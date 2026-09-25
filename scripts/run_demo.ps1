@@ -101,8 +101,8 @@ if ($Live) {
         $LiveArgs += @("--weights", $LiveWeights)
         Write-Host "Live tile model: $LiveWeights (the stage bag rule is off: it needs the people-and-bags detector)" -ForegroundColor Yellow
     } elseif ($Camera -ne "") {
-        $LiveArgs += @("--rules", "--threats")
-        Write-Host "Stage camera rules on: a bag left alone for 15 s, a knife or scissors in hand, a fight (pose + VideoMAE)" -ForegroundColor Yellow
+        $LiveArgs += @("--rules", "--threats", "--tamper")
+        Write-Host "Stage camera rules on: a bag left alone for 15 s, a knife or scissors in hand, a fight (pose + VideoMAE), the lens covered for 2 s" -ForegroundColor Yellow
     }
     Step "Starting live inference tile on http://localhost:8001/live.mjpg ($($LiveArgs -join ' '))"
     Start-Process -FilePath $Py -ArgumentList $LiveArgs -WorkingDirectory $Root -WindowStyle Minimized

@@ -11,6 +11,7 @@ actions:
   intervene:        "Send guards together to separate the people and call medical help"
   medical:          "Send first aid to the person on the ground"
   observe_exchange: "Watch the spot on camera and send a guard to observe discreetly"
+  check_camera:     "Send a guard to the camera and to what it was watching; review its last frames"
 
 # Default action per signal type (used by the template brief and as a hint to the LLM)
 defaults:
@@ -29,6 +30,8 @@ defaults:
   person_down:         medical
   hand_off:            monitor
   dealing_pattern:     observe_exchange
+  camera_obstructed:   check_camera
+  camera_restored:     review_footage
   default:             monitor
 
 # Evidence that tells a known story gets that story as the incident's title (all listed types present).
@@ -52,6 +55,7 @@ decisive:
   abandoned_object: {min_severity: 0.8, min_confidence: 0.6}
   weapon_visible:   {min_severity: 0.5, min_confidence: 0.5}
   violence:         {min_severity: 0.6, min_confidence: 0.5}
+  camera_obstructed: {min_severity: 0.6, min_confidence: 0.5}
 
 # Human-readable names for signal types
 titles:
@@ -70,6 +74,8 @@ titles:
   person_down:         "Person on the ground"
   hand_off:            "Hand-to-hand exchange"
   dealing_pattern:     "Repeated hand-offs (possible dealing)"
+  camera_obstructed:   "Camera view lost"
+  camera_restored:     "Camera view restored"
 
 # ---- Forecast and response planning (argus/forecast.py) ---------------------------------------------------------
 # Crime scripts (situational crime prevention: precursor -> commission -> departure). Each stage lists the signal
@@ -130,6 +136,7 @@ action_meta:
   review_footage:   {responder: camera,  disruption: 0, records: ack}
   track_subject:    {responder: camera,  disruption: 0, records: ack}
   observe_exchange: {responder: guard,   disruption: 1, records: ack}
+  check_camera:     {responder: guard,   disruption: 1, records: ack}
   dispatch_guard:   {responder: guard,   disruption: 1, records: ack}
   medical:          {responder: medical, disruption: 1, records: escalate}
   secure_object:    {responder: guard,   disruption: 2, records: ack}

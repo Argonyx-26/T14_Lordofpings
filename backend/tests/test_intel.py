@@ -107,3 +107,18 @@ def test_ask_about_connections_answers_from_the_pattern_links_offline(cfg):
     assert out["generated_by"] == "template"                        # conftest: ARGUS_LLM=off
     assert out["answer"].startswith("2 bag thefts in") and "hypothesis" in out["answer"]
     assert set(out["cited_incidents"]) == set(intel["series"][0]["incidents"])
+
+
+def test_a_covered_live_camera_is_a_blind_spot_until_restored(cfg):
+    def cam(i, etype, t, sev):
+        return Event(event_id=f"c-{i}", t=t, source="cctv", sensor_id="LIVE", zone="stage", area="live", type=etype,
+                     severity=sev, confidence=0.8, provenance="computed", attrs={"reason": "lens covered (view is flat)"})
+    covered = [cam(1, "camera_obstructed", T0, 0.7)]
+    eng, intel = run(cfg, *covered)
+    (inc,) = eng.incidents.values()
+    assert inc.status == "open" and inc.title.startswith("Camera view lost")        # decisive: a person checks
+    live = next(a for a in coverage(cfg, covered, T0 + 5, live=True)["areas"] if a["area"] == "live")
+    assert live["streams"]["cctv"] is False and "Bags left or taken" in live["blind"] and "lens covered" in live["note"]
+    back = covered + [cam(2, "camera_restored", T0 + 9, 0.3)]
+    live = next(a for a in coverage(cfg, back, T0 + 10, live=True)["areas"] if a["area"] == "live")
+    assert live["streams"]["cctv"] is True

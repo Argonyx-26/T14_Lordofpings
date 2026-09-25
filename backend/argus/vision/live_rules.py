@@ -257,3 +257,91 @@ def cv2_resize(f, w: int = 480):
     import cv2
     h = int(f.shape[0] * w / f.shape[1])
     return cv2.resize(f, (w, h))
+
+
+# ---- camera tamper: the view itself goes away ------------------------------------------------------------------
+TAMPER_HOLD_S = 2.0              # the view must be gone this long (a hand passing the lens is not tampering)
+TAMPER_CLEAR_S = 1.0             # and back this long before it counts as restored
+TAMPER_LEARN = 15                # healthy frames that make the scene's baseline
+FLAT_STD = 10.0                  # grey levels: a covered lens or a cap is nearly uniform
+DARK_MEAN = 18.0                 # grey levels: blacked out
+BLUR_FRAC = 0.12                 # detail (Laplacian variance) below this share of the scene's own baseline: sprayed or defocused
+
+
+class LiveTamperRule:
+    """The camera's own view is lost: covered, blacked out, or smeared. A monitoring system that cannot tell when its
+    own eyes fail reports a covered camera as a quiet scene. Per frame, on a 160 px grey thumbnail: brightness, contrast
+    (std) and detail (variance of the Laplacian) against the scene's own baseline, learned from its first healthy
+    frames. Held TAMPER_HOLD_S -> camera_obstructed (severity 0.7, decisive: a person checks); back for TAMPER_CLEAR_S
+    -> camera_restored (evidence on the same incident, with how long the view was gone)."""
+
+    def __init__(self, on_event=None):
+        self.on_event = on_event
+        self.base_detail: float | None = None
+        self._learn: list[float] = []
+        self.bad_since: float | None = None
+        self.good_since: float | None = None
+        self.down_at: float | None = None
+        self.reason = ""
+
+    @staticmethod
+    def measure(frame) -> tuple[float, float, float]:
+        import cv2
+        import numpy as np
+        g = frame if frame.ndim == 2 else cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        h, w = g.shape[:2]
+        g = cv2.resize(g, (160, max(1, int(160 * h / max(w, 1)))), interpolation=cv2.INTER_AREA)
+        return float(np.mean(g)), float(np.std(g)), float(cv2.Laplacian(g, cv2.CV_64F).var())
+
+    def _why(self, mean: float, std: float, detail: float) -> str | None:
+        if mean < DARK_MEAN:
+            return "view blacked out"
+        if std < FLAT_STD:
+            return "lens covered (view is flat)"
+        if self.base_detail and detail < BLUR_FRAC * self.base_detail:
+            return "view smeared or out of focus"
+        return None
+
+    def update(self, frame, now: float | None = None) -> None:
+        now = time.monotonic() if now is None else now
+        mean, std, detail = self.measure(frame)
+        why = self._why(mean, std, detail)
+        if why is None and self.base_detail is None:
+            self._learn.append(detail)
+            if len(self._learn) >= TAMPER_LEARN:
+                self._learn.sort()
+                self.base_detail = self._learn[len(self._learn) // 2]
+        if why:
+            self.good_since = None
+            self.bad_since = self.bad_since if self.bad_since is not None else now
+            self.reason = why
+            if self.down_at is None and now - self.bad_since >= TAMPER_HOLD_S:
+                self.down_at = self.bad_since
+                if self.on_event:
+                    self.on_event("camera_obstructed", {"reason": why, "brightness": round(mean, 1), "contrast": round(std, 1)},
+                                  [0, 0, float(frame.shape[1]), float(frame.shape[0])], 0.7, 0.8, frame)
+        else:
+            self.bad_since = None
+            self.good_since = self.good_since if self.good_since is not None else now
+            if self.down_at is not None and now - self.good_since >= TAMPER_CLEAR_S:
+                gone = round(self.good_since - self.down_at, 1)
+                self.down_at = None
+                if self.on_event:
+                    self.on_event("camera_restored", {"view_lost_s": gone},
+                                  [0, 0, float(frame.shape[1]), float(frame.shape[0])], 0.3, 0.9, frame)
+
+    @property
+    def obstructed(self) -> bool:
+        return self.down_at is not None
+
+    def overlay(self, img, now: float | None = None):
+        import cv2
+        now = time.monotonic() if now is None else now
+        if self.bad_since is None:
+            return img
+        held = now - self.bad_since
+        col = (40, 40, 235) if self.down_at is not None else (40, 170, 235)
+        cv2.rectangle(img, (0, 0), (img.shape[1] - 1, img.shape[0] - 1), col, 6)
+        cv2.putText(img, f"CAMERA VIEW LOST: {self.reason}  {held:4.1f} s", (16, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
+                    col, 2, cv2.LINE_AA)
+        return img

@@ -26,6 +26,7 @@ profiles:
       loitering:        {weight: 1.5}
     decisive:
       weapon_visible:   {min_severity: 0.5, min_confidence: 0.5}
+      camera_obstructed: {min_severity: 0.6, min_confidence: 0.5}   # the camera's own view lost (live tamper rule)
       violence:         {min_severity: 0.6, min_confidence: 0.5}
       person_down:      {min_severity: 0.6, min_confidence: 0.5}
       abandoned_object: {min_severity: 0.7, min_confidence: 0.5}   # owner away, not only out of view
@@ -38,6 +39,7 @@ profiles:
     signals: {}
     decisive:
       weapon_visible:   {min_severity: 0.5, min_confidence: 0.5}
+      camera_obstructed: {min_severity: 0.6, min_confidence: 0.5}   # the camera's own view lost (live tamper rule)
       violence:         {min_severity: 0.6, min_confidence: 0.5}
       person_down:      {min_severity: 0.7, min_confidence: 0.6}
       abandoned_object: {min_severity: 0.8, min_confidence: 0.6}   # owner walked out of view
@@ -55,4 +57,5 @@ profiles:
       occupancy:        {weight: 0.6}
     decisive:
       weapon_visible:   {min_severity: 0.5, min_confidence: 0.6}
+      camera_obstructed: {min_severity: 0.6, min_confidence: 0.5}   # the camera's own view lost (live tamper rule)
       violence:         {min_severity: 0.7, min_confidence: 0.6}

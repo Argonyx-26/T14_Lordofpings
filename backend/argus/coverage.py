@@ -67,8 +67,21 @@ def recording(camera: str, t: float, cfg: SiteConfig) -> bool | None:
     return any(s - 2 <= t < e + 2 for s, e in rec.get(camera, []))
 
 
+def tampered(log: list[Event], now: float) -> dict[str, dict]:
+    """Cameras whose own view is lost right now (vision/live_rules.py LiveTamperRule): the latest camera_obstructed
+    with no camera_restored after it."""
+    state: dict[str, dict] = {}
+    for e in sorted((e for e in log if e.type in ("camera_obstructed", "camera_restored") and e.t <= now), key=lambda e: e.t):
+        if e.type == "camera_obstructed":
+            state[e.sensor_id] = {"since": e.t, "reason": e.attrs.get("reason", "view lost")}
+        else:
+            state.pop(e.sensor_id, None)
+    return state
+
+
 def coverage(cfg: SiteConfig, log: list[Event], now: float, live: bool = False) -> dict:
     behaviours = cfg.playbook.get("visibility") or DEFAULT_BEHAVIOURS
+    lost = tampered(log, now)
     door_areas = {e.area for e in log if e.source == "door"}
     factors = cfg.fusion["corroboration_factors"]
     areas, seen_by = [], {}
@@ -77,7 +90,8 @@ def coverage(cfg: SiteConfig, log: list[Event], now: float, live: bool = False) 
         if area == "upload" or (area == "live" and not live):
             continue
         cams = [c for c, m in cfg.raw["cameras"].items() if m.get("area") == area and (c != "LIVE" or live)]
-        cam_rows = [{"id": c, "label": cfg.raw["cameras"][c].get("label", c), "recording": recording(c, now, cfg)} for c in cams]
+        cam_rows = [{"id": c, "label": cfg.raw["cameras"][c].get("label", c),
+                     "recording": False if c in lost else recording(c, now, cfg), "tampered": lost.get(c)} for c in cams]
         up = [c["id"] for c in cam_rows if c["recording"] is not False]
         streams = {"cctv": bool(up), "door": area in door_areas, "device": area in cfg.area_shapes}
         installed = {"cctv": bool(cams), "door": streams["door"], "device": streams["device"]}
@@ -107,8 +121,11 @@ def coverage(cfg: SiteConfig, log: list[Event], now: float, live: bool = False) 
 
 def _note(name: str, streams: dict, installed: dict, blind: list[str], cams: list[dict]) -> str:
     have = [STREAM_LABEL[s] for s, on in streams.items() if on]
-    off = [c["id"] for c in cams if c["recording"] is False]
+    off = [c["id"] for c in cams if c["recording"] is False and not c.get("tampered")]
+    lost = [f"{c['id']} {c['tampered']['reason']}" for c in cams if c.get("tampered")]
     parts = [f"{name}: " + (", ".join(have) if have else "no sensors")]
+    if lost:
+        parts.append(", ".join(lost))
     if off:
         parts.append(f"{', '.join(off)} not recording now")
     if blind:

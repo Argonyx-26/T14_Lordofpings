@@ -54,3 +54,47 @@ def test_knife_in_hand_fires_once_knife_on_table_does_not():
     for i in range(30, 60):
         rule.update(hand, now=i * 0.1)
     assert fired == [("weapon_visible", "knife")]                # once, then the 20 s refractory
+
+
+# ---- camera tamper ------------------------------------------------------------------------------------------
+def _scene(seed=0):
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    img = np.full((360, 640, 3), 110, np.uint8)
+    for _ in range(60):                                   # a scene with edges: boxes of different greys
+        x, y = int(rng.integers(0, 600)), int(rng.integers(0, 330))
+        img[y:y + 30, x:x + 40] = int(rng.integers(20, 240))
+    return img
+
+
+def _tamper(frames, dt=0.1):
+    from argus.vision.live_rules import LiveTamperRule
+    fired = []
+    rule = LiveTamperRule(on_event=lambda etype, attrs, box, sev, conf, frame: fired.append((etype, attrs, sev)))
+    for i, f in enumerate(frames):
+        rule.update(f, now=i * dt)
+    return fired, rule
+
+
+def test_covering_the_lens_for_two_seconds_fires_once_and_restores():
+    import numpy as np
+    scene = [_scene()] * 20
+    covered = [np.full((360, 640, 3), 40, np.uint8)] * 30         # a hand over the lens: flat and dim, 3 s
+    fired, rule = _tamper(scene + covered + scene)
+    assert [f[0] for f in fired] == ["camera_obstructed", "camera_restored"]
+    assert fired[0][1]["reason"].startswith("lens covered") and fired[0][2] >= 0.6
+    assert 2.5 <= fired[1][1]["view_lost_s"] <= 3.5 and not rule.obstructed
+
+
+def test_a_hand_passing_the_lens_is_not_tampering():
+    import numpy as np
+    fired, _ = _tamper([_scene()] * 20 + [np.zeros((360, 640, 3), np.uint8)] * 10 + [_scene()] * 20)   # 1 s
+    assert fired == []
+
+
+def test_a_smeared_lens_fires_against_the_scenes_own_detail():
+    import cv2
+    scene = _scene()
+    smeared = cv2.GaussianBlur(scene, (0, 0), 25)
+    fired, _ = _tamper([scene] * 20 + [smeared] * 30)
+    assert fired and fired[0][0] == "camera_obstructed" and "smeared" in fired[0][1]["reason"]

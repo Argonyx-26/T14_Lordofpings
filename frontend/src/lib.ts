@@ -99,6 +99,8 @@ export const EVENT_LABEL: Record<string, string> = {
   person_down: 'Person on the ground',
   hand_off: 'Hand-to-hand exchange',
   dealing_pattern: 'Repeated hand-offs (possible dealing)',
+  camera_obstructed: 'Camera view lost',
+  camera_restored: 'Camera view restored',
 }
 
 export const eventLabel = (type: string) => EVENT_LABEL[type] ?? type.replaceAll('_', ' ').replace(/^./, (c) => c.toUpperCase())

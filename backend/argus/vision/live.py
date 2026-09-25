@@ -28,7 +28,7 @@ from ultralytics import YOLO
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from argus.vision.common import MEVA_DIR, camera_cfg, clip_info  # noqa: E402
-from argus.vision.live_rules import SHARP, LiveBagRule, LiveSharpRule, LiveViolence  # noqa: E402
+from argus.vision.live_rules import SHARP, LiveBagRule, LiveSharpRule, LiveTamperRule, LiveViolence  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 CLASSES = [0, 2, 3, 5, 7, 24, 26, 28]
@@ -58,9 +58,9 @@ def no_power_throttling() -> None:
 class Live:
     def __init__(self, source, label: str, polygons: dict, weights: str, imgsz: int, header: bool = False,
                  rule: LiveBagRule | None = None, sharp: LiveSharpRule | None = None,
-                 violence: LiveViolence | None = None):
+                 violence: LiveViolence | None = None, tamper: LiveTamperRule | None = None):
         self.source, self.label, self.polygons, self.header, self.rule = source, label, polygons, header, rule
-        self.sharp, self.violence = sharp, violence
+        self.sharp, self.violence, self.tamper = sharp, violence, tamper
         self.classes = CLASSES + (list(SHARP) if sharp is not None else [])
         self.pose = YOLO(str(ROOT / "models" / "yolo11s-pose.pt")) if violence is not None else None
         self.model = YOLO(weights)
@@ -93,6 +93,8 @@ class Live:
             self.sharp.overlay(img, s)
         if self.violence is not None:
             self.violence.overlay(img)
+        if self.tamper is not None:
+            self.tamper.overlay(img)
         if self.header:  # standalone use; the console draws its own header from /live/stats
             self._header(img, fps, infer_ms)
         cv2.putText(img, ATTRIBUTION, (8, img.shape[0] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (230, 230, 230), 1, cv2.LINE_AA)
@@ -117,6 +119,8 @@ class Live:
                 ok, frame = cap.read()
                 if not ok:
                     break  # end of clip -> loop
+                if self.tamper is not None:
+                    self.tamper.update(frame)
                 t1 = time.perf_counter()
                 r = self.model.track(frame, persist=True, tracker="bytetrack.yaml", classes=self.classes, conf=0.3,
                                      imgsz=self.imgsz, half=True, verbose=False)[0]
@@ -249,6 +253,8 @@ if __name__ == "__main__":
     ap.add_argument("--abandon-s", type=float, default=15.0, help="seconds a bag must be alone before the alert")
     ap.add_argument("--threats", action="store_true",
                     help="also a knife/scissors in hand and fights (pose + VideoMAE), sent to ARGUS as incidents")
+    ap.add_argument("--tamper", action="store_true",
+                    help="watch the camera's own view: covered, blacked out or smeared for 2 s opens an incident")
     ap.add_argument("--backend", default="http://127.0.0.1:8000")
     a = ap.parse_args()
     no_power_throttling()
@@ -264,6 +270,8 @@ if __name__ == "__main__":
     send = threat_sender(a.backend, label)
     sharp = LiveSharpRule(on_event=send) if a.threats else None
     violence = LiveViolence(on_event=send) if a.threats else None
-    live = Live(src, label, polys, a.weights, a.imgsz, header=a.header, rule=rule, sharp=sharp, violence=violence)
+    tamper = LiveTamperRule(on_event=send) if a.tamper else None
+    live = Live(src, label, polys, a.weights, a.imgsz, header=a.header, rule=rule, sharp=sharp, violence=violence,
+                tamper=tamper)
     threading.Thread(target=live.run, daemon=True).start()
     uvicorn.run(make_app(live), host="127.0.0.1", port=a.port, log_level="warning")
