@@ -1,9 +1,11 @@
-import { FileVideo, LoaderCircle, TriangleAlert, Upload } from 'lucide-react'
+import { ChevronRight, FileVideo, LoaderCircle, TriangleAlert, Upload } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { API, scoreColor, severityLabel } from '../lib'
+import { API, LEVEL_COLOR, eventLabel, scoreColor, severityLabel } from '../lib'
 import { CLASS_STYLE } from '../tracks'
 import { Still, hasStill } from './Still'
-import type { ArgusEvent, Incident, SiteConfigView } from '../types'
+import type { ArgusEvent, Forecast, Incident, SiteConfigView } from '../types'
+import { ResponsePlanner } from './Forecast'
+import { StatusSymbol } from './Symbols'
 
 interface Job {
   id: string
@@ -32,7 +34,7 @@ const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).
 /** Analyse any video: upload it, then review detections, events and incidents on the footage itself. */
 export function UploadView({ config }: { config: SiteConfigView | null }) {
   const [jobs, setJobs] = useState<Job[]>([])
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(new URLSearchParams(location.search).get('upload'))
   const [job, setJob] = useState<Job | null>(null)
   const [sending, setSending] = useState<{ name: string; pct: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -152,14 +154,26 @@ function Dropzone({ onFile, busy }: { onFile: (f: File) => void; busy: boolean }
 }
 
 function Intro() {
+  const steps = [
+    ['Track', 'People, vehicles, bags, laptops and phones are detected and followed frame by frame (YOLO11 + ByteTrack).'],
+    ['Detect', 'The same rules as the live console flag unattended bags, bags taken, running, crowding, and (with their models) weapons, fights, falls and hand-offs.'],
+    ['Assess', 'Fusion turns those signals into scored, explained incidents under the security profile you pick: airport, school or park.'],
+    ['Project', 'Each incident gets a forecast: the stage it has reached, what would raise or lower its risk, and responses compared side by side.'],
+  ]
   return (
-    <section className="surface flex h-full flex-col items-center justify-center gap-3 px-10 text-center">
-      <span className="display text-[40px] text-[var(--color-fg)]">Analyse any footage</span>
+    <section className="surface flex h-full flex-col items-center justify-center gap-4 px-10 text-center">
+      <span className="display text-[34px] text-[var(--color-fg)]">Assess any security footage</span>
       <p className="max-w-xl text-[13px] leading-relaxed text-[var(--color-fg-2)]">
-        Upload a clip and Argus runs the same detector, tracker, rules and fusion as the live console on it: people,
-        vehicles, bags, laptops and phones are tracked, then unattended objects, objects changing hands or taken,
-        running and crowding become scored, explained incidents.
+        Drop in a clip from any camera, even a phone. ARGUS runs its full pipeline on it and returns a threat assessment you can replay moment by moment.
       </p>
+      <ol className="mt-2 grid max-w-3xl grid-cols-1 gap-3 text-left sm:grid-cols-2">
+        {steps.map(([t, body], k) => (
+          <li key={t} className="rounded-lg px-4 py-3" style={{ background: 'var(--color-surface-2)' }}>
+            <div className="text-[13px] font-medium text-[var(--color-fg)]"><span className="num text-[var(--color-fg-4)]">{k + 1}</span> {t}</div>
+            <div className="mt-1 text-[12px] leading-relaxed text-[var(--color-fg-3)]">{body}</div>
+          </li>
+        ))}
+      </ol>
       <p className="max-w-xl text-[11.5px] leading-relaxed text-[var(--color-fg-4)]">
         Door and walkway rules need a camera's zones drawn once, so they only run on the site's own cameras.
       </p>
@@ -209,6 +223,17 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
   // stable across renders: the overlay's draw loop restarts whenever this changes
   const signals = useMemo(() => result.events.filter((e) => e.type !== 'occupancy'), [result])
   const cfg = config ?? undefined
+  const [profile, setProfile] = useState<string | null>(config?.profile ?? null)
+  const [assessment, setAssessment] = useState<Assessment | null>(null)
+  const [plan, setPlan] = useState<string | null>(null)
+
+  // The threat assessment under the chosen profile (re-fused on the server from the clip's stored signals).
+  useEffect(() => {
+    let stale = false
+    fetch(`${API}/api/uploads/${job.id}/assess${profile ? `?profile=${profile}` : ''}`)
+      .then((r) => (r.ok ? r.json() : null)).then((a) => { if (!stale) setAssessment(a) }).catch(() => {})
+    return () => { stale = true }
+  }, [job.id, profile])
 
   useEffect(() => {
     fetch(`${API}/api/uploads/${job.id}/tracks`).then((r) => (r.ok ? r.text() : '')).then((text) => {
@@ -281,86 +306,179 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
     v.play().catch(() => {})
   }
 
+  const incidents = assessment?.incidents ?? result.incidents
+  const evidence = assessment?.evidence ?? result.evidence
+  const planning = plan ? incidents.find((i) => i.incident_id === plan) ?? null : null
+
   return (
-    <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_340px] gap-3">
+    <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_360px] gap-3">
       <section className="flex min-h-0 flex-col gap-3">
-        <div className="flex h-7 items-center gap-3">
-          <span className="truncate text-[13px] font-medium">{job.name}</span>
-          <span className="num text-[11px] text-[var(--color-fg-3)]">
-            {job.meta.width}×{job.meta.height} · {job.meta.fps} fps · {mmss(duration)}
-          </span>
-          <button className="btn ml-auto" onClick={() => setBoxes(!boxes)}>{boxes ? 'Hide detections' : 'Show detections'}</button>
-        </div>
+        <Verdict a={assessment} profiles={config?.profiles ?? []} profile={profile} onProfile={setProfile} name={job.name}
+          meta={`${job.meta.width}×${job.meta.height} · ${job.meta.fps} fps · ${mmss(duration)}`} />
         <div className="relative min-h-0 flex-1 overflow-hidden rounded-md bg-black" style={{ boxShadow: 'inset 0 0 0 1px var(--color-hair)' }}>
           <video ref={video} src={`${API}/api/uploads/${job.id}/video`} controls playsInline muted
             onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} className="absolute inset-0 h-full w-full object-contain" />
           <canvas ref={canvas} className="pointer-events-none absolute inset-0 h-full w-full" />
+          <button className="btn btn-sm absolute right-2 top-2 bg-black/60" onClick={() => setBoxes(!boxes)}>{boxes ? 'Hide detections' : 'Show detections'}</button>
         </div>
-        {/* Event timeline: every signal at its moment in the clip; click to jump there */}
-        <div className="relative h-9 shrink-0 rounded-md bg-[var(--color-surface)]" style={{ boxShadow: 'inset 0 0 0 1px var(--color-hair)' }}>
-          <div className="absolute inset-y-0 w-px bg-[var(--color-fg)]" style={{ left: `${(time / duration) * 100}%` }} />
-          {signals.map((e) => (
-            <button key={e.event_id} title={`${mmss(e.t - start)} · ${e.type.replaceAll('_', ' ')}`} onClick={() => seek(e.t)}
-              className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-sm"
-              style={{ left: `${((e.t - start) / duration) * 100}%`, background: e.severity >= 0.25 ? 'var(--color-high)' : 'var(--color-fg-3)' }} />
-          ))}
-        </div>
+        <RiskChart a={assessment} signals={signals} start={start} duration={duration} time={time} onSeek={seek} />
       </section>
 
       <aside className="flex min-h-0 flex-col gap-3">
         <section className="surface shrink-0 px-4 py-3">
           <div className="grid grid-cols-3 gap-2">
             <Stat label="Detections" value={tracks ? [...tracks.values()].reduce((n, d) => n + d.length, 0).toLocaleString() : '…'} />
-            <Stat label="Events" value={String(signals.length)} />
-            <Stat label="Incidents" value={String(result.incidents.length)} />
+            <Stat label="Signals" value={String(signals.length)} />
+            <Stat label="Incidents" value={String(incidents.length)} />
           </div>
         </section>
         <section className="surface flex min-h-0 flex-1 flex-col">
           <div className="flex h-10 shrink-0 items-center px-4 hairline-b">
-            <span className="text-[13px] font-medium">Incidents</span>
+            <span className="text-[13px] font-medium">Flagged</span>
+            <span className="ml-auto text-[11px] text-[var(--color-fg-3)]">{assessment ? assessment.profile_label : ''}</span>
           </div>
           <div className="scroll min-h-0 flex-1">
-            {result.incidents.length === 0 && (
+            {incidents.length === 0 && (
               <p className="px-4 py-4 text-[12px] leading-relaxed text-[var(--color-fg-3)]">
-                Nothing in this clip rose to an incident. The events below are what the detectors noticed.
+                Nothing in this clip rose to an incident under this profile. The signals below are what the detectors noticed.
               </p>
             )}
-            {result.incidents.map((i) => {
+            {incidents.map((i) => {
               const color = scoreColor(i.score, cfg)
+              const fc = assessment?.forecasts[i.incident_id]
+              const next = fc?.whatifs.find((w) => w.kind === 'next_stage')
               return (
-                <button key={i.incident_id} onClick={() => seek(i.first_signal_at)}
-                  className="relative flex w-full items-start gap-3 px-4 py-3 text-left transition hairline-b hover:bg-[var(--color-surface-2)]">
-                  <span className="absolute inset-y-0 left-0 w-[2px]" style={{ background: color }} />
-                  <span className="num w-8 shrink-0 text-[20px] font-medium leading-none" style={{ color }}>{i.score}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] text-[var(--color-fg)]">{i.title.split(' — ')[0]}</span>
-                    <span className="mt-0.5 block text-[11px] text-[var(--color-fg-3)]">
-                      <span className="num">{mmss(i.first_signal_at - start)}</span> · <span style={{ color }}>{i.status === 'watch' ? 'Watch' : severityLabel(i.score, cfg)}</span>
+                <div key={i.incident_id} className="relative px-4 py-3 hairline-b">
+                  <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: color }} />
+                  <button onClick={() => seek(i.first_signal_at)} className="flex w-full items-start gap-3 text-left">
+                    <span className="figure w-8 shrink-0 text-[20px]" style={{ color }}>{i.score}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] leading-snug text-[var(--color-fg)]">{i.title.split(' — ')[0]}</span>
+                      <span className="mt-0.5 block text-[11px] text-[var(--color-fg-3)]">
+                        <span className="num">{mmss(i.first_signal_at - start)}</span> in the clip · <span style={{ color }}>{i.status === 'watch' ? 'Watch' : severityLabel(i.score, cfg)}</span>
+                      </span>
+                      {i.brief && <span className="mt-1 block text-[11.5px] leading-snug text-[var(--color-fg-2)]">{i.brief.summary}</span>}
                     </span>
-                    {i.brief && <span className="mt-1 block text-[11.5px] leading-snug text-[var(--color-fg-2)]">{i.brief.summary}</span>}
-                    {(() => {
-                      const key = (result.evidence[i.incident_id] ?? []).filter(hasStill)
-                        .reduce<ArgusEvent | null>((a, e) => (!a || e.severity > a.severity ? e : a), null)
-                      return key && <Still key={key.event_id} e={key} job={job.id} className="mt-2 aspect-video w-full" />
-                    })()}
-                  </span>
-                </button>
+                  </button>
+                  {(() => {
+                    const key = (evidence[i.incident_id] ?? []).filter(hasStill)
+                      .reduce<ArgusEvent | null>((a, e) => (!a || e.severity > a.severity ? e : a), null)
+                    return key && <Still key={key.event_id} e={key} job={job.id} className="mt-2 aspect-video w-full" />
+                  })()}
+                  {fc && (
+                    <div className="mt-2.5 rounded-md px-2.5 py-2 text-[11.5px] leading-relaxed text-[var(--color-fg-2)]" style={{ background: 'var(--color-surface-2)' }}>
+                      {next ? <>{next.label}: <span className="num">{i.score}</span> → <span className="num" style={{ color: scoreColor(next.score, cfg) }}>{next.score}</span>{next.title_changes ? <>, "{next.title}"</> : null}.</>
+                        : 'No known escalation path from these signals.'}
+                      {fc.responses[0] && <span className="block text-[var(--color-fg-3)]">Best response now: {fc.responses[0].label.toLowerCase()}.</span>}
+                      <button className="mt-1.5 flex items-center gap-1 text-[12px] font-medium text-[var(--color-fg)] hover:underline" onClick={() => setPlan(i.incident_id)}>
+                        Plan the response <ChevronRight size={13} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               )
             })}
-            <div className="eyebrow px-4 pb-1 pt-4">Events</div>
-            {signals.length === 0 && <p className="px-4 pb-4 text-[12px] text-[var(--color-fg-4)]">No events beyond routine occupancy.</p>}
+            <div className="eyebrow px-4 pb-1 pt-4">Signals</div>
+            {signals.length === 0 && <p className="px-4 pb-4 text-[12px] text-[var(--color-fg-4)]">No signals beyond routine head counts.</p>}
             {signals.map((e) => (
               <button key={e.event_id} onClick={() => seek(e.t)}
-                className="grid w-full grid-cols-[44px_1fr_auto_36px] items-center gap-2 px-4 py-1.5 text-left text-[12px] hover:bg-[var(--color-surface-2)]">
+                className="grid w-full grid-cols-[44px_1fr_auto] items-center gap-2 px-4 py-1.5 text-left text-[12px] hover:bg-[var(--color-surface-2)]">
                 <span className="num text-[var(--color-fg-3)]">{mmss(e.t - start)}</span>
-                <span className="truncate text-[var(--color-fg)]">{e.type.replaceAll('_', ' ')}</span>
+                <span className="truncate text-[var(--color-fg)]">{eventLabel(e.type)}</span>
                 <span>{hasStill(e) && <Still key={e.event_id} e={e} job={job.id} className="h-[32px] w-[57px]" />}</span>
-                <span className="num text-right text-[var(--color-fg-2)]">{e.severity.toFixed(2)}</span>
               </button>
             ))}
           </div>
         </section>
       </aside>
+      {planning && assessment?.forecasts[planning.incident_id] && (
+        <ResponsePlanner fc={assessment.forecasts[planning.incident_id]} incident={planning} clock={null}
+          areaName={`${job.name} (uploaded)`} onClose={() => setPlan(null)} />
+      )}
+    </div>
+  )
+}
+
+interface Assessment {
+  profile: string | null
+  profile_label: string
+  thresholds: { watch: number; open: number }
+  verdict: { level: 'critical' | 'high' | 'watch' | 'low' | 'clear'; headline: string; incidents: number; signals: number; kinds: Record<string, number> }
+  timeline: { t: number; score: number; incident_id: string; type: string }[]
+  incidents: Incident[]
+  evidence: Record<string, ArgusEvent[]>
+  forecasts: Record<string, Forecast>
+}
+
+/** The clip's verdict in one line, the kinds of signal found, and the security profile it was judged under. */
+function Verdict({ a, profiles, profile, onProfile, name, meta }: {
+  a: Assessment | null; profiles: { id: string; label: string; description: string }[]; profile: string | null
+  onProfile: (p: string) => void; name: string; meta: string
+}) {
+  const lvl = a?.verdict.level ?? 'clear'
+  const color = LEVEL_COLOR[lvl]
+  return (
+    <div className="relative shrink-0 overflow-hidden rounded-lg px-4 py-3" style={{
+      background: `linear-gradient(90deg, color-mix(in srgb, ${color} 12%, var(--color-surface)), var(--color-surface) 70%)`,
+      boxShadow: 'inset 0 0 0 1px var(--color-hair)',
+    }}>
+      <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: color }} />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <StatusSymbol level={lvl} size={10} />
+            <span className="eyebrow" style={{ color }}>Threat assessment{a ? '' : ' · loading'}</span>
+            <span className="truncate text-[11px] text-[var(--color-fg-4)]">{name} · {meta}</span>
+          </div>
+          <div className="mt-1 text-[17px] font-semibold tracking-[-0.01em] text-[var(--color-fg)]">{a?.verdict.headline ?? 'Assessing…'}</div>
+          {a && Object.keys(a.verdict.kinds).length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {Object.entries(a.verdict.kinds).slice(0, 6).map(([k, n]) => <span key={k} className="chip">{k} <span className="num text-[var(--color-fg-3)]">{n}</span></span>)}
+            </div>
+          )}
+        </div>
+        {profiles.length > 0 && (
+          <div className="seg" aria-label="Judge this clip as">
+            {profiles.map((p) => <button key={p.id} data-on={p.id === profile} onClick={() => onProfile(p.id)} title={p.description}>{p.label}</button>)}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Risk over the clip: the highest live incident score after each signal, on the profile's watch / open lines. */
+function RiskChart({ a, signals, start, duration, time, onSeek }: {
+  a: Assessment | null; signals: ArgusEvent[]; start: number; duration: number; time: number; onSeek: (t: number) => void
+}) {
+  const W = 1000
+  const H = 70
+  const x = (t: number) => ((t - start) / duration) * W
+  const y = (s: number) => H - 6 - (Math.min(100, s) / 100) * (H - 12)
+  const pts = a?.timeline ?? []
+  let d = `M0 ${y(0)}`
+  let prev = 0
+  for (const p of pts) { d += ` L${x(p.t)} ${y(prev)} L${x(p.t)} ${y(p.score)}`; prev = p.score }
+  d += ` L${W} ${y(prev)}`
+  return (
+    <div className="shrink-0 rounded-md px-3 pb-1.5 pt-2" style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-hair)' }}>
+      <div className="mb-1 flex items-center gap-3 text-[10.5px] text-[var(--color-fg-3)]">
+        <span className="eyebrow">Risk over the clip</span>
+        {a && <span>watch {a.thresholds.watch} · opens for a person at {a.thresholds.open}</span>}
+        <span className="ml-auto">click to jump</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-[70px] w-full cursor-pointer"
+        onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onSeek(start + ((e.clientX - r.left) / r.width) * duration + 2) }}>
+        {a && [a.thresholds.watch, a.thresholds.open].map((t) => (
+          <line key={t} x1="0" x2={W} y1={y(t)} y2={y(t)} stroke="var(--color-hair-2)" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+        ))}
+        <path d={`${d} L${W} ${H} L0 ${H} Z`} fill="color-mix(in srgb, var(--color-high) 14%, transparent)" />
+        <path d={d} fill="none" stroke="var(--color-high)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+        {signals.map((e) => (
+          <line key={e.event_id} x1={x(e.t)} x2={x(e.t)} y1={H - 5} y2={H} stroke={e.severity >= 0.25 ? 'var(--color-fg-2)' : 'var(--color-fg-4)'} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        ))}
+        <line x1={(time / duration) * W} x2={(time / duration) * W} y1="0" y2={H} stroke="var(--color-fg)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      </svg>
     </div>
   )
 }

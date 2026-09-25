@@ -14,13 +14,14 @@ import type { ArgusEvent, Incident } from './types'
 import { useArgus } from './useArgus'
 
 export default function App() {
-  const { state, evidenceFor } = useArgus()
+  const { state, evidenceFor, forecastFor } = useArgus()
   // ?incident=INC-0007 preselects an incident (handy for screenshots and links)
   const [selected, setSelected] = useState<string | null>(new URLSearchParams(location.search).get('incident'))
   const [role, setRole] = useState<Role>('duty_officer')
   const [siloed, setSiloed] = useState(false)
   const [streamOpen, setStreamOpen] = useState(false)
-  const [view, setView] = useState<'console' | 'upload'>('console')
+  // ?upload=<job id> opens that analysed clip
+  const [view, setView] = useState<'console' | 'upload'>(new URLSearchParams(location.search).has('upload') ? 'upload' : 'console')
   const incidents = useMemo(() => Object.values(state.incidents), [state.incidents])
 
   // Nothing picked: show the most urgent incident that still sits in front of a person.
@@ -86,7 +87,8 @@ export default function App() {
 
           <div className="area-detail">
             <IncidentDetail incident={current} auto={!selected && !!current} config={state.config} clock={state.clock} summary={state.summary}
-              role={role} evidence={evidence} onJump={jumpTo} replayingLeadUp={replayingLeadUp} />
+              role={role} evidence={evidence} onJump={jumpTo} replayingLeadUp={replayingLeadUp}
+              forecastFor={forecastFor} profile={state.config?.profile} />
           </div>
         </main>
       </>}

@@ -1,0 +1,77 @@
+# Publishes the project site at the Pages root and the console's offline demo (a real MEVA replay snapshot, no
+# backend needed) under /console/. Raah analytics is added when the repository variable RAAH_PID is set.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "frontend/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.pages.outputs.enabled }}
+    steps:
+      # Pages must be switched on once by a repository admin (Settings -> Pages -> Source: GitHub Actions).
+      # Until then this workflow builds and stays green but does not deploy.
+      - id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else echo "enabled=false" >> "$GITHUB_OUTPUT"; echo "::notice::GitHub Pages is not enabled for this repository yet; skipping deploy"; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: frontend
+      - name: Build the console in offline-demo mode
+        run: npx vite build --base "/${{ github.event.repository.name }}/console/"
+        working-directory: frontend
+        env:
+          VITE_ARGUS_MOCK: "1"
+      - name: Assemble site + console
+        env:
+          RAAH_PID: ${{ vars.RAAH_PID }}
+        run: |
+          mkdir -p _site
+          cp -r site/. _site/
+          cp -r frontend/dist _site/console
+          rm -f _site/README.md
+          if [ -n "$RAAH_PID" ]; then
+            tag="<script defer src=\"https://t.raah.dev/script.js\" data-pid=\"$RAAH_PID\"></script>"
+            for f in _site/index.html _site/judges.html _site/console/index.html; do
+              [ -f "$f" ] && sed -i "s#</head>#  $tag\n</head>#" "$f"
+            done
+            echo "Raah analytics added"
+          else
+            echo "RAAH_PID not set: publishing without analytics"
+          fi
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

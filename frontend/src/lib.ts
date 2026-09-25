@@ -5,7 +5,8 @@ import type { SiteConfigView } from './types'
 const loc = typeof location === 'undefined' ? undefined : location
 export const API = import.meta.env.VITE_ARGUS_API ?? (!loc || loc.port === '5173' ? 'http://localhost:8000' : loc.origin)
 export const WS_URL = API.replace(/^http/, 'ws') + '/ws'
-export const MOCK = !!loc && new URLSearchParams(loc.search).has('mock')
+// ?mock, or a build made for the hosted offline demo (VITE_ARGUS_MOCK=1, GitHub Pages): no backend, a real snapshot
+export const MOCK = import.meta.env.VITE_ARGUS_MOCK === '1' || (!!loc && new URLSearchParams(loc.search).has('mock'))
 
 const UTC_OFFSET_H = -4 // MEVA site local time (EDT)
 

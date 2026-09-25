@@ -1,9 +1,10 @@
 import { ArrowUpRight, ChevronRight, Cpu, CornerDownRight, Eye, Link2, Radar, ShieldCheck, UserCheck } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
+import { ForecastCard, ResponsePlanner } from './Forecast'
 import {
   API, LEVEL_COLOR, MOCK, PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, fmt, levelOf, localTime, modelName, post, severityLabel,
 } from '../lib'
-import type { ArgusEvent, Clock, Incident, SiteConfigView, Summary } from '../types'
+import type { ArgusEvent, Clock, Forecast, Incident, SiteConfigView, Summary } from '../types'
 import { ResponseMenu, type Action } from './ResponseMenu'
 import { Still, hasStill } from './Still'
 import { SourceIcon, StatusSymbol } from './Symbols'
@@ -19,13 +20,18 @@ interface Props {
   evidence: ArgusEvent[]
   onJump: (e: ArgusEvent) => void
   replayingLeadUp?: boolean
+  forecastFor: (id: string) => Promise<Forecast | null>
+  profile?: string
 }
 
 interface AuditEntry { incident_id: string; action: Action; role: Role; note: string; sim_t: number; score: number; hash: string }
 
-export function IncidentDetail({ incident, auto, config, clock, summary, role, evidence, onJump, replayingLeadUp }: Props) {
+export function IncidentDetail({ incident, auto, config, clock, summary, role, evidence, onJump, replayingLeadUp, forecastFor, profile }: Props) {
   const cfg = config ?? undefined
   const log = useAudit(incident, clock)
+  const fc = useForecast(incident, clock, forecastFor, profile)
+  // ?plan=1 opens the response planner on load (links and screenshots)
+  const [planning, setPlanning] = useState(() => new URLSearchParams(location.search).has('plan'))
 
   if (!incident) return <HowItWorks config={config} summary={summary} />
 
@@ -101,6 +107,8 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
             )}
           </div>
         )}
+
+        {fc && !replayingLeadUp && <ForecastCard fc={fc} clock={clock} onPlan={() => setPlanning(true)} />}
 
         <div>
           <div className="eyebrow mb-2.5">Evidence · click to replay the moment</div>
@@ -192,6 +200,13 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
           )}
         </Section>
       </div>
+
+      {planning && fc && (
+        <ResponsePlanner fc={fc} incident={incident} clock={clock} areaName={config?.areas[incident.area]?.name ?? incident.area}
+          onClose={() => setPlanning(false)}
+          onApply={(r) => act(r.records, r.action)}
+          applyDisabled={MOCK ? 'Needs the backend' : replayingLeadUp ? 'Wait for the incident to re-form' : null} />
+      )}
 
       <footer className="flex shrink-0 items-center gap-3 px-4 py-3 hairline-t">
         <ResponseMenu incident={incident} config={config} onAct={act}
@@ -288,6 +303,22 @@ function Section({ title, hint, open, children }: { title: string; hint: string;
       <div className="px-3 pb-3 pt-1">{children}</div>
     </details>
   )
+}
+
+/** The incident's forecast, refetched when its evidence, status or profile changes, and every 30 s of replay time. */
+function useForecast(incident: Incident | null, clock: Clock | null, forecastFor: (id: string) => Promise<Forecast | null>, profile?: string) {
+  const [fc, setFc] = useState<Forecast | null>(null)
+  const bucket = clock ? Math.floor(clock.sim_t / 30) : 0
+  const key = incident ? `${incident.incident_id}:${incident.event_ids.length}:${incident.status}:${profile}:${bucket}` : ''
+  const id = incident?.incident_id
+  useEffect(() => {
+    if (!id) { setFc(null); return }
+    let stale = false
+    forecastFor(id).then((f) => { if (!stale) setFc(f && f.incident_id === id ? f : null) }).catch(() => {})
+    return () => { stale = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+  return fc && fc.incident_id === id ? fc : null
 }
 
 /**

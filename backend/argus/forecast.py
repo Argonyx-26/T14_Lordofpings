@@ -321,3 +321,34 @@ def risk_timeline(events: list[Event], cfg: SiteConfig) -> list[dict]:
     return points
 
 
+
+
+def add_to_snapshot(path: str) -> int:
+    """Attach a forecast to every incident in an exported snapshot (the console's offline `?mock` data), computed from
+    the snapshot's own incidents, evidence and recent events under the site as tuned. Returns how many were added."""
+    import json
+    from pathlib import Path
+
+    p = Path(path)
+    snap = json.loads(p.read_text(encoding="utf-8"))
+    cfg = site()
+    evidence = {k: [Event(**e) for e in v] for k, v in (snap.get("evidence") or {}).items()}
+    log = sorted({e.event_id: e for e in [Event(**e) for e in snap.get("recent_events", [])] +
+                  [e for v in evidence.values() for e in v]}.values(), key=lambda e: e.t)
+    now = snap["clock"]["sim_t"]
+    out = {}
+    for raw in snap["incidents"]:
+        inc = Incident(**raw)
+        if inc.status in ("candidate", "dismissed"):
+            continue
+        out[inc.incident_id] = forecast(inc, evidence.get(inc.incident_id, []), cfg, now, log=[e for e in log if e.t <= now])
+    snap["forecasts"] = out
+    p.write_text(json.dumps(snap, separators=(",", ":")), encoding="utf-8")
+    return len(out)
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 3 or sys.argv[1] != "snapshot":
+        sys.exit("usage: python -m argus.forecast snapshot <path to snapshot.json>")
+    print(f"forecasts added for {add_to_snapshot(sys.argv[2])} incidents")

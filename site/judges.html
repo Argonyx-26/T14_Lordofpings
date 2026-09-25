@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Argus for judges: the 90-second tour and every number</title>
+  <meta name="description" content="Argus fuses camera analytics, door activity and device location into a handful of ranked, explained incidents for security control rooms. Built at ARGONYX '26 by Lord of the Pings." />
+  <meta property="og:title" content="Argus: We don't watch more. We notice sooner." />
+  <meta property="og:description" content="Situational awareness for security control rooms, measured on real multi-camera footage: 4 of 5 staged incidents caught, 0 false incidents, 99.8% of events never reach a human." />
+  <meta property="og:image" content="assets/detections-bus-station.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230c0d0f'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%23f76b15' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23ececec'/%3E%3C/svg%3E" />
+  <style>
+    /* Fonts are bundled (site/fonts) so the page looks the same offline on the demo laptop. */
+    @font-face { font-family: "Instrument Serif"; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/instrument-serif-latin-400-normal.woff2) format("woff2"); }
+    @font-face { font-family: "Instrument Serif"; font-style: italic; font-weight: 400; font-display: swap; src: url(fonts/instrument-serif-latin-400-italic.woff2) format("woff2"); }
+    @font-face { font-family: "Geist"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/geist-latin-wght-normal.woff2) format("woff2"); }
+    @font-face { font-family: "Geist Mono"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/geist-mono-latin-wght-normal.woff2) format("woff2"); }
+    :root {
+      --bg: #0c0d0f; --surface: #121316; --surface-2: #17181c; --hair: rgba(255,255,255,.08); --hair-2: rgba(255,255,255,.14);
+      --fg: #ececec; --fg-2: #a3a3ab; --fg-3: #7d7d86; --accent: #f76b15; --ivory: #f3f1eb; --ink: #141518; --ink-2: #4a4a52;
+      --serif: "Instrument Serif", Georgia, serif; --sans: "Geist", ui-sans-serif, system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    img { max-width: 100%; display: block; }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+    .eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+    .display { font-family: var(--serif); font-weight: 400; letter-spacing: -.01em; line-height: 1.02; }
+    h2.display { font-size: clamp(38px, 5vw, 64px); margin: 12px 0 18px; }
+    .lead { font-size: 19px; color: var(--fg-2); max-width: 680px; }
+    section { padding: 110px 0; }
+    .hair-t { border-top: 1px solid var(--hair); }
+
+    /* nav */
+    nav { position: sticky; top: 0; z-index: 10; background: rgba(12,13,15,.82); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hair); }
+    nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+    nav .brand { font-family: var(--serif); font-size: 26px; text-decoration: none; }
+    nav .links { display: flex; gap: 22px; margin-left: auto; font-size: 14px; }
+    nav .links a { color: var(--fg-2); text-decoration: none; }
+    nav .links a:hover { color: var(--fg); }
+    .btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 8px; font-size: 14.5px; text-decoration: none; border: 1px solid var(--hair-2); color: var(--fg); transition: .15s; }
+    .btn:hover { background: var(--surface-2); }
+    .btn.primary { background: var(--fg); color: #0b0b0c; border-color: var(--fg); font-weight: 500; }
+    .btn.primary:hover { background: #fff; }
+    nav .btn { height: 34px; font-size: 13.5px; }
+
+    /* hero */
+    .hero { padding: 96px 0 56px; background: radial-gradient(900px 480px at 78% 0%, #1c1d22 0%, transparent 70%); }
+    .hero h1 { font-size: clamp(54px, 8.2vw, 112px); margin: 18px 0 22px; }
+    .hero h1 i { color: var(--fg-2); }
+    .hero .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+    .figure { margin-top: 64px; border-radius: 12px; overflow: hidden; border: 1px solid var(--hair); background: #000; }
+    .caption { font-size: 13px; color: var(--fg-3); margin-top: 12px; }
+
+    /* funnel */
+    .funnel { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
+    .funnel > div { padding: 34px 26px; border-left: 1px solid var(--hair); }
+    .funnel > div:first-child { border-left: none; }
+    .funnel .n { font-family: var(--serif); font-size: clamp(44px, 5vw, 64px); line-height: 1; }
+    .funnel .l { color: var(--fg-2); font-size: 14.5px; margin-top: 10px; }
+    .funnel .n.accent { color: var(--accent); }
+
+    /* problem */
+    .stats { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 48px; margin-top: 52px; align-items: start; }
+    .stats .n { font-family: var(--serif); font-size: clamp(72px, 9vw, 128px); line-height: .95; }
+    .stats p { color: var(--fg-2); margin: 10px 0 0; }
+    .stats .aside { border-left: 1px solid var(--hair-2); padding-left: 32px; color: var(--fg-2); }
+    .source { font-size: 13px; color: var(--fg-3); margin-top: 40px; }
+
+    /* insight (ivory) */
+    .ivory { background: var(--ivory); color: var(--ink); }
+    .ivory .lead { color: var(--ink-2); }
+    .ivory .eyebrow { color: #9a4a0f; }
+    .signals { display: grid; grid-template-columns: repeat(3, 1fr) 56px 1.25fr; gap: 18px; margin-top: 52px; align-items: stretch; }
+    .signal { background: #e6e2d8; border-radius: 14px; padding: 26px; }
+    .signal .k { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+    .signal .t { font-size: 19px; margin: 10px 0 14px; }
+    .signal .s { font-size: 13.5px; color: var(--ink-2); }
+    .arrow { align-self: center; justify-self: center; font-size: 34px; color: var(--ink); }
+    .together { background: var(--bg); color: var(--fg); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; justify-content: center; }
+    .together .k { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+    .together .t { font-family: var(--serif); font-size: 40px; line-height: 1; margin: 10px 0; }
+    .together .s { color: var(--fg-2); font-size: 14.5px; }
+
+    /* how */
+    .steps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 22px; margin-top: 56px; }
+    .step { border-top: 1px solid var(--hair-2); padding-top: 20px; }
+    .step .no { font-family: var(--mono); color: var(--accent); font-size: 13px; }
+    .step h3 { font-size: 20px; font-weight: 500; margin: 10px 0 8px; }
+    .step p { font-size: 14.5px; color: var(--fg-2); margin: 0; }
+
+    /* features */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 12px; overflow: hidden; margin-top: 56px; }
+    .feature { background: var(--bg); padding: 30px; }
+    .feature h3 { font-size: 18px; font-weight: 500; margin: 0 0 8px; }
+    .feature p { font-size: 14.5px; color: var(--fg-2); margin: 0; }
+
+    /* results */
+    .results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 44px 40px; margin-top: 56px; }
+    .results .n { font-family: var(--serif); font-size: clamp(52px, 6vw, 84px); line-height: 1; }
+    .results .n.accent { color: var(--accent); }
+    .results p { color: var(--fg-2); font-size: 15px; margin: 10px 0 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 56px; font-size: 15px; }
+    th, td { text-align: left; padding: 13px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
+    th { font-weight: 500; color: var(--fg-3); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; }
+    td:first-child { color: var(--fg); padding-right: 24px; width: 34%; }
+    td { color: var(--fg-2); }
+
+    /* data */
+    .two { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+    .two ul { color: var(--fg-2); padding-left: 18px; }
+    .two li { margin: 8px 0; }
+
+    /* journey */
+    .timeline { margin-top: 48px; border-left: 1px solid var(--hair-2); margin-left: 6px; }
+    .tl { position: relative; padding: 0 0 26px 28px; }
+    .tl::before { content: ""; position: absolute; left: -5px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--fg-2); }
+    .tl.key::before { background: var(--accent); }
+    .tl .time { font-family: var(--mono); font-size: 13px; color: var(--fg-3); }
+    .tl .what { color: var(--fg); margin-top: 2px; }
+    .tl .who { font-size: 13.5px; color: var(--fg-3); }
+
+    /* team */
+    .team { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 48px; }
+    .member { border: 1px solid var(--hair); border-radius: 12px; padding: 24px; }
+    .member .name { font-family: var(--serif); font-size: 28px; line-height: 1.05; }
+    .member .role { font-size: 13.5px; color: var(--fg-3); margin-top: 8px; }
+
+    footer { border-top: 1px solid var(--hair); padding: 40px 0 56px; font-size: 13.5px; color: var(--fg-3); }
+    footer .wrap { display: flex; gap: 28px; flex-wrap: wrap; justify-content: space-between; }
+    footer a { color: var(--fg-2); }
+
+    @media (max-width: 980px) {
+      .funnel { grid-template-columns: 1fr 1fr; } .funnel > div:nth-child(3) { border-left: none; } .funnel > div:nth-child(n+3) { border-top: 1px solid var(--hair); }
+      .stats, .two { grid-template-columns: 1fr; } .stats .aside { border-left: none; padding-left: 0; }
+      .signals { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); }
+      .tour { grid-template-columns: repeat(2, 1fr); }
+      .features, .results { grid-template-columns: 1fr 1fr; }
+      .team { grid-template-columns: 1fr 1fr; }
+      nav .links { display: none; }
+      nav .btn { margin-left: auto; }
+    }
+    @media (max-width: 600px) {
+      section { padding: 76px 0; }
+      .features, .results, .steps, .team { grid-template-columns: 1fr; }
+      td:first-child { width: 45%; }
+    }
+  </style>
+  <style>
+    .jtour { counter-reset: step; list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 14px; }
+    .jtour li { counter-increment: step; position: relative; padding: 18px 20px 18px 64px; border: 1px solid var(--hair); border-radius: 12px; background: var(--surface); }
+    .jtour li::before { content: counter(step); position: absolute; left: 20px; top: 16px; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-family: var(--mono); font-size: 14px; background: var(--surface-2); color: var(--accent); }
+    .jtour b { color: var(--fg); font-weight: 600; }
+    .jtour p { margin: 4px 0 0; color: var(--fg-2); font-size: 15.5px; }
+    .kicker { color: var(--fg-3); font-size: 14px; }
+    td small { color: var(--fg-3); }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="index.html">Argus</a>
+      <div class="links"><a href="#tour">Tour</a><a href="#numbers">Numbers</a><a href="#wrong">When it's wrong</a><a href="#privacy">Privacy</a></div>
+      <a class="btn primary" data-live-demo href="console/">Live demo</a>
+      <a class="btn" href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="wrap">
+      <div class="eyebrow">For judges · ARGONYX '26 · Team T14 Lord of the Pings</div>
+      <h1 class="display">Ninety seconds,<br /><i>then ask us anything.</i></h1>
+      <p class="lead">Argus turns the cameras and sensors a site already owns into a handful of ranked, explained incidents, projects where each one is heading, and leaves every decision with a person. Everything below runs on real footage, and every number has its sample size and method next to it.</p>
+    </div>
+  </header>
+
+  <section id="tour" class="hair-t">
+    <div class="wrap">
+      <div class="eyebrow">The tour</div>
+      <h2 class="display">What to click</h2>
+      <p class="kicker">The <a href="console/" data-live-demo>live demo</a> is a real snapshot of the replay at 15:20, bundled with the page. The stage demo adds live footage, replay and uploads.</p>
+      <ol class="jtour">
+        <li><b>Read the top band.</b><p>What needs a decision now, the funnel from every signal to a human decision (1,242 → 20 → 3), and the score against ground truth.</p></li>
+        <li><b>Open the top incident.</b><p>The main camera follows it. The panel shows the brief, the evidence (click a row to replay the moment), and the response progress: signals, opened by Argus, your decision.</p></li>
+        <li><b>Look at "Where this is heading".</b><p>The crime-script stage it has reached and what the next stage would do to its risk, re-scored by the real scorer.</p></li>
+        <li><b>Press "Plan the response".</b><p>How incidents like this unfold, what would change the score (another sensor, night time, a stricter or looser site profile, a dismissal), and every response compared: time to effect, the stage it stops, people affected, disruption. Simulate one, then apply it.</p></li>
+        <li><b>Respond.</b><p>Acknowledge, escalate or dismiss. The decision goes into a hash-chained audit log, and a dismissal teaches Argus to score similar alerts lower here.</p></li>
+        <li><b>On stage: analyse a video.</b><p>Hand us any clip. Argus tracks it, flags threats, and returns a threat assessment under the profile you pick, with a forecast for each incident.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="numbers" class="hair-t">
+    <div class="wrap">
+      <div class="eyebrow">Every number, with n and method</div>
+      <h2 class="display">What we measured, and how</h2>
+      <table>
+        <tr><th>Claim</th><th>Result</th><th>n and method</th></tr>
+        <tr><td>Staged thefts and abandonments caught</td><td><b>4 of 5</b>, 0 false incidents</td><td><small>MEVA, 15 Mar 2018, 14:50–15:20, 6 cameras + GPS. Every staged theft and abandonment MEVA publishes for that window. Ground truth is read only by the evaluator.</small></td></tr>
+        <tr><td>Noise removed</td><td>1,242 events → 20 per-stream alerts → <b>3 incidents</b></td><td><small>Same window. "Per-stream alerts" is what separate camera, door and GPS thresholds would page.</small></td></tr>
+        <tr><td>Security profiles</td><td>Airport 4/5 (+6 on watch) · Campus 4/5 · Park 2/5; <b>0 false in all three</b></td><td><small>Same footage re-scored under each profile.</small></td></tr>
+        <tr><td>Fights</td><td>accuracy <b>74.7%</b>, ROC-AUC 0.82</td><td><small>300 real CCTV clips (Akti et al. 2019), 5-fold CV grouped by source recording (74 recordings). The dataset authors reported 72% on a random split.</small></td></tr>
+        <tr><td>Weapons</td><td>AP50 handgun 0.51, rifle 0.54; 42 of 84 appearances alerted, 14 false alerts in 29 min</td><td><small>3,511 frames from a camera never trained on (Univ. of Seville mock attack). Knives: AP50 0.09, so we don't claim them.</small></td></tr>
+        <tr><td>Door sensor from video</td><td>indoor precision 0.54, recall 0.75</td><td><small>±2 s against human door-open labels, 3 indoor cameras.</small></td></tr>
+        <tr><td>Held-out day</td><td>staged theft missed, 0 false incidents</td><td><small>5 Mar, nothing tuned on it. The bag sat at the frame edge with only its handle visible.</small></td></tr>
+        <tr><td>Live inference</td><td>30 fps, 13–23 ms a frame</td><td><small>YOLO11s at 960 px, FP16, one RTX 5060 laptop GPU.</small></td></tr>
+      </table>
+      <p class="kicker">The misses are reported on purpose: a black purse on a black bench, and a suitcase hidden at the edge of the frame. Both are objects the detector cannot see at rest.</p>
+    </div>
+  </section>
+
+  <section id="wrong" class="hair-t">
+    <div class="wrap">
+      <div class="eyebrow">When the AI is wrong</div>
+      <h2 class="display">A person decides. Always.</h2>
+      <p class="lead">Incidents come from measured rules and a transparent score (severity × confidence × area criticality × corroboration × time of day × feedback), never from a language model. The model only writes the brief and answers questions, and every line it writes is checked against the evidence. We tried an AI second opinion on camera alerts: it threw away four of six real thefts, so it stays out. Forecasts are the same scorer run on real evidence plus one hypothetical signal, and every assumption (guard posts, walking speed, police time) is labelled as one.</p>
+    </div>
+  </section>
+
+  <section id="privacy" class="hair-t">
+    <div class="wrap">
+      <div class="eyebrow">Privacy</div>
+      <h2 class="display">Built to count, not to identify</h2>
+      <table>
+        <tr><th>Data</th><th>What Argus does with it</th></tr>
+        <tr><td>Faces</td><td>No face recognition, no biometrics. People are tracked as anonymous boxes within one camera.</td></tr>
+        <tr><td>Phone locations</td><td>Used only as counts per area (crowding, people leaving). Never linked to the people on camera, never shown by identity. The demo GPS is MEVA's consented actor data.</td></tr>
+        <tr><td>Decisions</td><td>Every action is logged with role and time in an append-only, hash-chained log, so it can't be edited quietly.</td></tr>
+        <tr><td>Footage</td><td>Stays on the site's machine. The demo runs offline on one laptop.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <footer class="hair-t"><div class="wrap"><p class="kicker">MEVA dataset: Kitware Inc. / IARPA, CC-BY-4.0. Incidents in MEVA are staged by actors among ordinary passers-by.</p></div></footer>
+  <script>
+    if (!/github\.io$/.test(location.hostname)) document.querySelectorAll('[data-live-demo]').forEach((a) => { a.href = location.protocol === 'file:' ? 'http://localhost:8000/' : '/' })
+  </script>
+</body>
+</html>

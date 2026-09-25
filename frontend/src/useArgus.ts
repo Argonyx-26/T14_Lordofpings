@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { API, MOCK, WS_URL } from './lib'
-import type { ArgusEvent, Clock, Incident, SiteConfigView, Snapshot, Summary, Tick } from './types'
+import type { ArgusEvent, Clock, Forecast, Incident, SiteConfigView, Snapshot, Summary, Tick } from './types'
 
 export interface ArgusState {
   config: SiteConfigView | null
@@ -11,6 +11,7 @@ export interface ArgusState {
   connected: boolean
   mock: boolean
   mockEvidence: Record<string, ArgusEvent[]>
+  mockForecasts: Record<string, Forecast>
 }
 
 type Action =
@@ -35,6 +36,7 @@ export function reducer(s: ArgusState, a: Action): ArgusState {
         incidents: Object.fromEntries(a.snap.incidents.map((i) => [i.incident_id, i])),
         events: a.snap.recent_events.slice(-MAX_EVENTS),
         mockEvidence: a.snap.evidence ?? s.mockEvidence,
+        mockForecasts: a.snap.forecasts ?? s.mockForecasts,
       }
     case 'tick': {
       // keep the same object when nothing changed, so views memoised on it don't recompute four times a second
@@ -50,7 +52,7 @@ export function reducer(s: ArgusState, a: Action): ArgusState {
 }
 
 export const initial: ArgusState = {
-  config: null, clock: null, summary: null, incidents: {}, events: [], connected: false, mock: MOCK, mockEvidence: {},
+  config: null, clock: null, summary: null, incidents: {}, events: [], connected: false, mock: MOCK, mockEvidence: {}, mockForecasts: {},
 }
 
 export function useArgus() {
@@ -111,5 +113,15 @@ export function useArgus() {
     [state.mockEvidence],
   )
 
-  return { state, evidenceFor }
+  /** Where an incident is heading (backend/argus/forecast.py); in mock mode, the forecast exported with the snapshot. */
+  const forecastFor = useCallback(
+    async (id: string): Promise<Forecast | null> => {
+      if (MOCK) return state.mockForecasts[id] ?? null
+      const r = await fetch(`${API}/api/incidents/${id}/forecast`)
+      return r.ok ? r.json() : null
+    },
+    [state.mockForecasts],
+  )
+
+  return { state, evidenceFor, forecastFor }
 }

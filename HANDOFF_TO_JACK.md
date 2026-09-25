@@ -270,3 +270,15 @@ events.
    - alt: "The Argus console: situation band and signal funnel, the bus-station camera with detections, ranked incidents, a to-scale site map, and the incident's brief and response progress"
    - caption: "The Argus console at 15:18 in the MEVA replay: the bus-station incident is on the main camera, with its brief, recommended action and response progress."
 6. Commit and push.
+
+## 14. Update 23:15: forecasting, threat assessment for uploads, README / CI / Pages
+
+Pushed by Tanush (nothing in `backend/argus/vision/` changed). After `git pull`, `scripts\run_demo.ps1 -Prepare` rebuilds the console.
+
+- **"Where this is heading" + response planner** (`backend/argus/forecast.py`, `GET /api/incidents/{id}/forecast`): crime-script stage, what would change the score (the real scorer on real evidence plus one hypothetical signal), and a course-of-action comparison you can simulate and apply. Guard posts and police/medical times are assumptions in `site.yaml → response`; check that the two guard posts look sensible on the site map.
+- **Analyse a video is now a threat assessment**: verdict, risk over the clip, a profile switch (Airport / School / Park, re-assessed instantly via `GET /api/uploads/{id}/assess`), and a forecast + planner per incident.
+- **Please capture one screenshot for the README**: open your analysed `2018-03-15.15-15-00.15-20-00.bus.G331.avi` upload (the one with incident 72) at 1600×1000 with `http://localhost:8000/?upload=<job id>`, save it as `docs/readme/upload.png`, and add under point 5 of "What ARGUS does" in `README.md`:
+  `<p align="center"><img src="docs/readme/upload.png" alt="Threat assessment of an uploaded bus-station clip" width="100%" /></p>`
+  (On my Mac the only real clip was a 45 s excerpt with nothing staged in it, which correctly came back "No threat found".)
+- **CI** (`.github/workflows/ci.yml`): backend pytest + frontend lint, types, tests, build on every push.
+- **Pages** (`.github/workflows/pages.yml`): deploys `site/` and the console's offline demo to `argonyx-26.github.io/T14_Lordofpings/` once a repo **admin** enables Pages (Settings → Pages → Source: GitHub Actions). Neither of us has admin; ask the organisers.

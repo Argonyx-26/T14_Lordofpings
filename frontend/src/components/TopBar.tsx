@@ -48,7 +48,10 @@ export function TopBar({ config, summary, connected, mock, role, onRole, onAnaly
       </button>
 
       {mock ? (
-        <span className="chip" style={{ color: 'var(--color-high)' }}>Mock data</span>
+        <span className="chip" style={{ color: 'var(--color-watch)' }}
+          title="A real snapshot of the MEVA replay at 15:20, bundled with the page. Live footage, replay and uploads need the backend.">
+          Offline demo · real snapshot
+        </span>
       ) : (
         <span className="flex items-center gap-1.5 text-[11.5px] text-[var(--color-fg-2)]" role="status">
           <span className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-[var(--color-ok)]' : 'bg-[var(--color-crit)] breathe'}`} />
