@@ -1,4 +1,4 @@
-"""Second, bag-only detection pass: yolo11m @1280, low confidence -> data/tracks/<stem>.bags.jsonl
+"""Second, valuables-only detection pass (bags, laptops, phones): yolo11m @1280, low confidence -> data/tracks/<stem>.bags.jsonl
 
 Small bags on the floor (e.g. G421 theft 1) sit at conf 0.1-0.2, below what ByteTrack will start a
 track on, so this pass writes raw per-frame detections and rules.py links them itself.
@@ -15,7 +15,7 @@ from ultralytics import YOLO
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 VIDEO_DIR = ROOT / "data" / "meva" / "video"
 TRACK_DIR = ROOT / "data" / "tracks"
-BAGS = [24, 26, 28]
+BAGS = [24, 26, 28, 63, 67]  # backpack, handbag, suitcase, laptop, cell phone (portable valuables)
 VID_STRIDE = 2
 
 

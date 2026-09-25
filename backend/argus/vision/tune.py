@@ -17,7 +17,7 @@ BAG_TYPES = ("custody_change", "abandoned_object")
 
 events = [json.loads(l) for l in (EVENTS_DIR / "cctv.jsonl").open()]
 bag = [e for e in events if e["type"] in BAG_TYPES]
-tracked = {p.name.removesuffix(".jsonl") for p in TRACKS_DIR.glob("*.jsonl") if not p.name.endswith(".bags.jsonl")}
+tracked = {p.name.removesuffix(".jsonl") for p in TRACKS_DIR.glob("*.jsonl") if p.name.count(".") == 5}
 used = set()
 hits = n = 0
 for g in load_ground_truth(ANNOTATION_DIR, site()):

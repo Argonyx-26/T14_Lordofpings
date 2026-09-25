@@ -25,8 +25,9 @@ from argus.vision.common import EVENTS_DIR, FPS, TRACKS_DIR, camera_cfg, clip_in
 PERSON = 0
 FRAME_W, FRAME_H = 1920, 1072
 VEHICLES = {2, 3, 5, 7}
-BAGS = {24, 26, 28}
-CLS_NAME = {0: "person", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck", 24: "backpack", 26: "handbag", 28: "suitcase"}
+BAGS = {24, 26, 28, 63, 67}  # portable valuables: backpack, handbag, suitcase, laptop, cell phone
+CLS_NAME = {0: "person", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck", 24: "backpack", 26: "handbag", 28: "suitcase",
+            63: "laptop", 67: "cell phone"}
 
 # Tunables (seconds are wall-clock seconds of footage)
 ABANDON_S = 15.0          # owner away from a resting bag this long -> abandoned_object
@@ -34,6 +35,8 @@ BAG_STILL = 0.6           # bag counts as stationary if it drifts < this many ba
 CUSTODY_MIN_S = 1.0       # carrier != owner for at least this long
 OWNER_WINDOW_S = 2.0      # owner = most frequent nearest person in the bag's first N s
 NEAR = 0.6                # person "near" a bag if box distance < NEAR * person height
+TAKEN_REST_S = 5.0        # an object resting this long that vanishes while a non-owner stands at it
+TAKEN_GONE_S = 15.0       # ...and is not seen at that spot again for this long -> taken
 RUN_SPEED = 1.8           # body-heights per second
 RUN_MIN_S = 1.0
 DOOR_COOLDOWN_S = 3.0
@@ -100,7 +103,7 @@ def iou(a, b) -> float:
     return inter / max((a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter, 1e-6)
 
 
-def link_bag_dets(path: pathlib.Path, ignore: list[Polygon]) -> dict[int, Track]:
+def link_bag_dets(path: pathlib.Path, ignore: list[Polygon]) -> tuple[dict[int, Track], dict]:
     """Low-confidence bag detections (run_bags.py) -> tracklets by greedy centre matching."""
     by_frame = defaultdict(list)
     with path.open() as f:
@@ -148,7 +151,7 @@ def link_bag_dets(path: pathlib.Path, ignore: list[Polygon]) -> dict[int, Track]
             tid = 100000 + n
             out[tid] = Track(tid, Counter(tr["cls"]).most_common(1)[0][0], np.array(tr["frames"]),
                              np.array(tr["boxes"], float), float(np.mean(tr["conf"])), [tid])
-    return out
+    return out, by_frame
 
 
 def chain_bags(tracks: dict[int, Track]) -> list[Track]:
@@ -187,8 +190,9 @@ class ClipRules:
         bags_path = track_path.with_name(f"{self.stem}.bags.jsonl")
         ignore = [Polygon(p) for p in cfg.get("bag_ignore") or []]
         if bags_path.exists():  # prefer the dedicated low-conf bag pass
-            self.bag_tracks = link_bag_dets(bags_path, ignore)
+            self.bag_tracks, self.bag_dets = link_bag_dets(bags_path, ignore)
         else:
+            self.bag_dets = None
             self.bag_tracks = {k: t for k, t in self.tracks.items() if t.cls in BAGS
                                and not any(p.contains(Point(*t.centers[0])) for p in ignore)}
         # frame -> [(tid, box)] for persons
@@ -254,7 +258,18 @@ class ClipRules:
         """Track ends at a door or walking out of the frame edge (not just lost mid-scene)."""
         x1, y1, x2, y2 = t.boxes[-1]
         at_edge = x1 < 40 or x2 > FRAME_W - 40 or y2 > FRAME_H - 20
-        return at_edge or self.leaves_via_door(t)
+        if at_edge:  # must be walking out, not sitting at the edge of the frame and then occluded
+            # boxes get clipped at the edge, so measure the side of the box facing away from it
+            k = int(np.searchsorted(t.frames, t.frames[-1] - 1.5 * FPS))
+            b0, b1 = t.boxes[k], t.boxes[-1]
+            if x2 > FRAME_W - 40:
+                moved = b1[0] - b0[0]
+            elif x1 < 40:
+                moved = b0[2] - b1[2]
+            else:
+                moved = b1[1] - b0[1]
+            at_edge = moved / max(t.heights[k], 1) > 0.25
+        return bool(at_edge) or self.leaves_via_door(t)
 
     def door_names(self):
         return [k for k in self.polys if k.startswith("door")]
@@ -292,6 +307,7 @@ class ClipRules:
         for bag in chain_bags(self.bag_tracks):
             if len(bag.frames) < 8:
                 continue
+            emitted_custody = False
             c, h = bag.centers, np.maximum(bag.heights, 8)
             near = [self.nearest_person(int(f), p) for f, p in zip(bag.frames, c)]
             near_tid = [n[0] if n[1] < NEAR else None for n in near]
@@ -336,11 +352,17 @@ class ClipRules:
                                       object=CLS_NAME[bag.cls], owner=f"{self.cam}:t{owner}",
                                       carrier=f"{self.cam}:t{carrier}", carrier_exits_via_door=exits,
                                       bag_tracks=bag.chain)
+                            emitted_custody = True
                             break
                     elif ok:
                         run_start, run_tid = bag.frames[i], carrier
                     else:
                         run_start, run_tid = None, None
+
+            # --- custody_change (taken): a resting object vanishes while a non-owner stands at it ---
+            # (thefts where the object disappears into a hand/pocket and is not tracked while carried)
+            if self.bag_dets is not None and not emitted_custody:
+                self.object_taken(bag, c, h, near_tid)
 
             # --- abandoned_object: bag at rest, and the person who set it down has walked away ---
             # (strangers sitting next to it don't count as attending it)
@@ -372,6 +394,78 @@ class ClipRules:
                             break
                     else:
                         away_since = None
+
+    def object_taken(self, bag: Track, c, h, near_tid):
+        end = int(bag.frames[-1])
+        last_frame = max(self.by_frame) if self.by_frame else end
+        if end > last_frame - TAKEN_GONE_S * FPS:
+            return  # clip ends too soon to know it's gone
+        # resting span at the end of the track
+        s_ = len(c) - 1
+        while s_ > 0 and np.hypot(*(c[s_ - 1] - c[-1])) < BAG_STILL * h[-1]:
+            s_ -= 1
+        # it must really be gone: no detection of any valuable at that spot afterwards
+        for f in range(end + 2, int(end + TAKEN_GONE_S * FPS), 2):
+            for d in self.bag_dets.get(f, []):
+                b = d["xyxy"]
+                if np.hypot((b[0] + b[2]) / 2 - c[-1][0], (b[1] + b[3]) / 2 - c[-1][1]) < h[-1]:
+                    return
+        # taker: the person at the object when it vanished
+        taker = None
+        for f in range(end - 30, end + 31, 2):
+            tid, d, _ = self.nearest_person(f, c[-1])
+            if tid is not None and d < NEAR:
+                taker = tid
+                if f >= end:
+                    break
+        if taker is None:
+            return
+        # when did the object really arrive at this spot? (its track may have broken; walk back through raw dets)
+        def here(fr):
+            for d in self.bag_dets.get(fr, []):
+                b = d["xyxy"]
+                if np.hypot((b[0] + b[2]) / 2 - c[-1][0], (b[1] + b[3]) / 2 - c[-1][1]) < max(h[-1], 20):
+                    return True
+            return False
+        first, f, miss = int(bag.frames[s_]), int(bag.frames[s_]), 0
+        while f > 0 and miss < 6 * FPS:  # people standing in front hide it for a few seconds
+            f -= 2
+            if here(f):
+                first, miss = f, 0
+            else:
+                miss += 2
+        if end - first < TAKEN_REST_S * FPS:
+            return
+        # worn / held while its wearer stood still: centre inside someone's box most of the time
+        inside = [box_dist(c[q], self.nearest_person(int(bag.frames[q]), c[q])[2]) == 0
+                  for q in range(s_, len(c)) if self.nearest_person(int(bag.frames[q]), c[q])[2] is not None]
+        if inside and np.mean(inside) > 0.6:
+            return
+        owner = None
+        for f in range(first, first + int(FPS), 2):
+            tid, d, _ = self.nearest_person(f, c[-1])
+            if tid is not None and d < NEAR:
+                owner = tid
+                break
+        if owner is not None and taker in self.successors(owner):
+            return  # owner took it back
+        # an owner standing nearby (distracted, back turned) can still be robbed; just less certain
+        owner_near = owner is not None and not self.person_away(self.successors(owner), end, c[-1])
+        chain = self.successors(taker)
+        tt = self.persons[chain[-1]]
+        k = int(np.searchsorted(tt.frames, end + 5 * FPS))
+        k0 = int(np.searchsorted(self.persons[taker].frames, end))
+        t0 = self.persons[taker]
+        moved = np.hypot(*(tt.feet[min(k, len(tt.feet) - 1)] - t0.feet[min(k0, len(t0.feet) - 1)])) / max(t0.heights[0], 1)
+        leaves = self.leaves_scene(tt)
+        if moved < 1.0 and not leaves:
+            return  # taker stays put -> probably just occluding it
+        exits = self.leaves_via_door(tt)
+        conf = (0.65 if exits else 0.45) - (0.1 if owner_near else 0.0)
+        self.emit("custody_change", end, 0.6 if exits else 0.45, conf, bag.tid, bag.boxes[-1],
+                  mode="taken", owner_nearby=owner_near, object=CLS_NAME[bag.cls], owner=f"{self.cam}:t{owner}" if owner is not None else None,
+                  carrier=f"{self.cam}:t{taker}", carrier_exits_via_door=exits,
+                  rested_s=round(float(end - first) / FPS, 1), bag_tracks=bag.chain)
 
     def vehicle_in_ped_zone(self):
         if "walkway" not in self.polys:
@@ -453,5 +547,5 @@ def main(paths: list[pathlib.Path]):
 
 
 if __name__ == "__main__":
-    args = [pathlib.Path(a) for a in sys.argv[1:]] or sorted(p for p in TRACKS_DIR.glob("*.jsonl") if not p.name.endswith(".bags.jsonl"))
+    args = [pathlib.Path(a) for a in sys.argv[1:]] or sorted(p for p in TRACKS_DIR.glob("*.jsonl") if p.name.count(".") == 5)  # <stem>.jsonl only
     main(args)
