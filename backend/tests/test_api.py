@@ -27,3 +27,14 @@ def test_console_is_served_when_built():
         r = client.get("/")
         assert r.status_code == 200 and "<div id=\"root\">" in r.text
         assert client.get("/api/health").json()["ok"] is True
+
+
+def test_project_site_is_served():
+    from argus import settings
+    if not (settings.REPO_ROOT / "site" / "index.html").exists():
+        import pytest
+        pytest.skip("no site")
+    with TestClient(app) as client:
+        r = client.get("/site/")
+        assert r.status_code == 200 and "We notice sooner" in r.text
+        assert client.get("/site/fonts/geist-latin-wght-normal.woff2").status_code == 200

@@ -64,7 +64,7 @@ backend/tests/   pytest suite (runs against the real 14:50–15:20 MEVA window w
 frontend/        React + Vite + Tailwind console
 scripts/         data download helpers
 docs/            team handoff and plans
-site/            public project website (deploy guide: site/README.md)
+site/            project website, served at http://localhost:8000/site/ (see site/README.md)
 ```
 
 ## Run the demo (Windows laptop)

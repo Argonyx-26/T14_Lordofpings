@@ -89,4 +89,5 @@ if (-not $health.by_source.cctv) {
 }
 
 if (-not $NoBrowser) { Start-Process "http://localhost:8000" }
+Write-Host "Project website: http://localhost:8000/site/" -ForegroundColor Cyan
 Write-Host "`nARGUS is running. Stop it with: powershell -ExecutionPolicy Bypass -File scripts\stop_demo.ps1" -ForegroundColor Cyan

@@ -1,39 +1,25 @@
 # Argus project website
 
-One static page (`index.html` + `assets/`), no build step. It's the public showcase for the ARGONYX '26
-bonus points: hosted site + Raah analytics + LinkedIn post.
+One static page (`index.html` + `assets/` + `fonts/`), no build step and no internet needed: the fonts are
+bundled. It is not deployed anywhere; it runs on the demo laptop.
 
-## 1. Deploy (5 minutes, pick one)
+## Open it on the demo laptop
 
-**Vercel:** vercel.com → Add New → Project → import `Argonyx-26/T14_Lordofpings` → **Root Directory: `site`** →
-Framework preset: **Other** → Deploy. You get `https://<name>.vercel.app`.
+- With the demo running (`scripts\run_demo.ps1`): **http://localhost:8000/site/** (the backend serves it
+  next to the console at http://localhost:8000).
+- Without the demo: double-click `site\index.html`.
 
-**Cloudflare Pages:** dash.cloudflare.com → Workers & Pages → Create → Pages → connect the repo →
-Build command: *(empty)* → **Build output directory: `site`** → Deploy.
-
-Every push to `main` redeploys automatically.
-
-## 2. Turn on Raah analytics
-
-1. Sign up at https://raah.dev, create a project with the domain Vercel/Cloudflare gave you.
-2. In `site/index.html`, replace `RAAH_PROJECT_ID` with the project ID and `YOUR-DOMAIN` with that domain
-   (the `<script ... src="https://t.raah.dev/script.js">` line in `<head>`).
-3. If Raah's dashboard offers an official badge snippet, paste it in place of the "Analytics by Raah" link in
-   the footer.
-4. Also make `og:image` an absolute URL (`https://<your-domain>/assets/detections-bus-station.jpg`) so the
-   LinkedIn post shows the preview image. Commit and push; the site redeploys.
-
-## 3. Before posting
+## Before showing it
 
 - Replace `assets/console-preview.jpg` with a real screenshot of the console on the demo laptop (full replay
-  loaded, an incident open), `Win + Shift + S`, saved at about 1536 px wide. Then remove "This preview uses
-  the console's sample-data mode" from the caption under it.
+  loaded, an incident open): `Win + Shift + S`, saved at about 1536 px wide. Then remove "This preview uses the
+  console's sample-data mode" from the caption under it in `index.html`.
 - Check the team roles in the Team section.
 
-## 4. LinkedIn post (draft)
+## LinkedIn post (optional draft)
 
-Tag: **Studio1** (Raah's LinkedIn), **School of Computer Science and Engineering, RV University**,
-**Viksha – The Coding Club**, **ECell, RV University**, **IEEE RVU**, and your teammates.
+Tag: **Studio1**, **School of Computer Science and Engineering, RV University**, **Viksha – The Coding Club**,
+**ECell, RV University**, **IEEE RVU**, and your teammates.
 
 > We built Argus in 24 hours at #ARGONYX26.
 >
@@ -45,7 +31,6 @@ Tag: **Studio1** (Raah's LinkedIn), **School of Computer Science and Engineering
 > 1,242 raw events reduced to 3 explained incidents. Detection runs live at 30 fps on one laptop GPU, every score
 > shows its working, and you can upload any video to analyse it on the spot.
 >
-> Project: https://<your-domain>
 > Code: https://github.com/Argonyx-26/T14_Lordofpings
 >
 > With [teammates] · @Studio1 · @RV University SoCSE · @Viksha · @ECell RVU · @IEEE RVU

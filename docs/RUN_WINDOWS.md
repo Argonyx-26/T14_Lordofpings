@@ -47,6 +47,10 @@ Stop everything:
 powershell -ExecutionPolicy Bypass -File scripts\stop_demo.ps1
 ```
 
+## Project website
+
+With the demo running, the project page is at **http://localhost:8000/site/** (offline, fonts bundled).
+
 ## Analyse any video
 
 In the console, **Analyse a video** (top right) → drop any MP4/AVI/MOV/MKV/WebM (up to 2 GB). Argus runs the
