@@ -30,7 +30,7 @@ Tag: **Studio1**, **School of Computer Science and Engineering, RV University**,
 > incident when independent signals agree about the same place and the same minute.
 >
 > Measured on real multi-camera footage (the MEVA dataset): 4 of 5 staged incidents caught, 0 false incidents, and
-> 1,242 raw events reduced to 3 explained incidents. Detection runs live at 30 fps on one laptop GPU, every score
+> 314 raw events reduced to 3 explained incidents. Detection runs live at 30 fps on one laptop GPU, every score
 > shows its working, and you can upload any video to analyse it on the spot.
 >
 > Code: https://github.com/Argonyx-26/T14_Lordofpings

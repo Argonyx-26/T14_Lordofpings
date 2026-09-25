@@ -46,7 +46,7 @@ SCHEMA = {"type": "OBJECT", "properties": {"verdict": {"type": "STRING", "enum":
 
 
 def claim(e: dict) -> str:
-    a, obj = e["attrs"], e["attrs"].get("object", "object")
+    obj = e["attrs"].get("object", "object")
     if e["type"] == "abandoned_object":
         return f"a {obj} was left unattended and the person who brought it has walked away."
     return f"a {obj} that was resting or belonged to someone else was picked up and carried off by another person."

@@ -3,29 +3,21 @@
 On a real campus this stream would be Wi-Fi access-point associations. GPS loggers are not linked
 to the people seen on camera, so fusion uses these events by area and time, never by identity.
 """
-import math
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 
+from argus import settings
 from argus.config import SiteConfig
 from argus.ingest.rates import group_times, rate_anomalies
-from argus.schema import Entity, Event
+from argus.schema import Event
 
 NS = {"g": "http://www.topografix.com/GPX/1/0"}
-FAST_EXIT_MPS = 2.5   # faster than a brisk walk (~1.4 m/s)
 
 
 def _epoch(iso: str) -> float:
     return datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp()
-
-
-def _metres(lat1, lon1, lat2, lon2) -> float:
-    r = 6_371_000
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dp, dl = p2 - p1, math.radians(lon2 - lon1)
-    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-    return 2 * r * math.asin(math.sqrt(a))
 
 
 def load_fixes(gps_dir: Path, start_t: float | None = None, end_t: float | None = None) -> dict[str, list[tuple]]:
@@ -45,6 +37,23 @@ def load_fixes(gps_dir: Path, start_t: float | None = None, end_t: float | None 
     return fixes
 
 
+@lru_cache(maxsize=2)
+def _cached_fixes(gps_dir: str) -> dict[str, list[tuple]]:
+    return load_fixes(Path(gps_dir))
+
+
+def phones_in_area(cfg: SiteConfig, area: str, t: float, window_s: float = 60.0, gps_dir: Path | None = None) -> int | None:
+    """How many phones had a fix inside `area` within `window_s` of t: a count and nothing else (no id, no route).
+    None when there is no GPS, or the area has no outline to count in (an uploaded clip, the stage camera)."""
+    d = gps_dir or settings.GPS_DIR
+    if area not in cfg.area_shapes or not d.exists():
+        return None
+    fixes = _cached_fixes(str(d))
+    if not fixes:
+        return None
+    return sum(any(abs(p[0] - t) <= window_s and cfg.area_at(p[1], p[2]) == area for p in pts) for pts in fixes.values())
+
+
 def load_device_events(gps_dir: Path, cfg: SiteConfig, start_t: float | None = None,
                        end_t: float | None = None) -> list[Event]:
     """Privacy by design: ARGUS never follows a phone. Positions are reduced, in memory, to how many phones are in
@@ -57,13 +66,13 @@ def load_device_events(gps_dir: Path, cfg: SiteConfig, start_t: float | None = N
 
     for dev, pts in fixes.items():
         areas = _debounced_areas([cfg.area_at(lat, lon) for _, lat, lon in pts])
-        prev_area, prev = None, None
-        for (t, lat, lon), area in zip(pts, areas):
+        prev_area = None
+        for (t, _lat, _lon), area in zip(pts, areas):
             if area:
                 presence.append((area, t, dev))
-            if prev is not None and area != prev_area and prev_area:
+            if area != prev_area and prev_area:
                 exits.append((prev_area, t))
-            prev_area, prev = area, (t, lat, lon)
+            prev_area = area
 
     events.extend(_occupancy_anomalies(presence, cfg, start_t, end_t))
     events.extend(_exodus_anomalies(exits, cfg, start_t, end_t))

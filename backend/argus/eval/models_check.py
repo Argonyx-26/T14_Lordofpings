@@ -45,7 +45,6 @@ def frame(clip: str, second: float):
 def main() -> int:
     from ultralytics import YOLO
     bus = frame("2018-03-15.15-15-00.15-20-00.bus.G331", 200)          # the staged abandoned backpack is on the floor
-    empty = frame("2018-03-15.14-50-00.14-55-00.school.G336", 1)
 
     @check("yolo11s  people + bags (tracking)")
     def _():

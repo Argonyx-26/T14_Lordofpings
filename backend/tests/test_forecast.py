@@ -4,6 +4,7 @@ from argus.fusion.engine import FusionEngine
 from argus.fusion.score import score_incident
 from argus.schema import Entity, Event
 from argus.uploads import assess
+from tests.conftest import needs_data
 
 T0 = 1521140000.0   # 14:53:20 local, daytime
 
@@ -108,3 +109,13 @@ def test_upload_assessment_has_a_verdict_timeline_and_forecasts(cfg):
     assert a["forecasts"][iid]["script"]["id"] == "theft"
     quiet = assess([ev(3, "cctv", "occupancy", 0.05, area="upload")], None)
     assert quiet["verdict"]["level"] == "clear" and quiet["incidents"] == []
+
+
+@needs_data
+def test_people_in_area_counts_gps_fixes_when_the_log_has_no_per_phone_events(cfg):
+    """MEVA's GPS reaches ARGUS only as counts (ingest/gps.py), so the planner counts phones from the fixes."""
+    from argus.ingest import demo_window
+    start, _ = demo_window(cfg)
+    n = people_in_area("bus_station", [ev(1, "cctv", "running", 0.35)], start + 900, cfg)
+    assert isinstance(n, int) and n > 0
+    assert people_in_area("live", [], start + 900, cfg) is None          # no outline to count in

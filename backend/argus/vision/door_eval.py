@@ -15,7 +15,6 @@ from argus.config import site
 from argus.eval.evaluate import DOOR_TOL_S
 from argus.ingest.groundtruth import load_door_truth
 from argus.vision import rules
-from argus.vision.common import camera_cfg
 
 DOOR_CAMS = ("G331", "G419", "G420", "G421", "G638")
 

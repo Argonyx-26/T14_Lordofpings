@@ -6,7 +6,7 @@
   <title>Argus for judges: the 90-second tour and every number</title>
   <meta name="description" content="Argus fuses camera analytics, door activity and device location into a handful of ranked, explained incidents for security control rooms. Built at ARGONYX '26 by Lord of the Pings." />
   <meta property="og:title" content="Argus: We don't watch more. We notice sooner." />
-  <meta property="og:description" content="Situational awareness for security control rooms, measured on real multi-camera footage: 4 of 5 staged incidents caught, 0 false incidents, 99.8% of events never reach a human." />
+  <meta property="og:description" content="Situational awareness for security control rooms, measured on real multi-camera footage: 4 of 5 staged incidents caught, 0 false incidents, 99% of events never reach a human." />
   <meta property="og:image" content="assets/detections-bus-station.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230c0d0f'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%23f76b15' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23ececec'/%3E%3C/svg%3E" />
@@ -184,7 +184,7 @@
       <h2 class="display">What to click</h2>
       <p class="kicker">The <a href="console/" data-live-demo data-raah-event="open_console">live demo</a> is a real snapshot of the replay at 15:20, bundled with the page. The stage demo adds live footage, replay and uploads.</p>
       <ol class="jtour">
-        <li><b>Read the top band.</b><p>What needs a decision now, the funnel from every signal to a human decision (1,242 → 20 → 3), and the score against ground truth.</p></li>
+        <li><b>Read the top band.</b><p>What needs a decision now, the funnel from every signal to a human decision (314 → 20 → 3), and the score against ground truth.</p></li>
         <li><b>Open the top incident.</b><p>The main camera follows it. The panel shows the brief, the evidence (click a row to replay the moment), and the response progress: signals, opened by Argus, your decision.</p></li>
         <li><b>Look at "Where this is heading".</b><p>The crime-script stage it has reached and what the next stage would do to its risk, re-scored by the real scorer.</p></li>
         <li><b>Press "Plan the response".</b><p>How incidents like this unfold, what would change the score (another sensor, night time, a stricter or looser site profile, a dismissal), and every response compared: time to effect, the stage it stops, people affected, disruption. Simulate one, then apply it.</p></li>
@@ -202,10 +202,10 @@
       <table>
         <tr><th>Claim</th><th>Result</th><th>n and method</th></tr>
         <tr><td>Staged thefts and abandonments caught</td><td><b>4 of 5</b>, 0 false incidents</td><td><small>MEVA, 15 Mar 2018, 14:50–15:20, 6 cameras + GPS. Every staged theft and abandonment MEVA publishes for that window. Ground truth is read only by the evaluator.</small></td></tr>
-        <tr><td>Noise removed</td><td>1,242 events → 20 per-stream alerts → <b>3 incidents</b></td><td><small>Same window. "Per-stream alerts" is what separate camera, door and GPS thresholds would page.</small></td></tr>
+        <tr><td>Noise removed</td><td>314 events → 20 per-stream alerts → <b>3 incidents</b></td><td><small>Same window. "Per-stream alerts" is what separate camera, door and GPS thresholds would page.</small></td></tr>
         <tr><td>Security profiles</td><td>Airport 4/5 (+6 on watch) · Campus 4/5 · Park 2/5; <b>0 false in all three</b></td><td><small>Same footage re-scored under each profile.</small></td></tr>
         <tr><td>Fights</td><td>accuracy <b>76.7%</b>, ROC-AUC 0.854; 87 of 150 fights at the pipeline threshold, 12 false (precision 0.88)</td><td><small>300 real CCTV clips (Akti et al. 2019), 5-fold CV grouped by source recording (74 recordings); body pose fused with a pretrained surveillance VideoMAE. The dataset authors reported 72% on a random split.</small></td></tr>
-        <tr><td>Weapons</td><td>AP50 handgun 0.51, rifle 0.54; 42 of 84 appearances alerted, 14 false alerts in 29 min</td><td><small>3,511 frames from a camera never trained on (Univ. of Seville mock attack). Knives: AP50 0.09, so we don't claim them.</small></td></tr>
+        <tr><td>Weapons</td><td>46 of 84 appearances alerted, 7 false alerts in 29 min (v2 detector); a vision-model verifier cuts false alarms on ordinary CCTV from 72 to 6 of 149 clips</td><td><small>3,511 frames from a camera never trained on (Univ. of Seville mock attack). Knives: AP50 0.09, so we don't claim them.</small></td></tr>
         <tr><td>Door sensor from video</td><td>indoor precision 0.54, recall 0.75</td><td><small>±2 s against human door-open labels, 3 indoor cameras.</small></td></tr>
         <tr><td>Held-out day</td><td>staged theft missed, 0 false incidents</td><td><small>5 Mar, nothing tuned on it. The bag sat at the frame edge with only its handle visible.</small></td></tr>
         <tr><td>Live inference</td><td>30 fps, 13–23 ms a frame</td><td><small>YOLO11s at 960 px, FP16, one RTX 5060 laptop GPU.</small></td></tr>
@@ -229,7 +229,7 @@
       <table>
         <tr><th>Data</th><th>What Argus does with it</th></tr>
         <tr><td>Faces</td><td>No face recognition, no biometrics. People are tracked as anonymous boxes within one camera.</td></tr>
-        <tr><td>Phone locations</td><td>Used only as counts per area (crowding, people leaving). Never linked to the people on camera, never shown by identity. The demo GPS is MEVA's consented actor data.</td></tr>
+        <tr><td>Phone locations</td><td>Used only as counts per area (crowding, people leaving). Argus never follows a phone: positions become per-area counts in memory, no event carries a device id, and nothing about one phone is stored, shown or sent to a model. Never linked to the people on camera. The demo GPS is MEVA's consented actor data.</td></tr>
         <tr><td>Decisions</td><td>Every action is logged with role and time in an append-only, hash-chained log, so it can't be edited quietly.</td></tr>
         <tr><td>Footage</td><td>Stays on the site's machine. The demo runs offline on one laptop.</td></tr>
       </table>

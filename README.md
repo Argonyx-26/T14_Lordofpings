@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/readme/banner.svg" alt="ARGUS: We don't watch more. We notice sooner. 1,242 signals, 20 per-stream alerts, 3 incidents, 1 person decides." width="100%" />
+  <img src="docs/readme/banner.svg" alt="ARGUS: We don't watch more. We notice sooner. 314 signals, 20 per-stream alerts, 3 incidents, 1 person decides." width="100%" />
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 ---
 
-In thirty minutes of one ordinary afternoon, a school, its cafe, a plaza and a bus station produced **1,242 signals** from cameras, doors and people's phones. Separate systems watching each stream would have paged a guard **20 times**. Hidden among them: a bag stolen from a cafe table, then another, then a suitcase taken at the bus station and a package left behind on the platform.
+In thirty minutes of one ordinary afternoon, a school, its cafe, a plaza and a bus station produced **314 signals** from cameras, doors and people's phones (phones counted per area, never one by one). Separate systems watching each stream would have paged a guard **20 times**. Hidden among them: a bag stolen from a cafe table, then another, then a suitcase taken at the bus station and a package left behind on the platform.
 
 **Three things needed a person. ARGUS found them, explained them, and showed where each one was heading.**
 
@@ -45,12 +45,14 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 | | |
 |---|---|
 | **Staged incidents caught** | **4 of 5**, with **0 false incidents** (MEVA, 30 min, 6 cameras + GPS, scored against the dataset's own ground truth) |
-| **Noise removed** | 1,242 signals → 20 per-stream alerts → **3 incidents**: 99.8% never reach a person |
+| **Noise removed** | 314 signals → 20 per-stream alerts → **3 incidents**: 99% never reach a person |
 | **Fights** | **76.7%** accuracy, ROC-AUC 0.854 on 300 real CCTV clips, cross-validated by recording (dataset authors: 72%) |
-| **Weapons** | handguns AP50 0.51, rifles 0.54 on a camera the model never saw |
+| **Weapons** | 46 of 84 weapon appearances alerted, 7 false alerts in 29 min on a camera the model never saw; a vision-model verifier cuts false alarms on ordinary CCTV from 72 to 6 of 149 clips |
 | **Live** | 30 fps detection and tracking on one laptop GPU |
 | **Forecast** | every incident projected forward with the real scorer: next stage, what would change the risk, and responses compared |
-| **Human in charge** | every decision audit-logged in a hash chain; a language model never creates, hides or ranks an incident |
+| **Investigator** | a tool-using agent works a case like an analyst: real alerts kept **12/12**, the one false alert called a false alarm 2/2 |
+| **Above incidents** | incidents linked into patterns by behaviour, place and walking time; near-repeat watch; every area's blind spots |
+| **Human in charge** | two roles enforced by the backend; every decision audit-logged in a hash chain; a language model never creates, hides or ranks an incident |
 
 ## ✦ What ARGUS does
 
@@ -69,16 +71,20 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 
 **Two roles, enforced by the backend.** A **duty officer** runs the floor: incidents, briefs, plain-language evidence (no track ids or detector internals), forecasts, patterns, and the decisions on the incident in front of them. A **supervisor** has oversight and policy on top: the whole hash-chained decision log and its export, **detector internals** per incident (raw strength × profile weight, the signals the score counts, and what each source adds, re-scored without it), **what ARGUS has learned** from dismissals (each lesson resettable), **dismissed incidents** (reopening one takes its lesson back), and the supervisor-only decisions (dismiss, police, site profile). Set `ARGUS_SUPERVISOR_PIN` and the supervisor role needs a PIN (single sign-on on a real site); the rules live in `backend/argus/access.py`.
 
-**5. Assesses any footage.** Drop in a clip from any camera, even a phone. ARGUS tracks everything in it, flags threats with the same rules, and returns a threat assessment (verdict, risk over time, incidents with forecasts) under the security profile you pick.
+**5. Investigates like an analyst.** Ask ARGUS answers questions from the log with citations. In *Investigate* mode a tool-using agent (Gemini function calling over read-only tools) works the case: it lists and opens incidents, searches signals, **looks at the footage** around a piece of evidence and asks a vision model one specific question, counts phones in an area, reads the forecast, then writes a case file with a verdict, a confidence and the next step. Its steps stream into the console as it works. The trust rule comes from our own measurement: footage can confirm an alert, never dismiss one. Measured on every camera alert in the window, 2 runs each: real alerts kept **12/12**, the false alert (a bush) called a false alarm 2/2; a vision model alone kept only 2/6.
+
+**6. Assesses any footage.** Drop in a clip from any camera, even a phone. ARGUS tracks everything in it, flags threats with the same rules, and returns a threat assessment (verdict, risk over time, incidents with forecasts) under the security profile you pick.
 
 
-**6. Sees patterns above incidents.** Two thefts four minutes apart are not two unrelated rows. ARGUS links incidents that follow the same crime script and share its act, then checks the site map: could one person have walked it in the gap? *Walkable*, *same place*, or *too soon to walk* (at least two people). After an act it puts the site on **near-repeat watch**: where to look next, until when, and where no camera can see. It links behaviour, place and time, never faces or phones, and it never changes a score.
+**7. Sees patterns above incidents.** Two thefts four minutes apart are not two unrelated rows. ARGUS links incidents that follow the same crime script and share its act, then checks the site map: could one person have walked it in the gap? *Walkable*, *same place*, or *too soon to walk* (at least two people). After an act it puts the site on **near-repeat watch**: where to look next, until when, and where no camera can see. It links behaviour, place and time, never faces or phones, and it never changes a score.
 
-**7. Knows where it is blind.** Every area's coverage is computed from the site model: which streams can see it, which cameras are recording, and what it cannot see at all (the parking lots have phone counts but no camera). Every score says how much evidence its area can give; a covered stage camera is noticed in 2 s and its area goes blind until the view is back.
+**8. Knows where it is blind.** Every area's coverage is computed from the site model: which streams can see it, which cameras are recording, and what it cannot see at all (the parking lots have phone counts but no camera). Every score says how much evidence its area can give; a covered stage camera is noticed in 2 s and its area goes blind until the view is back.
 
-**8. Writes the case up.** One click turns an incident into a case report: timeline, evidence, the score's arithmetic, the pattern, the blind spots, the forecast and every decision with its audit hash. Print it, or copy it into a message.
+**9. Writes the case up.** One click turns an incident into a case report: timeline, evidence, the score's arithmetic, the pattern, the blind spots, the forecast and every decision with its audit hash. Print it, or copy it into a message.
 
-**9. Adapts to the site.** One switch: **Airport** (every area critical, any unattended bag or weapon goes straight to a person), **School / college** (the tuned setting) or **Public park** (running and crowds are normal). Measured on the same footage: 4/5, 4/5 and 2/5 caught, with 0 false incidents in all three.
+**10. Works live on stage.** The laptop webcam runs the same detector at ~30 fps with stage rules: a bag its owner leaves for 15 s, a knife or scissors in someone's hands, a fight (pose + VideoMAE), and the lens covered for 2 s. Each alert joins the replay as a signal in the *Stage camera (live)* area and is fused, scored and briefed like any other.
+
+**11. Adapts to the site.** One switch: **Airport** (every area critical, any unattended bag or weapon goes straight to a person), **School / college** (the tuned setting) or **Public park** (running and crowds are normal). Measured on the same footage: 4/5, 4/5 and 2/5 caught, with 0 false incidents in all three.
 
 ## ▶ The 90-second tour
 
@@ -202,10 +208,12 @@ Measured on the MEVA recording of 15 March 2018, 14:50–15:20: six cameras, one
 | Claim | Result | n and method |
 |---|---|---|
 | Staged thefts and abandonments | **4 / 5 caught, 0 false incidents** | every staged theft and abandonment MEVA publishes in the window; 2 cafe thefts, 1 bus-station theft and 1 abandonment caught |
-| Event funnel | 1,242 → 20 → **3** | raw events → what per-stream thresholds would page → incidents |
+| Event funnel | 314 → 20 → **3** | raw events → what per-stream thresholds would page → incidents. Phones are counted per area, never one by one (was 1,242 when each phone's arrival and departure was an event) |
 | Security profiles | Airport 4/5 (+6 on watch) · Campus 4/5 · Park 2/5 · **0 false in all three** | same 30 minutes, re-scored per profile |
 | Fights | accuracy **76.7%**, ROC-AUC **0.854**; at the pipeline threshold 87/150 fights, 12/150 false (precision 0.88) | 300 real CCTV clips (Akti et al. 2019), 5-fold CV grouped by source recording (74 recordings); body pose fused with a pretrained surveillance VideoMAE used as-is. Pose alone: 74.7%, AUC 0.82 |
-| Weapons | AP50 handgun **0.51**, rifle **0.54**; 42/84 appearances alerted, 14 false alerts in 29 min | 3,511 frames from a camera never trained on (Univ. of Seville mock armed attack). Knives AP50 0.09: not claimed |
+| Weapons (v2 detector, in use) | **46/84** appearances alerted, **7** false alerts in 29 min; box AP50 handgun 0.37, rifle 0.51 (v1: 42/84, 14 false, AP50 0.51 / 0.54) | 3,511 frames from a camera never trained on (Univ. of Seville mock armed attack). Knives: not claimed |
+| Weapon verifier | false weapon alarms on ordinary CCTV **72 → 6** of 149 clips; on the unseen camera real alerts kept 33/37, false 4 → 0 | a vision model checks a close crop of each detector alert; dropped only on a clear no; offline, alerts stay and are marked unverified |
+| Investigator agent | real alerts kept **12/12** (11 confirmed or likely); false alert called a false alarm **2/2**; 24 s and 1.6 camera looks per case | the 7 camera bag alerts in the window, 2 runs each, scored against MEVA annotations it never sees. n is small |
 | Door sensor from video | indoor precision **0.54**, recall **0.75** | ±2 s against human door-open labels, 3 indoor cameras; all 6 cameras: 0.21 / 0.52 |
 | Held-out day | staged theft missed, **0 false incidents** | 5 March, unseen and untuned; the suitcase sat at the frame edge with only its handle in view |
 | Live inference | **30 fps**, 13–23 ms a frame | YOLO11s at 960 px, FP16, one RTX 5060 laptop GPU |
@@ -216,7 +224,7 @@ Measured on the MEVA recording of 15 March 2018, 14:50–15:20: six cameras, one
 ## ⚖ When the AI is wrong
 
 - **Incidents come from measured rules and a transparent score, never from a language model.** The model writes briefs and answers questions, and every citation it makes is checked against the log.
-- **We tried an AI second opinion on camera alerts.** Gemini, shown frames around each alert, removed the one false alert but also four of six real thefts. It stays out.
+- **We tried an AI second opinion on camera alerts.** Gemini, shown frames around each alert, removed the one false alert but also four of six real thefts. So a model never dismisses a camera alert: the investigator may confirm one from footage, and the weapon verifier drops an alert only on a clear no.
 - **Every decision is a person's**, logged with role and time in an append-only hash chain that breaks if anyone edits it.
 - **Dismissals feed back**: each one multiplies that area's score for those signals by 0.7, so the system gets quieter where operators say it is wrong.
 
@@ -225,7 +233,8 @@ Measured on the MEVA recording of 15 March 2018, 14:50–15:20: six cameras, one
 | Data | What ARGUS does with it |
 |---|---|
 | Faces | No face recognition and no biometrics. People are anonymous boxes, tracked within one camera. |
-| Phone locations | Used only as counts per area (crowding, people leaving at once), never linked to people on camera or shown by identity. The demo's GPS is MEVA's consented actor data. |
+| Phone locations | ARGUS never follows a phone. Positions are reduced in memory to phone counts per area; only unusual counts become events (crowding, dispersal, many leaving at once), and no event carries a device id. Nothing about one phone is stored, shown, linked to people on camera or sent to a model. The demo's GPS is MEVA's consented actor data. |
+| Who sees what | A duty officer sees evidence without track ids or detector internals, and only the decisions on the incident in front of them; the whole log and the internals are a supervisor's (`backend/argus/access.py`). |
 | Decisions | Append-only, hash-chained audit log with role and time. |
 | Footage | Stays on the site's own machine: the whole demo runs offline on one laptop. |
 
@@ -238,7 +247,7 @@ The console is built around a single living instrument, the **ARGUS eye** (Argus
 | Outer ticks | the watch, turning while the replay plays |
 | Six arc segments | the six cameras: lit when they have footage, coloured when their area has an incident |
 | Three rotating rings | camera analytics, door sensors and phone locations, each pulsing with its live signal rate |
-| Particles flowing inward | every real signal. Routine events fade halfway (absorbed); only signals reach the pupil: the 1,242 → 3 funnel, live |
+| Particles flowing inward | every real signal. Routine events fade halfway (absorbed); only signals reach the pupil: the 314 → 3 funnel, live |
 | Iris and pupil | the most urgent state on screen: the pupil dilates and the iris changes colour from calm to critical |
 
 It opens full screen while the console links up (the percentage is real readiness), then flies into its place in the top band. Around it, motion only ever says that something changed: new incident titles **decode** out of scrambled glyphs, briefs **come into focus** when they are written, the incident list **re-ranks on springs**, counts **roll**. Glass appears only where UI floats over footage. Everything respects `prefers-reduced-motion`, runs on one animation loop that stops when the tab is hidden, and adds no long tasks at 30× replay.

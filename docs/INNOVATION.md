@@ -16,7 +16,7 @@ what we built, and why.
 | Human in charge | Respond menu, supervisor-only powers enforced by the API, hash-chained audit log, dismissals feed back into scoring | `api/main.py`, `audit.py` |
 | Profiles | Airport / School / Park re-score the same events | `profiles.yaml` |
 | UI | React 19 + Tailwind 4 + Motion, graphite design system, the ARGUS eye, camera wall, queue, to-scale site map | `frontend/src` |
-| Evidence | 4/5 staged incidents, 0 false; 1,242 → 20 → 3; every model's score with n and method | `eval/`, `docs/MODEL_SCORES.md` |
+| Evidence | 4/5 staged incidents, 0 false; 314 → 20 → 3; every model's score with n and method | `eval/`, `docs/MODEL_SCORES.md` |
 
 **Strengths:** real data, measured claims, honest misses, explainable score, projection, a real agent.
 

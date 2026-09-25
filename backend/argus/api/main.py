@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from argus import settings
 from argus.access import for_duty_officer, pin_required, require_supervisor, role_of
 from argus.audit import AuditLog
-from argus.brief.llm import MODEL, brief_for, template_brief
+from argus.brief.llm import MODEL, brief_for, cache_key
 from argus.config import profiles, site
 from argus.fusion.engine import FusionEngine
 from argus.ingest import demo_window, load_all_events
@@ -42,6 +42,7 @@ class Runtime:
         self.clients: set[WebSocket] = set()
         self.recent: list[Event] = []
         self._briefing: set[str] = set()
+        self._brief_keys: dict[str, str] = {}      # incident -> the evidence its current brief was written for
         self._tasks: set[asyncio.Task] = set()     # strong refs, or the event loop may drop running tasks
 
     def remember(self, events: list[Event]) -> None:
@@ -123,10 +124,15 @@ async def _publish(new_events: list[Event], changed: list[Incident]):
 
 
 def _ensure_brief(inc: Incident):
+    """Keep the brief in step with the evidence. When the evidence changes (a bag left is then taken), the brief for
+    the new evidence comes at once from the cache (briefs are keyed by evidence and pre-warmed by brief/warm.py for
+    every state of the replay), else the template; a language-model brief then replaces the template when it can."""
     if inc.status not in ("open", "ack", "escalated"):
         return
-    if inc.brief is None:
-        inc.brief = template_brief(inc, rt.engine.evidence(inc.incident_id), rt.cfg)
+    key = cache_key(inc)
+    if inc.brief is None or rt._brief_keys.get(inc.incident_id) != key:
+        inc.brief = brief_for(inc, rt.engine.evidence(inc.incident_id), rt.cfg, allow_llm=False)
+        rt._brief_keys[inc.incident_id] = key
     if inc.brief.generated_by == "template" and inc.incident_id not in rt._briefing:
         rt._briefing.add(inc.incident_id)
         task = asyncio.create_task(_upgrade_brief(inc))
@@ -135,14 +141,20 @@ def _ensure_brief(inc: Incident):
 
 
 async def _upgrade_brief(inc: Incident):
+    key = cache_key(inc)
+    current = False
     try:
         brief = await asyncio.to_thread(brief_for, inc, rt.engine.evidence(inc.incident_id), rt.cfg)
-        if rt.engine.incidents.get(inc.incident_id) is inc:     # still the same replay run
+        current = rt.engine.incidents.get(inc.incident_id) is inc      # still the same replay run
+        if current and cache_key(inc) == key:                           # and nothing new arrived while it was written
             inc.brief = brief
+            rt._brief_keys[inc.incident_id] = key
             await _broadcast({"type": "tick", "clock": rt.clock(), "summary": rt.engine.summary(),
                               "events": [], "incidents": [inc.model_dump()]})
     finally:
         rt._briefing.discard(inc.incident_id)
+        if current and cache_key(inc) != key:
+            _ensure_brief(inc)                                         # brief the evidence it has now
 
 
 async def _broadcast(msg: dict):

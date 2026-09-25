@@ -107,8 +107,10 @@ def match_script(signal_types: list[str], cfg: SiteConfig) -> dict | None:
     return best
 
 
-def people_in_area(area: str, log: list[Event], now: float) -> int | None:
-    """Phones in the area right now, from the GPS enter/exit stream (None when there is no GPS for it)."""
+def people_in_area(area: str, log: list[Event], now: float, cfg: SiteConfig | None = None) -> int | None:
+    """Phones in the area right now. From a per-phone enter/exit stream when the log has one (another site's Wi-Fi
+    associations); otherwise, with the site config, a count straight from the GPS fixes (ingest/gps.py: counts only,
+    the MEVA demo). None when there is no location data for the area."""
     where: dict[str, str | None] = {}
     seen_gps = False
     for e in log:
@@ -120,7 +122,10 @@ def people_in_area(area: str, log: list[Event], now: float) -> int | None:
         elif e.type in ("device_exit", "device_fast_exit"):
             where[e.entity.id] = e.attrs.get("to") if e.attrs.get("to") not in (None, "outside") else None
     if not seen_gps:
-        return None
+        if cfg is None:
+            return None
+        from argus.ingest.gps import phones_in_area
+        return phones_in_area(cfg, area, now)
     return sum(1 for a in where.values() if a == area)
 
 
@@ -255,7 +260,7 @@ def forecast(inc: Incident, evidence: list[Event], cfg: SiteConfig, now: float, 
              ["dispatch_guard", "notify_police", "review_footage"]:
         if a in cfg.playbook["actions"] and a in meta and a not in candidates:
             candidates.append(a)
-    people = people_in_area(inc.area, log, now)
+    people = people_in_area(inc.area, log, now, cfg)
     next_stage = ahead[0] if ahead else None
     reached_now = [s for s in script_out["stages"] if s["reached"]][-1] if script_out else None
     responses = []

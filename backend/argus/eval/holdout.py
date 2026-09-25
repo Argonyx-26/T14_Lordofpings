@@ -72,7 +72,7 @@ WINDOWS = {
 }
 
 ROOT = settings.DATA_DIR
-VIDEO, TRACKS, EVENTS = ROOT / "meva" / "video", settings.TRACKS_DIR, ROOT / "events"
+VIDEO, TRACKS = ROOT / "meva" / "video", settings.TRACKS_DIR
 
 
 def log(msg: str) -> None:

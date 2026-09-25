@@ -32,7 +32,8 @@ STREAM_LABEL = {"cctv": "cameras", "door": "door sensors", "device": "phone coun
 
 
 @lru_cache(maxsize=4)
-def _recordings(cameras: tuple[str, ...], utc_offset_h: float) -> dict[str, list[tuple[float, float]]] | None:
+def _recordings(cameras: tuple[str, ...]) -> dict[str, list[tuple[float, float]]] | None:
+    """Recorded spans per camera (UTC epoch), from MEVA's clip table or the browser clips on disk. Read once."""
     stems: list[str] = []
     table = settings.MEVA_DIR / "clip-table.txt"
     if table.exists():
@@ -60,7 +61,7 @@ def recording(camera: str, t: float, cfg: SiteConfig) -> bool | None:
     """Was this camera recording at t? None when ARGUS has no record of recordings at all."""
     if camera == "LIVE":
         return True
-    rec = _recordings(tuple(sorted(cfg.raw["cameras"])), cfg.raw["utc_offset_hours"])
+    rec = _recordings(tuple(sorted(cfg.raw["cameras"])))
     if rec is None:
         return None
     # MEVA clips are 5 min and abut with up to 2 s between them: a gap that small is not a blind spot

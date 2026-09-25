@@ -9,7 +9,6 @@ Usage (from backend/):  python -m argus.eval.weapons_vlm [weights]   -> data/cac
 import json
 import re
 import sys
-import time
 from collections import defaultdict
 from pathlib import Path
 

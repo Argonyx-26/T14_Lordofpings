@@ -74,7 +74,7 @@ class Live:
         h, w = img.shape[:2]
         s = OUT_W / w
         img = cv2.resize(img, (OUT_W, int(h * s)))
-        for name, pts in self.polygons.items():
+        for pts in self.polygons.values():
             p = (np.array(pts) * s).astype(np.int32)
             cv2.polylines(img, [p], True, (255, 160, 60), 1, cv2.LINE_AA)
         counts = Counter()

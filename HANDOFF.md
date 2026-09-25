@@ -36,7 +36,7 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
 | Staged incidents caught | **4 / 5** | Cafe thefts at 14:53:38 and 14:54:18, bus theft at 15:13:30, bus abandonment at 15:18:07. |
 | Miss | G331 theft 14:56:54 | Black purse on a black bench; the detector never sees it. `static_change.py` finds it but is off (+12 false alarms). |
 | False incidents | **0** | Traced: 2 camera-level bag alerts are away from ground truth. `cctv-G638-000014` sits in plaza candidate INC-0001 (score 26, below watch 35); `cctv-G331-000059` folded into the true bus incident INC-0007. |
-| Funnel | 1,242 raw → 20 siloed alerts → **3 incidents** | 99.8 % reduction. |
+| Funnel | 314 raw → 20 siloed alerts → **3 incidents** | 99 % reduction (1,242 before phones became per-area counts). |
 | Door sensor, indoor (G419/G420/G421, door-leaf method) | **P 0.54 · R 0.75** | ±2 s against MEVA door-open annotations. |
 | Door sensor, all 6 cameras | P 0.21 · R 0.52 | G331/G638 use the feet-in-door-zone heuristic; G331 fires on the ATM queue (64 detections, 1 annotated opening). |
 | Live tile | **30 fps** (the clip's real-time cap), 13–23 ms/frame | YOLO11s @960 FP16 + ByteTrack. **Energy Saver must be off**: with it on, 16–19 fps (23–27 after the throttling opt-out). |

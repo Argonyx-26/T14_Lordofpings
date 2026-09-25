@@ -10,7 +10,7 @@ Presentation & Storytelling, Business Impact & Market Potential.
 |---|---|---|
 | `[CAUGHT]` staged incidents caught | `ground_truth_alerted / ground_truth_total` | **4/5** (2 cafe thefts, bus theft + abandonment; miss: black purse on black bench) |
 | `[FALSE]` false incidents in the 30-min window | incidents with no ground truth nearby | **0** (2 camera-level bag alerts, absorbed by fusion) |
-| `[RAW] → [SILO] → [INC]` | `reduction` block | **1,242 → 20 → 3** (99.8% never reach an operator) |
+| `[RAW] → [SILO] → [INC]` | `reduction` block | **314 → 20 → 3** (99% never reach an operator; phones are counted per area, never followed) |
 | `[DOOR_P] / [DOOR_R]` door detection precision / recall | `door_detection` | **0.54 / 0.75** indoor (0.21 / 0.52 all cameras) |
 | `[LAT]` median seconds from first signal to incident | `latency_s` | not on the slides |
 | `[FPS]` live inference fps on the RTX 5060 | live tile stats | **30 fps** (13–23 ms per frame) |

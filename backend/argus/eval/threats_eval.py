@@ -79,9 +79,7 @@ def falls() -> dict:
 
 
 def handoffs(pose_dir: Path = ROOT / "data" / "eval" / "handoff") -> dict:
-    from argus.config import site
     from argus.ingest.doors import _activities
-    cfg = site()
     per, truth_n, found, det_n, correct = [], 0, 0, 0, 0
     for pose in sorted(pose_dir.glob("*.pose.jsonl")):
         stem = pose.name.removesuffix(".pose.jsonl")

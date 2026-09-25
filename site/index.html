@@ -6,7 +6,7 @@
   <title>Argus: We don't watch more. We notice sooner.</title>
   <meta name="description" content="Argus fuses camera analytics, door activity and device location into a handful of ranked, explained incidents for security control rooms. Built at ARGONYX '26 by Lord of the Pings." />
   <meta property="og:title" content="Argus: We don't watch more. We notice sooner." />
-  <meta property="og:description" content="Situational awareness for security control rooms, measured on real multi-camera footage: 4 of 5 staged incidents caught, 0 false incidents, 99.8% of events never reach a human." />
+  <meta property="og:description" content="Situational awareness for security control rooms, measured on real multi-camera footage: 4 of 5 staged incidents caught, 0 false incidents, 99% of events never reach a human." />
   <meta property="og:image" content="assets/detections-bus-station.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230c0d0f'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%23f76b15' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23ececec'/%3E%3C/svg%3E" />
@@ -212,22 +212,17 @@
     </div>
   </header>
 
-  <!-- Real signals from the replay snapshot (frontend/src/mock/snapshot.json), 15 March 2018, local time -->
+  <!-- Real signals from the replay, 15 March 2018, local time. Phones appear only as counts per area (crowding, many
+       leaving at once): ARGUS never follows a phone, so no single phone's arrival or departure is ever shown. -->
   <div class="ticker" aria-label="Signals from the MEVA replay, 15 March 2018">
     <div class="ticker-label"><span class="live"></span><span class="txt">Replay · 15 Mar 2018</span></div>
     <div class="ticker-view"><ul class="ticker-track">
-      <li><span class="t">15:13:16</span><i style="--c:#26a88a"></i>Phone leaves · school</li>
       <li><span class="t">15:13:31</span><i style="--c:#5b8def"></i>Object changes hands · bus station</li>
       <li class="inc"><span class="t">15:13:31</span>▲ Incident opened · crowding at the bus station · 2 sources agree · score 67</li>
-      <li><span class="t">15:13:44</span><i style="--c:#26a88a"></i>Phone arrives · bus station</li>
       <li><span class="t">15:14:00</span><i style="--c:#26a88a"></i>Many phones leave at once · bus station</li>
       <li><span class="t">15:14:00</span><i style="--c:#26a88a"></i>Phones crowd together · bus station</li>
-      <li><span class="t">15:14:20</span><i style="--c:#26a88a"></i>Phone leaves fast · parking</li>
-      <li><span class="t">15:15:01</span><i style="--c:#26a88a"></i>Phone leaves fast · plaza</li>
-      <li><span class="t">15:15:49</span><i style="--c:#26a88a"></i>Phone arrives · school</li>
       <li><span class="t">15:16:45</span><i style="--c:#d9669f"></i>Door opens, exit · bus station</li>
       <li><span class="t">15:17:18</span><i style="--c:#d9669f"></i>Door opens, entry · bus station</li>
-      <li><span class="t">15:18:28</span><i style="--c:#26a88a"></i>Phone leaves · plaza</li>
       <li><span class="t">15:18:30</span><i style="--c:#5b8def"></i>Object left behind · bus station</li>
       <li class="inc"><span class="t">15:18:30</span>▲ Incident opened · unattended object · bus station · score 55</li>
       <li><span class="t">15:19:22</span><i style="--c:#d9669f"></i>Door opens, exit · bus station</li>
@@ -256,11 +251,12 @@
 
   <div class="wrap">
     <div class="funnel">
-      <div><div class="n">1,242</div><div class="l">events from every stream in 30 minutes</div></div>
+      <div><div class="n">314</div><div class="l">events from every stream in 30 minutes</div></div>
       <div><div class="n">20</div><div class="l">alerts that siloed, per-stream thresholds would page</div></div>
       <div><div class="n accent">3</div><div class="l">incidents Argus raises, each explained</div></div>
-      <div><div class="n">99.8%</div><div class="l">of events never need a human</div></div>
+      <div><div class="n">99%</div><div class="l">of events never need a human</div></div>
     </div>
+    <p class="caption">Private by design: no face recognition, people on camera are anonymous boxes within one camera, and phones are only ever counted per area, never followed one by one.</p>
   </div>
 
   <section id="problem">
@@ -339,7 +335,7 @@
         <tr><th>Measure</th><th>Result</th></tr>
         <tr><td>Staged incidents caught</td><td>4 / 5 (cafe thefts 14:53:38 and 14:54:18; bus-station theft 15:13:30 and abandonment 15:18:07)</td></tr>
         <tr><td>False incidents</td><td>0 in 30 minutes across 6 cameras</td></tr>
-        <tr><td>Event funnel</td><td>1,242 raw events → 20 per-stream alerts → 3 incidents</td></tr>
+        <tr><td>Event funnel</td><td>314 raw events → 20 per-stream alerts → 3 incidents (phones counted per area, never one by one)</td></tr>
         <tr><td>Door sensor, indoor doors</td><td>precision 0.54, recall 0.75 (±2 s against human door-open annotations)</td></tr>
         <tr><td>Door sensor, all six cameras</td><td>precision 0.21, recall 0.52: exterior doors use a simpler rule that fires on people queueing near a door</td></tr>
         <tr><td>Live inference</td><td>30 fps, 13 to 23 ms per frame, YOLO11s at 960 px with FP16</td></tr>

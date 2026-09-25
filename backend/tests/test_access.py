@@ -89,3 +89,35 @@ def test_with_a_pin_set_the_supervisor_role_needs_it(client, monkeypatch):
     r = client.post(f"/api/incidents/{_iid()}/action", json={"action": "dismiss", "role": "supervisor"})
     assert r.status_code == 401
     assert client.get("/api/role").json()["role"] == "duty_officer"
+
+
+def test_the_brief_follows_the_evidence_after_a_model_has_written_one(client, tmp_path, monkeypatch):
+    """Once a language-model brief exists it used to stay, however the incident changed; now a change in evidence
+    brings the brief for the new evidence."""
+    import time
+
+    from argus.brief import llm
+    from argus.schema import Brief
+    monkeypatch.setattr(llm, "CACHE_FILE", tmp_path / "briefs.json")
+    monkeypatch.setattr(llm, "llm_brief", lambda inc, ev, cfg: Brief(
+        summary=f"model brief for {len(ev)} signals", why="-", action_id="monitor", evidence_ids=[ev[0].event_id],
+        generated_by="llm", model="test"))
+    main.rt.engine.reset()
+
+    def post(etype):
+        r = client.post("/api/live/event", json={"type": etype, "severity": 0.9, "confidence": 0.8,
+                                                 "bbox": [0, 0, 10, 10], "track": 1})
+        return r.json()["incidents"][0]
+
+    def summary(iid, want):
+        for _ in range(100):
+            b = client.get(f"/api/incidents/{iid}").json()["incident"]["brief"]
+            if b and b["summary"] == want:
+                return b["summary"]
+            time.sleep(0.02)
+        return b and b["summary"]
+
+    iid = post("abandoned_object")
+    assert summary(iid, "model brief for 1 signals") == "model brief for 1 signals"
+    assert post("weapon_visible") == iid
+    assert summary(iid, "model brief for 2 signals") == "model brief for 2 signals"

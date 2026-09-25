@@ -87,7 +87,7 @@ scripts:
     stages:
       - {id: left,    label: "Bag left unattended",       types: [abandoned_object],                          action: secure_object}
       - {id: taken,   label: "Someone else takes it",     types: [custody_change],                            action: track_subject}
-      - {id: leaving, label: "The taker leaves",          types: [running, device_fast_exit, door_surge],     action: dispatch_guard}
+      - {id: leaving, label: "The taker leaves",          types: [running, door_surge],                       action: dispatch_guard}
   assault:
     name: "Assault"
     stages:
@@ -100,7 +100,7 @@ scripts:
     stages:
       - {id: exchange, label: "Hand-to-hand exchange",    types: [hand_off],                                  action: observe_exchange}
       - {id: pattern,  label: "Repeated with different people", types: [dealing_pattern],                    action: observe_exchange}
-      - {id: leaving,  label: "The dealer moves on",      types: [running, device_fast_exit],                 action: track_subject}
+      - {id: leaving,  label: "The dealer moves on",      types: [running],                                   action: track_subject}
   crowd:
     name: "Crowd building up"
     stages:
@@ -126,7 +126,6 @@ typical:
   device_crowding:     {severity: 0.35, confidence: 0.6}
   device_exodus:       {severity: 0.35, confidence: 0.6}
   device_dispersal:    {severity: 0.3,  confidence: 0.6}
-  device_fast_exit:    {severity: 0.08, confidence: 0.6}
   occupancy_anomaly:   {severity: 0.35, confidence: 0.6}
 
 # Who carries out each action, how disruptive it is (0 none .. 3 closes an area or brings in police), and which

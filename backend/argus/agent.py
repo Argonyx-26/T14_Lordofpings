@@ -32,8 +32,6 @@ import re
 import threading
 import time
 from collections import Counter
-from functools import lru_cache
-from pathlib import Path
 from typing import Callable
 
 from argus import settings
@@ -277,11 +275,8 @@ class Case:
         if t > self.now:
             return {"error": "that moment is in the future"}
         w = float(window_s or 60)
-
-        def count(at):
-            return sum(any(abs(p[0] - at) <= w and self.cfg.area_at(p[1], p[2]) == aid for p in pts)
-                       for pts in _fixes().values())
-        then, now = count(t), count(self.now)
+        from argus.ingest.gps import phones_in_area
+        then, now = phones_in_area(self.cfg, aid, t, w) or 0, phones_in_area(self.cfg, aid, self.now, w) or 0
         return {"area": self.cfg.area_name(aid), "moment": self.local(t), "window_s": w, "phones_then": then,
                 "phones_now": now, "change": now - then}
 
@@ -318,12 +313,6 @@ def _trim(obj, depth=0):
     if isinstance(obj, str):
         return obj[:300]
     return obj
-
-
-@lru_cache(maxsize=1)
-def _fixes() -> dict:
-    from argus.ingest.gps import load_fixes
-    return load_fixes(settings.GPS_DIR)
 
 
 # --- the models ------------------------------------------------------------------------------------------------
