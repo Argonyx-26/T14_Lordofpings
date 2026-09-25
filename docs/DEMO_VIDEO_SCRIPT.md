@@ -14,7 +14,7 @@ The script is about 250 spoken words, a calm pace for 2 minutes. Numbers are the
 - [ ] `scripts\run_demo.ps1 -Live` is running; the console is at http://localhost:8000 and the live tile at :8001.
 - [ ] Charger in, **Best performance**, **Energy Saver off**, notifications off (Focus assist → Alarms only).
 - [ ] Browser full-screen (**F11**), zoom 100%, nothing else on screen. Close the dev tools.
-- [ ] Console: **Reset**, speed **10×**, role **Duty officer**, event stream on **All events**.
+- [ ] Console: **Reset**, speed **10×**, role **Duty officer**, **Raw signals** drawer (under the cameras) closed.
 - [ ] One upload already analysed (for shot H): the bus-station clip from `HANDOFF_TO_JACK.md` §3.
 - [ ] A quiet room and a headset mic. Record the voice-over separately if the room is noisy.
 - [ ] **Title and results cards:** export the deck's cover slide and results slide as PNGs (Download → PNG/PDF), or make them in Clipchamp as white text on `#0c0d0f`.
@@ -36,13 +36,13 @@ clips land in `Videos\Captures`. OBS works too. Then assemble them in **Clipcham
 | Time | Shot | On screen / what to do | Voice-over |
 |---|---|---|---|
 | 0:00–0:07 | **Title card** | "Argus" · *We don't watch more. We notice sooner.* · ARGONYX '26 · PS5 | "This is Argus. We don't watch more. We notice sooner." |
-| 0:07–0:22 | **A. The flood** | Press **Play** at 10×. Hold on the camera wall and the funnel band as the event count climbs. | "A security control room gets thousands of signals. This is thirty minutes of real footage, door activity and phone location from one facility, replayed at ten times speed." |
-| 0:22–0:32 | **B. Siloed view** | Switch the event stream to **Siloed alerts**, let it fill, then switch back to **All events**. | "On their own, every system pages constantly. Operators learn to ignore it, and real threats get buried." |
+| 0:07–0:22 | **A. The flood** | Press **Play** at 10×. Hold on the main camera and the *From signals to decisions* band as the counts climb. | "A security control room gets thousands of signals. This is thirty minutes of real footage, door activity and phone location from one facility, replayed at ten times speed." |
+| 0:22–0:32 | **B. Siloed view** | Open **Raw signals** under the cameras, switch to **Siloed alerts**, let it fill, then close the drawer. | "On their own, every system pages constantly. Operators learn to ignore it, and real threats get buried." |
 | 0:32–0:55 | **C. The incident** | Click the **Bus station** diamond on the timeline (hover shows the label). Play on until the bus-station incident tops the queue, then click it. **Zoom** on the queue and the score. | "Argus looks for agreement instead. At the bus station, a camera sees a bag left unattended, then carried off by someone else, while people's phones show a crowd forming in the same minute. Independent sources agree, so Argus ranks it first." |
 | 0:55–1:12 | **D. Why this score** | Scroll the incident panel slowly: the brief, the recommended action, then **Why this score**. **Zoom** on the factor bars. | "The score shows its working: severity, confidence, how critical the place is, and a bonus because independent sources agree. Gemini writes the brief, but it can't create or hide an incident, and every line is checked against the evidence." |
-| 1:12–1:25 | **E. Replay the moment** | Click the **camera** evidence row: the camera enlarges with the red box on the bag. Let it play 3–4 seconds. | "One click replays the moment, on the camera that saw it. Detection is YOLO11 with tracking, running on this laptop, with no training." |
+| 1:12–1:25 | **E. Replay the moment** | Click the **camera** evidence row: that camera moves to the main view with the red box on the bag. Let it play 3–4 seconds. | "One click replays the moment, on the camera that saw it. Detection is YOLO11 with tracking, running on this laptop, with no training." |
 | 1:25–1:33 | **F. Live** | Toggle **Live inference** for about 5 seconds; the fps counter is visible. Toggle back. | "And it runs live, at thirty frames a second, on a single laptop GPU." |
-| 1:33–1:42 | **G. A human decides** | Switch the role to **Supervisor**, press **Escalate**. | "A person makes every call, and every call goes into a tamper-evident log." |
+| 1:33–1:42 | **G. A human decides** | Switch the role to **Supervisor**, open **Respond** and choose **Escalate to a supervisor**; open **Decision log** to show the verified chain. | "A person makes every call, and every call goes into a tamper-evident log." |
 | 1:42–1:50 | **H. Any footage** | Header: **Analyse a video** → open the finished bus-station analysis; play 3 seconds with boxes on. | "Any clip can be uploaded and analysed the same way." |
 | 1:50–2:00 | **Results card** | "4 of 5 staged incidents caught · 0 false incidents · 1,242 events → 3 incidents · 30 fps live" · small line: "MEVA dataset, Kitware / IARPA. Incidents staged by actors." | "On real footage, Argus caught four of five staged incidents with zero false incidents. We don't watch more. We notice sooner." |
 

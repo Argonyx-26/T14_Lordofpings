@@ -1,30 +1,39 @@
 @import "tailwindcss";
 
-/* Design language: quiet, dense, typographic. Graphite surfaces separated by hairlines; colour is reserved
-   for meaning (severity, data source). Geist for UI, Geist Mono for every number, Instrument Serif for
-   display figures. Fonts are bundled (offline demo). */
+/* Design language: a control-room console. Ink-dark slate surfaces so footage is the brightest thing on screen;
+   hairlines instead of boxes; colour only carries meaning. Status colours follow the Astro UXDS rule set
+   (red is reserved for "act now", many states roll up into the most urgent one, and every status colour
+   travels with a shape and a word). Geist for UI and numbers; Instrument Serif only for the wordmark.
+   Fonts are bundled (offline demo). */
 
 @theme {
-  --color-bg: #09090b;
-  --color-surface: #0e0f11;
-  --color-surface-2: #141518;
-  --color-surface-3: #1b1c20;
-  --color-hair: rgb(255 255 255 / 0.07);
-  --color-hair-2: rgb(255 255 255 / 0.12);
-  --color-fg: #ececec;
-  --color-fg-2: #a3a3ab;
-  --color-fg-3: #72727b;
-  --color-fg-4: #4f4f57;
+  --color-bg: #080a0d;
+  --color-surface: #0e1115;
+  --color-surface-2: #13171c;
+  --color-surface-3: #1a1f26;
+  --color-surface-4: #232933;
+  --color-hair: rgb(148 163 184 / 0.10);
+  --color-hair-2: rgb(148 163 184 / 0.17);
+  --color-fg: #e8ebf0;
+  --color-fg-2: #a6afbb;
+  --color-fg-3: #717c8a;
+  --color-fg-4: #4b5460;
 
-  --color-watch: #d4a72c;
-  --color-high: #f76b15;
-  --color-crit: #e5484d;
-  --color-ok: #30a46c;
+  /* interactive accent: focus, selection, the camera on the main screen */
+  --color-accent: #7fb2ff;
 
-  --color-cctv: #8aa4ff;
-  --color-door: #c3a6ff;
-  --color-device: #5ec2a8;
-  --color-auth: #f0a3c4;
+  /* status (severity) */
+  --color-crit: #ef4e4e;
+  --color-high: #f0843f;
+  --color-watch: #eab63a;
+  --color-ok: #3fb97a;
+  --color-off: #6b7480;
+
+  /* data sources (validated for dark mode; always shown with an icon and a label) */
+  --color-cctv: #5b8def;
+  --color-door: #d9669f;
+  --color-device: #26a88a;
+  --color-auth: #b69cff;
 
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
@@ -42,36 +51,108 @@ body {
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "ss01", "cv11";
 }
+::selection { background: color-mix(in srgb, var(--color-accent) 35%, transparent); }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 4px; }
 
+@layer components {
 .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-.display { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.01em; line-height: 1; }
-.eyebrow { font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-fg-3); }
+/* big standalone figures: same sans as everything else, proportional digits */
+.figure { font-family: var(--font-sans); font-weight: 600; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: proportional-nums; }
+.display { font-family: var(--font-sans); font-weight: 600; letter-spacing: -0.025em; line-height: 1.1; }
+.wordmark { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.01em; line-height: 1; }
+.eyebrow { font-size: 10.5px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--color-fg-3); }
 
-.surface { background: var(--color-surface); border: 1px solid var(--color-hair); border-radius: 8px; }
+.surface { background: var(--color-surface); border: 1px solid var(--color-hair); border-radius: 10px; }
 .hairline-b { border-bottom: 1px solid var(--color-hair); }
 .hairline-t { border-top: 1px solid var(--color-hair); }
 
 .btn {
-  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 6px;
-  color: var(--color-fg-2); background: transparent; border: 1px solid var(--color-hair);
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: 7px;
+  color: var(--color-fg-2); background: transparent; border: 1px solid var(--color-hair-2); white-space: nowrap;
   transition: background .15s, color .15s, border-color .15s;
 }
-.btn:hover { color: var(--color-fg); background: var(--color-surface-2); border-color: var(--color-hair-2); }
-.btn-primary { color: #0b0b0c; background: var(--color-fg); border-color: var(--color-fg); font-weight: 500; }
-.btn-primary:hover { color: #0b0b0c; background: #ffffff; }
-.btn-icon { width: 28px; padding: 0; justify-content: center; }
+.btn:hover:not(:disabled) { color: var(--color-fg); background: var(--color-surface-3); border-color: var(--color-hair-2); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn[data-on="true"] { color: var(--color-fg); background: var(--color-surface-3); border-color: color-mix(in srgb, var(--color-accent) 45%, transparent); }
+.btn-primary { color: #0a0c0f; background: var(--color-fg); border-color: var(--color-fg); font-weight: 550; }
+.btn-primary:hover:not(:disabled) { color: #0a0c0f; background: #ffffff; border-color: #ffffff; }
+.btn-ghost { border-color: transparent; }
+.btn-icon { width: 30px; padding: 0; justify-content: center; }
+.btn-sm { height: 26px; padding: 0 8px; font-size: 12px; border-radius: 6px; }
 
-.seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: 7px; background: var(--color-surface-2); border: 1px solid var(--color-hair); }
-.seg > button { height: 22px; padding: 0 8px; border-radius: 5px; color: var(--color-fg-3); font-size: 12px; transition: all .15s; }
-.seg > button:hover { color: var(--color-fg); }
-.seg > button[data-on="true"] { background: var(--color-surface-3); color: var(--color-fg); box-shadow: 0 0 0 1px var(--color-hair-2); }
+.seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: 8px; background: var(--color-surface-2); border: 1px solid var(--color-hair); }
+.seg > button { height: 24px; padding: 0 8px; border-radius: 6px; color: var(--color-fg-3); font-size: 12px; transition: color .15s, background .15s; }
+.seg > button:hover:not(:disabled) { color: var(--color-fg); }
+.seg > button:disabled { cursor: not-allowed; opacity: .5; }
+.seg > button[data-on="true"] { background: var(--color-surface-4); color: var(--color-fg); box-shadow: 0 1px 0 rgb(255 255 255 / .04) inset; }
 
-.scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--color-surface-3) transparent; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; border-radius: 999px;
+  font-size: 11px; color: var(--color-fg-2); background: var(--color-surface-3); white-space: nowrap;
+}
+.kbd { font-family: var(--font-mono); font-size: 10px; padding: 0 4px; border-radius: 4px; border: 1px solid var(--color-hair-2); color: var(--color-fg-3); }
+}
+
+.scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--color-surface-4) transparent; }
+
+select { background: transparent; }
+option { background: var(--color-surface-2); color: var(--color-fg); }
+
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] > summary .chev { transform: rotate(90deg); }
+.chev { transition: transform .15s; }
+
+/* ---- layout ---------------------------------------------------------------------------------------------- */
+
+.app { display: flex; flex-direction: column; height: 100%; }
+.console {
+  display: grid; gap: 10px; padding: 10px; flex: 1; min-height: 0;
+  grid-template-columns: minmax(250px, 290px) minmax(0, 1fr) minmax(340px, 410px);
+  grid-template-areas: "rail feed detail";
+}
+.area-rail { grid-area: rail; display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; }
+.area-feed { grid-area: feed; display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; }
+.area-detail { grid-area: detail; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+
+@media (min-width: 1680px) {
+  .console { grid-template-columns: 300px minmax(0, 1fr) 440px; }
+}
+/* small laptop: same three columns, narrower rails, so the footage keeps its height */
+@media (max-width: 1279px) {
+  .console { grid-template-columns: minmax(200px, 220px) minmax(0, 1fr) minmax(300px, 330px); gap: 8px; padding: 8px; }
+}
+/* small screens: one column, the page scrolls, most important first */
+@media (max-width: 1023px) {
+  .app { height: auto; min-height: 100%; }
+  .console { display: flex; flex-direction: column; }
+  .area-feed { order: 1; }
+  .area-detail { order: 2; }
+  .area-rail { order: 3; flex-direction: column; }
+  .area-rail > * { flex: none; }
+  .fill-sm { max-height: none !important; flex: none !important; }
+  .scroll-sm { max-height: 420px; }
+  .feed-grid { grid-template-rows: auto auto; }
+  .tile-primary { aspect-ratio: 16 / 9; }
+}
+
+/* camera wall: the main view takes what height is left, the filmstrip keeps its 16:9 thumbnails */
+.feed-grid { display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+.tile-primary { grid-row: 1; min-height: 0; }
+
+/* ---- motion: only to say something changed ---------------------------------------------------------------- */
 
 @keyframes breathe { 0%, 100% { opacity: 1 } 50% { opacity: .35 } }
 .breathe { animation: breathe 2.4s ease-in-out infinite; }
 @keyframes ring { 0% { transform: scale(.6); opacity: .8 } 100% { transform: scale(2.4); opacity: 0 } }
 .ring { transform-origin: center; transform-box: fill-box; animation: ring 2s ease-out infinite; }
+@keyframes arrive { from { opacity: 0; transform: translateY(-4px) } to { opacity: 1; transform: none } }
+.arrive { animation: arrive .35s ease-out both; }
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+.fade-in { animation: fade-in .3s ease-out both; }
+@keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.98) } to { opacity: 1; transform: none } }
+.pop { animation: pop .14s ease-out both; }
 
-select { background: transparent; }
-option { background: var(--color-surface-2); color: var(--color-fg); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; }
+}

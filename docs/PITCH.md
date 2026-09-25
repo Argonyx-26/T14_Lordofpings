@@ -88,13 +88,13 @@ if the venue network is shaky. Backup video on the desktop and on a USB stick.
 |---|---|---|
 | 1:00 | Press **Play** (10×) | "This is thirty minutes of real footage and sensor data from one facility, sped up." |
 | 1:10 | Point at the funnel band | "Events pour in from every stream; the per-stream alerts pile up; incidents stay near zero." |
-| 1:20 | Toggle **Siloed alerts** in the event stream | "This is what each system would page on its own. This is what operators ignore." |
+| 1:20 | Open **Raw signals** under the cameras and toggle **Siloed alerts** | "This is what each system would page on its own. This is what operators ignore." |
 | 1:35 | Click the **Bus station** diamond on the timeline | "Let's go to the bus station." |
 | 1:45 | The incident "Possible theft: unattended object taken" rises to the top; click it | "A bag was left unattended, then someone else carried it off, and phones show a crowd forming in the same minute: independent sources agree." |
 | 2:05 | Point at **Why this score** | "No black box: severity, confidence, how critical the place is, and the corroboration bonus." |
-| 2:20 | Click the **camera evidence** row | "One click replays the moment." (the camera enlarges, red box on the object) |
+| 2:20 | Click the **camera evidence** row | "One click replays the moment." (that camera moves to the main view, red box on the object) |
 | 2:35 | C: one sentence | "That box comes from YOLO11 tracking, running on this laptop, no training." |
-| 2:45 | Switch role to **Supervisor**, press **Escalate** | "A human decides, and every decision goes into a tamper-evident log." |
+| 2:45 | Switch role to **Supervisor**, **Respond → Escalate to a supervisor** | "A human decides, and every decision goes into a tamper-evident log." |
 | 2:55 | (optional) **Live inference** toggle for 5 s | "And this is the detector running live, [FPS] frames a second." |
 | 3:10 | Back to slides | |
 
@@ -118,7 +118,7 @@ auto-captions), because judges may watch it muted.
 | 0:08–0:25 | Console playing at 10×, funnel numbers climbing; then the Siloed alerts view | "A security control room gets thousands of signals. Here are thirty minutes of real multi-camera footage and GPS from one facility. Every stream on its own would page constantly." |
 | 0:25–0:50 | Jump to the bus-station scenario; incident rises; open it | "Argus fuses signals by place and time. At the bus station, a camera sees an object change hands while phones show a crowd forming: two independent sources, one incident, ranked first." |
 | 0:50–1:10 | Zoom on Why this score and the brief | "The score is transparent. Gemini writes the brief, but it cannot create or hide incidents, and every sentence is checked against the evidence." |
-| 1:10–1:30 | Click the evidence: camera enlarges with the red box; then the live inference view | "One click replays the moment. Detection is YOLO11 with tracking, running live on a single laptop GPU, with no training." |
+| 1:10–1:30 | Click the evidence: that camera takes the main view with the red box; then the live inference view | "One click replays the moment. Detection is YOLO11 with tracking, running live on a single laptop GPU, with no training." |
 | 1:30–1:45 | Supervisor escalates; audit log | "A human makes every call, and every call is recorded in a tamper-evident log." |
 | 1:45–2:00 | Results card: [CAUGHT] caught · [FALSE] false alarms · [RAW] → [INC] | "On real footage we caught [CAUGHT] staged incidents with [FALSE] false alarms. And you can hand Argus any clip to analyse on the spot." |
 

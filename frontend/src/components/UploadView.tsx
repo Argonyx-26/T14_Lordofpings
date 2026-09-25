@@ -1,4 +1,4 @@
-import { ArrowLeft, FileVideo, LoaderCircle, TriangleAlert, Upload } from 'lucide-react'
+import { FileVideo, LoaderCircle, TriangleAlert, Upload } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { API, scoreColor, severityLabel } from '../lib'
 import { CLASS_STYLE } from '../tracks'
@@ -30,7 +30,7 @@ const FPS = 30
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
 /** Analyse any video: upload it, then review detections, events and incidents on the footage itself. */
-export function UploadView({ config, onBack }: { config: SiteConfigView | null; onBack: () => void }) {
+export function UploadView({ config }: { config: SiteConfigView | null }) {
   const [jobs, setJobs] = useState<Job[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [job, setJob] = useState<Job | null>(null)
@@ -85,7 +85,6 @@ export function UploadView({ config, onBack }: { config: SiteConfigView | null; 
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)] gap-3 p-3">
       <aside className="flex min-h-0 flex-col gap-3">
-        <button className="btn self-start" onClick={onBack}><ArrowLeft size={14} strokeWidth={1.75} /> Back to the console</button>
         <Dropzone onFile={send} busy={!!sending} />
         <label className="flex cursor-pointer items-start gap-2.5 px-1 text-[12px] leading-snug text-[var(--color-fg-2)]">
           <input type="checkbox" checked={thorough} onChange={(e) => setThorough(e.target.checked)} className="mt-0.5 accent-[var(--color-fg)]" />

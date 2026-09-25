@@ -7,7 +7,9 @@ const PAD = 18
 const SHORT: Record<string, string> = { school: 'School', plaza: 'Plaza', parking: 'Parking', bus_station: 'Bus station' }
 
 /** Site plan drawn from the real fusion-area polygons (areas.geojson) and camera positions, north up, to scale. */
-export function SiteMap({ config, incidents }: { config: SiteConfigView | null; incidents: Incident[] }) {
+export function SiteMap({ config, incidents, primary, onFocus }: {
+  config: SiteConfigView | null; incidents: Incident[]; primary: string | null; onFocus: (camera: string) => void
+}) {
   const geometry = config?.geometry ?? {}
   const cams = Object.entries(config?.cameras ?? {}).filter(([id, c]) => c.pos && id !== 'G474')
   const pts: [number, number][] = [...Object.values(geometry).flat(), ...cams.map(([, c]) => [c.pos![1], c.pos![0]] as [number, number])]
@@ -30,12 +32,12 @@ export function SiteMap({ config, incidents }: { config: SiteConfigView | null; 
   const top = (area: string) => Math.max(0, ...live.filter((i) => i.area === area).map((i) => i.score))
 
   return (
-    <section className="surface shrink-0 px-4 pb-3 pt-3">
+    <section className="surface shrink-0 px-3.5 pb-2.5 pt-3">
       <div className="mb-1 flex items-center">
         <span className="text-[13px] font-medium">Site</span>
-        <span className="ml-2 truncate text-[11px] text-[var(--color-fg-3)]">{config?.site_name}</span>
+        <span className="ml-auto truncate text-[11px] text-[var(--color-fg-3)]">click a camera to view it</span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} className="max-h-[240px] w-full">
         <defs>
           <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
             <path d="M16 0H0V16" fill="none" stroke="var(--color-hair)" strokeWidth="0.5" />
@@ -65,12 +67,18 @@ export function SiteMap({ config, incidents }: { config: SiteConfigView | null; 
         {groupCameras(cams.map(([id, c]) => ({ id, area: c.area, xy: proj(c.pos![1], c.pos![0]) }))).map((g) => {
           const [x, y] = g.xy
           const hot = g.areas.some((a) => top(a) >= (config?.thresholds.open_threshold ?? 55))
+          const onScreen = !!primary && g.ids.includes(primary)
+          const target = onScreen ? primary! : g.ids[0]
           return (
-            <g key={g.ids.join()}>
+            <g key={g.ids.join()} role="button" tabIndex={0} className="cursor-pointer outline-none"
+              aria-label={`Show ${g.ids.join(' or ')} in the main view`}
+              onClick={() => onFocus(target)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onFocus(target)}>
               <title>{g.ids.map((id) => `${id} · ${config?.cameras[id].label}`).join('\n')}</title>
+              <circle cx={x} cy={y} r="9" fill="transparent" />
               {hot && <circle cx={x} cy={y} r="4" fill="none" stroke="var(--color-high)" className="ring" />}
-              <circle cx={x} cy={y} r="1.8" fill={hot ? 'var(--color-high)' : 'var(--color-fg-2)'} />
-              <text x={x + 3.5} y={y - 2.5} fontSize="5.5" fill="var(--color-fg-4)" fontFamily="var(--font-mono)">{g.ids.join(' · ')}</text>
+              {onScreen && <circle cx={x} cy={y} r="4.2" fill="none" stroke="var(--color-accent)" strokeWidth="1.2" />}
+              <circle cx={x} cy={y} r="1.9" fill={hot ? 'var(--color-high)' : onScreen ? 'var(--color-accent)' : 'var(--color-fg-2)'} />
+              <text x={x + 5} y={y - 3} fontSize="5.5" fill={onScreen ? 'var(--color-accent)' : 'var(--color-fg-3)'} fontFamily="var(--font-mono)">{g.ids.join(' · ')}</text>
             </g>
           )
         })}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clipAt, clipWindow, localTime, scoreColor, severityLabel } from '../lib'
+import { camerasFor, clipAt, clipWindow, duration, eventLabel, localTime, nextClipStart, pickPrimary, rankIncidents, scoreColor, severityLabel } from '../lib'
 import { detsAt, type FrameIndex } from '../tracks'
 import type { SiteConfigView } from '../types'
 
@@ -41,5 +41,49 @@ describe('detections lookup', () => {
     expect(detsAt(idx, 101)).toHaveLength(1)
     expect(detsAt(idx, 102)).toHaveLength(1)
     expect(detsAt(idx, 110)).toHaveLength(0)
+  })
+})
+
+describe('main camera', () => {
+  const wall = ['G421', 'G419', 'G331']
+  const cams = {
+    cameras: { G421: { area: 'school' }, G419: { area: 'school' }, G331: { area: 'bus_station' } },
+    clips: ['2018-03-15.14-50-00.14-55-00.school.G421', '2018-03-15.15-10-00.15-15-00.bus.G331'],
+  } as unknown as SiteConfigView
+  const cctv = (sensor_id: string, severity: number) => ({ source: 'cctv', sensor_id, severity })
+
+  it('lists the cameras that saw an incident first, strongest evidence first, then the rest of its area', () => {
+    expect(camerasFor({ area: 'school' }, [cctv('G421', 0.4), cctv('G419', 0.8)], cams, wall)).toEqual(['G419', 'G421'])
+    expect(camerasFor({ area: 'school' }, [{ source: 'door', sensor_id: 'G331', severity: 1 }], cams, wall)).toEqual(['G421', 'G419'])
+    expect(camerasFor(null, [], cams, wall)).toEqual([])
+  })
+  it('a pinned camera wins; otherwise the incident camera with footage; otherwise any with footage', () => {
+    const footage = (c: string) => c === 'G421'
+    expect(pickPrimary(wall, 'G331', ['G419', 'G421'], footage)).toEqual({ camera: 'G331', why: 'pinned' })
+    expect(pickPrimary(wall, null, ['G419', 'G421'], footage)).toEqual({ camera: 'G421', why: 'incident' })
+    expect(pickPrimary(wall, null, ['G419'], footage)).toEqual({ camera: 'G419', why: 'incident' })
+    expect(pickPrimary(wall, null, [], footage)).toEqual({ camera: 'G421', why: 'auto' })
+  })
+  it("finds a camera's next recording", () => {
+    expect(nextClipStart(cams, 'G331', 1521139800)).toBe(1521141000)   // 15:10:00
+    expect(nextClipStart(cams, 'G331', 1521141000)).toBeNull()
+  })
+})
+
+describe('plain language', () => {
+  it('names signals the way a person would, and falls back readably', () => {
+    expect(eventLabel('custody_change')).toBe('Bag taken by someone else')
+    expect(eventLabel('some_new_rule')).toBe('Some new rule')
+  })
+  it('ranks undecided before handled before on-watch, then by risk; drops the rest', () => {
+    const list = [
+      { id: 'a', status: 'watch', score: 90 }, { id: 'b', status: 'ack', score: 80 },
+      { id: 'c', status: 'open', score: 60 }, { id: 'd', status: 'escalated', score: 70 }, { id: 'e', status: 'dismissed', score: 99 },
+    ]
+    expect(rankIncidents(list).map((i) => i.id)).toEqual(['d', 'c', 'b', 'a'])
+  })
+  it('formats elapsed time', () => {
+    expect(duration(75)).toBe('1:15')
+    expect(duration(3725)).toBe('1:02:05')
   })
 })

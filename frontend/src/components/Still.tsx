@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { API, MOCK } from '../lib'
 import type { ArgusEvent } from '../types'
 
@@ -8,13 +8,14 @@ export function hasStill(e: ArgusEvent): boolean {
   return e.source === 'cctv' && e.type !== 'occupancy' && !!b && b[2] > b[0] && b[3] > b[1]
 }
 
-/** The evidence still of an event; hides itself when there is none (mock mode, a clip without stills). */
-export function Still({ e, className, job }: { e: ArgusEvent; className: string; job?: string }) {
+/** The evidence still of an event; hides itself (and its caption) when there is none (mock mode, a clip without stills). */
+export function Still({ e, className, job, caption }: { e: ArgusEvent; className: string; job?: string; caption?: ReactNode }) {
   const [failed, setFailed] = useState(false)
   if (failed || MOCK) return null
   const src = job ? `${API}/api/uploads/${job}/thumbs/${e.event_id}.jpg` : `${API}/media/thumbs/${e.event_id}.jpg`
-  return (
+  const img = (
     <img src={src} alt={`${e.type.replaceAll('_', ' ')} on ${e.sensor_id}`} loading="lazy" onError={() => setFailed(true)}
       className={`rounded-[3px] bg-[var(--color-surface-3)] object-cover ${className}`} />
   )
+  return caption ? <span className="mb-3 block">{img}{caption}</span> : img
 }

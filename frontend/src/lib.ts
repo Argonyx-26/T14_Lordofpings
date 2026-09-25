@@ -40,16 +40,16 @@ export async function post(path: string, body: unknown) {
 }
 
 export const SOURCE_LABEL: Record<string, string> = {
-  cctv: 'CCTV analytics',
-  door: 'Door sensor',
-  device: 'Device location',
-  auth: 'Auth logs',
+  cctv: 'Camera analytics',
+  door: 'Door sensors',
+  device: 'Phone locations',
+  auth: 'Access logs',
 }
 
 export const PROVENANCE_LABEL: Record<string, string> = {
-  computed: 'computed',
-  annotation_derived: 'from annotations',
-  recorded: 'recorded',
+  computed: 'computed by Argus',
+  annotation_derived: 'from dataset annotations',
+  recorded: 'recorded GPS',
 }
 
 export function scoreColor(score: number, cfg?: SiteConfigView): string {
@@ -71,3 +71,109 @@ export function severityLabel(score: number, cfg?: SiteConfigView): string {
 }
 
 export const fmt = (n: number | undefined) => (n ?? 0).toLocaleString('en-US')
+
+// ---- plain language ------------------------------------------------------------------------------------------
+
+/** What each signal means to a person, not the rule's internal name. */
+export const EVENT_LABEL: Record<string, string> = {
+  abandoned_object: 'Bag left unattended',
+  abandoned_package: 'Package left unattended',
+  custody_change: 'Bag taken by someone else',
+  running: 'Person running',
+  loitering: 'Person lingering',
+  vehicle_in_ped_zone: 'Vehicle in pedestrian area',
+  occupancy: 'Head count',
+  occupancy_anomaly: 'Unusual number of people',
+  door_activity: 'Door opened',
+  door_open: 'Door opened',
+  door_surge: 'Unusual door traffic',
+  device_enter: 'Phone arrived',
+  device_exit: 'Phone left',
+  device_fast_exit: 'Phone left quickly',
+  device_crowding: 'Phones gathering',
+  device_exodus: 'Many phones leaving',
+  device_dispersal: 'Area emptied suddenly',
+}
+
+export const eventLabel = (type: string) => EVENT_LABEL[type] ?? type.replaceAll('_', ' ').replace(/^./, (c) => c.toUpperCase())
+
+// ---- severity ------------------------------------------------------------------------------------------------
+
+export type Level = 'critical' | 'high' | 'watch' | 'low' | 'clear'
+
+/** One severity scale for everything on screen (same bands as scoreColor / severityLabel). */
+export function levelOf(score: number, cfg?: SiteConfigView): Level {
+  const l = severityLabel(score, cfg)
+  return l === 'Critical' ? 'critical' : l === 'High' ? 'high' : l === 'Watch' ? 'watch' : 'low'
+}
+
+export const LEVEL_COLOR: Record<Level, string> = {
+  critical: 'var(--color-crit)', high: 'var(--color-high)', watch: 'var(--color-watch)', low: 'var(--color-off)', clear: 'var(--color-ok)',
+}
+
+/** Statuses that still sit in front of a human. */
+export const ACTIVE = ['open', 'escalated', 'ack'] as const
+export const isActive = (status: string) => (ACTIVE as readonly string[]).includes(status)
+const RANK: Record<string, number> = { open: 0, escalated: 0, ack: 1, watch: 2 }
+
+/** Incidents a person should see, most urgent first: undecided before handled before on-watch, then by risk. */
+export function rankIncidents<T extends { status: string; score: number }>(list: T[]): T[] {
+  return list.filter((i) => i.status in RANK).sort((a, b) => RANK[a.status] - RANK[b.status] || b.score - a.score)
+}
+
+export const STATUS_LABEL: Record<string, string> = {
+  candidate: 'Signal', watch: 'On watch', open: 'Awaiting decision', ack: 'Acknowledged', escalated: 'Escalated', dismissed: 'Dismissed',
+}
+
+/** 75 -> "1:15", 3725 -> "1:02:05" */
+export function duration(s: number): string {
+  s = Math.max(0, Math.floor(s))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = String(s % 60).padStart(2, '0')
+  return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`
+}
+
+/** The cameras on the wall, in display order. */
+export const WALL = ['G421', 'G419', 'G420', 'G638', 'G336', 'G331']
+
+// ---- cameras -------------------------------------------------------------------------------------------------
+
+/** Start of the next recording from `camera` after `t`, or null. */
+export function nextClipStart(cfg: SiteConfigView, camera: string, t: number): number | null {
+  let best: number | null = null
+  for (const stem of cfg.clips) {
+    const w = clipWindow(stem)
+    if (w.camera === camera && w.start > t && (best === null || w.start < best)) best = w.start
+  }
+  return best
+}
+
+/** Cameras that saw an incident: those with camera evidence (strongest first), then the rest of its area. */
+export function camerasFor(
+  inc: { area: string } | null, evidence: { source: string; sensor_id: string; severity: number }[], cfg: SiteConfigView, wall: string[],
+): string[] {
+  if (!inc) return []
+  const seen = evidence.filter((e) => e.source === 'cctv' && wall.includes(e.sensor_id))
+    .sort((a, b) => b.severity - a.severity).map((e) => e.sensor_id)
+  const inArea = wall.filter((c) => cfg.cameras[c]?.area === inc.area)
+  return [...new Set([...seen, ...inArea])]
+}
+
+/**
+ * The camera on the main screen. A camera the operator pinned wins; otherwise the one that saw the incident in
+ * front of them (as a VMS alarm pops the nearest camera), preferring one that has footage right now.
+ */
+export function pickPrimary(
+  wall: string[], pinned: string | null, incidentCams: string[], hasFootage: (c: string) => boolean,
+): { camera: string; why: 'pinned' | 'incident' | 'auto' } {
+  if (pinned && wall.includes(pinned)) return { camera: pinned, why: 'pinned' }
+  const withFootage = incidentCams.find(hasFootage)
+  if (withFootage) return { camera: withFootage, why: 'incident' }
+  if (incidentCams.length) return { camera: incidentCams[0], why: 'incident' }
+  return { camera: wall.find(hasFootage) ?? wall[0], why: 'auto' }
+}
+
+/** "gemini-flash-latest" -> "Gemini", "claude-…" -> "Claude" */
+export const modelName = (model?: string | null) =>
+  model?.startsWith('gemini') ? 'Gemini' : model?.startsWith('claude') ? 'Claude' : model ?? 'the model'

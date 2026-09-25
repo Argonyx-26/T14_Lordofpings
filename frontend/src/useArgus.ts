@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react'
-import mockConfig from './mock/config.json'
-import mockSnapshot from './mock/snapshot.json'
 import { API, MOCK, WS_URL } from './lib'
 import type { ArgusEvent, Clock, Incident, SiteConfigView, Snapshot, Summary, Tick } from './types'
 
@@ -39,8 +37,12 @@ export function reducer(s: ArgusState, a: Action): ArgusState {
         mockEvidence: a.snap.evidence ?? s.mockEvidence,
       }
     case 'tick': {
-      const incidents = { ...s.incidents }
-      for (const i of a.tick.incidents) incidents[i.incident_id] = i
+      // keep the same object when nothing changed, so views memoised on it don't recompute four times a second
+      let incidents = s.incidents
+      if (a.tick.incidents.length) {
+        incidents = { ...s.incidents }
+        for (const i of a.tick.incidents) incidents[i.incident_id] = i
+      }
       const events = a.tick.events.length ? [...s.events, ...a.tick.events].slice(-MAX_EVENTS) : s.events
       return { ...s, clock: a.tick.clock, summary: a.tick.summary, incidents, events }
     }
@@ -57,8 +59,11 @@ export function useArgus() {
 
   useEffect(() => {
     if (MOCK) {
-      dispatch({ kind: 'config', config: mockConfig as unknown as SiteConfigView })
-      dispatch({ kind: 'snapshot', snap: mockSnapshot as unknown as Snapshot })
+      // loaded on demand so the live console never downloads the sample data
+      Promise.all([import('./mock/config.json'), import('./mock/snapshot.json')]).then(([c, s]) => {
+        dispatch({ kind: 'config', config: c.default as unknown as SiteConfigView })
+        dispatch({ kind: 'snapshot', snap: s.default as unknown as Snapshot })
+      })
       return
     }
     let cancelled = false
