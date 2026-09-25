@@ -70,7 +70,13 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 **5. Assesses any footage.** Drop in a clip from any camera, even a phone. ARGUS tracks everything in it, flags threats with the same rules, and returns a threat assessment (verdict, risk over time, incidents with forecasts) under the security profile you pick.
 
 
-**6. Adapts to the site.** One switch: **Airport** (every area critical, any unattended bag or weapon goes straight to a person), **School / college** (the tuned setting) or **Public park** (running and crowds are normal). Measured on the same footage: 4/5, 4/5 and 2/5 caught, with 0 false incidents in all three.
+**6. Sees patterns above incidents.** Two thefts four minutes apart are not two unrelated rows. ARGUS links incidents that follow the same crime script and share its act, then checks the site map: could one person have walked it in the gap? *Walkable*, *same place*, or *too soon to walk* (at least two people). After an act it puts the site on **near-repeat watch**: where to look next, until when, and where no camera can see. It links behaviour, place and time, never faces or phones, and it never changes a score.
+
+**7. Knows where it is blind.** Every area's coverage is computed from the site model: which streams can see it, which cameras are recording, and what it cannot see at all (the parking lots have phone counts but no camera). Every score says how much evidence its area can give; a covered stage camera is noticed in 2 s and its area goes blind until the view is back.
+
+**8. Writes the case up.** One click turns an incident into a case report: timeline, evidence, the score's arithmetic, the pattern, the blind spots, the forecast and every decision with its audit hash. Print it, or copy it into a message.
+
+**9. Adapts to the site.** One switch: **Airport** (every area critical, any unattended bag or weapon goes straight to a person), **School / college** (the tuned setting) or **Public park** (running and crowds are normal). Measured on the same footage: 4/5, 4/5 and 2/5 caught, with 0 false incidents in all three.
 
 ## ▶ The 90-second tour
 
@@ -81,8 +87,9 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 2. **Open the top incident.** The main camera follows it. Click an evidence row to replay that moment on the camera that saw it.
 3. **Read "Where this is heading"**: the crime-script stage and what the next stage would do to the risk.
 4. **Press "Plan the response"**: what would change the score, and every response compared. Simulate one, then apply it.
-5. **Respond**, then open the **Decision log** to see the verified hash chain.
-6. **On stage, analyse a video**: hand us a clip and watch the threat assessment appear.
+5. **Read "Part of a pattern"** and the site map's arcs, *watch next* outlines and hatched blind spots.
+6. **Respond**, then open the **Decision log** to see the verified hash chain, and the **Case report**.
+7. **On stage, analyse a video**: hand us a clip and watch the threat assessment appear. Cover the stage camera: ARGUS notices its own eye going dark.
 
 ## ⚙ How it works
 
@@ -102,6 +109,11 @@ flowchart LR
     F["Same area + 2 min window<br/>one incident"]
     S["Transparent 0-100 score<br/>corroboration, criticality, profile"]
   end
+  subgraph Intel["Above incidents (read-only)"]
+    PL["Pattern links<br/>same act, walkable?"]
+    NR["Near-repeat watch<br/>where to look next"]
+    CV["Coverage<br/>what it can't see"]
+  end
   subgraph Human["A person decides"]
     B["Brief, checked<br/>against evidence"]
     P["Forecast +<br/>response planner"]
@@ -114,6 +126,8 @@ flowchart LR
   F --> S --> B --> A
   S --> P --> A
   A -. "dismissals lower<br/>similar scores" .-> S
+  S --> PL --> NR --> B
+  CV --> B
 ```
 
 <details>
@@ -159,6 +173,25 @@ Competing systems stop at *what is happening*. ARGUS adds *what happens next, an
 | **Simulate and apply** | One response played forward against the evidence window, then applied through the same audit-logged action as the Respond menu. | |
 
 Guard posts, walking speed and police or medical times are **assumptions** for the demo site (`site.yaml → response`), and the console labels them as such. Code: `backend/argus/forecast.py`, tested in `backend/tests/test_forecast.py`.
+
+## ◈ Above incidents: patterns and blind spots
+
+Every incident dashboard stops at the incident. Security platforms that go further correlate *across* them
+([Splunk risk-based alerting](https://help.splunk.com/en/splunk-enterprise-security-8/administer/8.5/risk-based-alerting/risk-scoring-in-splunk-enterprise-security),
+[Sentinel Fusion](https://learn.microsoft.com/en-us/azure/sentinel/fusion)) and score their own visibility
+([DeTT&CT](https://github.com/rabobank-cdc/DeTTECT)). ARGUS brings both to a physical site, with rules anyone can read:
+
+| Piece | Rule | Code |
+|---|---|---|
+| **Link** | Two incidents follow the same crime script (`playbook.yaml`), share its *act* (a bag taken, not merely left), and the second starts within 30 min of the first. Walking time between the areas (site geometry, the site's own walking assumptions) names the link: `repeat`, `near_repeat` (one person could have done both) or `concurrent` (too soon to walk: at least two people). Only camera-seen behaviour counts; phone counts never make a series | `patterns.py` |
+| **Series** | Connected links, oldest first ("3 bag thefts in 21 min across the school and the bus station"), with what they allow one to conclude and no more | `patterns.py` |
+| **Near-repeat watch** | After an act, offences cluster in space and time ([near-repeat victimisation](https://www.researchgate.net/publication/314293755_Comparative_Analysis_of_Two_Variants_of_the_Knox_Test_Inferences_from_Space-Time_Crime_Pattern_Analysis)). Every area ranked by criticality × e^(−walk / 3 min) × time left in the window; the top two are *watch next*, with the camera that sees them or a note that none does | `patterns.py` |
+| **Coverage** | Per area: streams that cover it, cameras recording now (MEVA's clip table; a tampered camera counts as not seeing), the behaviours it can and cannot see, the corroboration ceiling; site visibility weighted by criticality | `coverage.py` |
+| **Camera tamper** | Stage camera: brightness, contrast and detail against the scene's own baseline; lost for 2 s opens *Camera view lost* | `vision/live_rules.py` |
+
+The layer is read-only: it never changes a score, opens or hides an incident, so every number in the results is
+unchanged. Measured against MEVA's ground truth with `python -m argus.eval.patterns_eval` (counts with the chance
+level; n is five staged events). Served at `GET /api/intel`; tested in `backend/tests/test_intel.py`.
 
 ## 📊 Results
 
@@ -214,7 +247,7 @@ On the website the same eye becomes the hero: real footage from the bus-station 
 
 ## 🛠 Engineering
 
-- **50 backend tests and 14 frontend tests** on every push ([CI](https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml)). Tests that need MEVA video skip themselves; the rest run anywhere.
+- **73 backend tests and 14 frontend tests** on every push ([CI](https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml)). Tests that need MEVA video skip themselves; the rest run anywhere.
 - **Deterministic**: the same events in the same order give the same incidents, scores and forecasts.
 - **Offline on stage**: fonts, briefs and Ask ARGUS answers are cached; nothing needs the network.
 - **Windows-first demo**: PowerShell setup, run and stop scripts, UTF-8 file I/O everywhere, one process at `http://localhost:8000`.
