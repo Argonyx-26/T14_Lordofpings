@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Sat 26 Sep 01:39 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Sat 26 Sep 01:55 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -12,7 +12,7 @@ _Updated Sat 26 Sep 01:39 IST. Refreshed every 5 min and pushed only when someth
 
 - Backend + console: **up** at http://localhost:8000 · 1242 events · briefs by `gemini-flash-latest`
 - Live tile: **down**
-- AI briefs cached: 7
+- AI briefs cached: 8
 - Metrics: 4/5 caught · 1242 → 20 → 3
 
 **Upload jobs (Analyse a video):**
@@ -23,12 +23,12 @@ _Updated Sat 26 Sep 01:39 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+b47a81d Live incident on stage: the unattended-bag rule on the webcam (live.py --rules). A bag's owner is whoever brought it; it is abandoned when the owner leaves it for 15 s (bystanders don't count), with a countdown drawn on the stream. The alert and its still go to POST /api/live/event, join the replay in a 'Stage camera (live)' area and are fused, scored and briefed like any other signal; the console switches the camera wall to the live feed for that incident. Checked on the staged MEVA abandonment (G331 15:18): fires once, 0.3 s from the offline rule, owner-left; no alert for the platform's other bags. 4 tests. scale.py: numpy values in event attrs no longer crash the results file. train_weapons.py: v2 (+2,500 synthetic frames)
+0e6d84a Links to the live website (argus-lordofpings.vercel.app: site, judges' page, offline console, Raah analytics) in the README, site/README.md and HANDOFF_TO_JACK Â§14
 9dd1537 The ARGUS eye: a living instrument at the heart of the console (camera ring, three stream rings pulsing with live signal rates, signals flowing inward as particles with routine ones absorbed, pupil and iris dilating with the most urgent state, sweep at replay speed) in the situation band and the no-decision panel; boot sequence that opens the eye while the console links up (real readiness, hard 4.5 s cap, skippable, once per session) and flies it into the band; decoding incident titles, briefs that come into focus, spring re-ranking of the queue, rolling counts, glass HUD chips over footage; Motion's layout features lazy-loaded; theme colours emitted statically (the stream colours never reached the page). Website: real footage seen through the eye's aperture, opening with scroll to full bleed; inertial wheel scroll, sections that come into focus, decoding eyebrows, counting numbers (site/motion.js, no dependencies, offline, reduced-motion safe). Hosting without admin rights: scripts/build_site.sh + scripts/deploy_site.sh publish site + offline console with Raah analytics to Vercel; GitHub Pages workflow removed; README design section and new links
 f50e47e Pages: Raah analytics (project proj_wwwp2pa8sqx7ytp4, domain argonyx-26.github.io) injected into the site, judges page and hosted console at build time; the offline demo on the laptop stays network-free
 6f29088 README and judges page: fight detection at 76.7% / AUC 0.854 (pose + pretrained VideoMAE, 87/150 fights, 12 false) per 659e8df
 d12960e What happens next, in the console and for uploads: 'Where this is heading' card and a response planner (crime-script stages with intervention points, what would change the score as bars on the site's bands, course-of-action comparison with a simulation, apply through the audit-logged action); Analyse a video becomes a threat assessment (verdict, risk over the clip, Airport / School / Park switch, forecast and planner per incident); offline demo snapshot carries forecasts (python -m argus.forecast snapshot); ?plan=1 and ?upload=<id> deep links. Packaging: CI (backend pytest, frontend lint/types/tests/build), GitHub Pages workflow (site + offline console, Raah when RAAH_PID is set; deploys once Pages is enabled), README rewritten (banner, badges, results with n and method, 90-second tour, mermaid architecture, forecasting method, privacy, AI disclosure, team), judges page, live-demo links on the site; HANDOFF_TO_JACK Â§14
 659e8df Violence: pretrained surveillance video model fused with pose; accuracy 76.7 %, AUC 0.854 on 300 CCTV clips
 cb040c4 Forecast and response planning (argus/forecast.py): crime-script stage (precursor -> commission -> departure, playbook scripts), what would change the score (next stages, another sensor agreeing, night, other profiles, dismissal) re-scored with the real scorer at each signal's usual strength, course-of-action comparison (time to effect from guard posts and stated service times, stage disrupted, people affected from GPS, disruption, decision recorded) ranked by a stated rule; GET /api/incidents/{id}/forecast; uploads get a threat assessment (verdict, risk timeline, forecasts) re-fused under any profile via GET /api/uploads/{id}/assess; 8 tests
-2f37032 HANDOFF Â§12: mentor round (profiles, weapons, violence, person down, hand-offs, dealing pattern) with numbers, n and method, and what to say on stage
-2355441 Weapon detector results on an unseen camera (Cam7, 3,511 frames): AP50 handgun 0.51, rifle 0.54, knife 0.09; alert level 42/84 weapon appearances, 14 false alerts in 29 min (dark phones in hand); train_weapons.py alerts reproduces it; scale.py also runs the weapon pass and logs threat events on ordinary footage
 ```
