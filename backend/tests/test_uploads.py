@@ -23,5 +23,12 @@ def test_rejects_non_video_files(tmp_path, monkeypatch):
     assert mgr.get("../../etc") is None and mgr.get("not-an-id") is None
 
 
+def test_uploads_are_scored_as_daytime():
+    from argus.fusion.score import time_factor
+    start = clip_start_epoch()
+    assert time_factor(start, site()) == 1.0
+    assert time_factor(start + 3600, site()) == 1.0      # an hour-long clip stays in daytime
+
+
 def test_upload_area_exists_for_fusion():
     assert site().area_name("upload") == "Uploaded clip"

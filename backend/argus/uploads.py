@@ -42,7 +42,8 @@ ID_RE = re.compile(r"^[0-9a-f]{10}$")
 RULES_FPS = 30                    # the vision rules' frame clock
 ANALYSIS_FPS = 15                 # frames analysed per second of footage
 CANVAS_W, CANVAS_H = 1920, 1072   # the vision rules' pixel space
-CLIP_DAY = "2000-01-01"           # uploaded clips get a synthetic clock starting at 00:00:00
+CLIP_DAY = "2000-01-01"           # uploaded clips get a synthetic clock on this day ...
+CLIP_START_H = 12                 # ... starting at noon, so the unknown time of day never triggers the night factor
 TRACK_CLASSES = [0, 2, 3, 5, 7, 24, 26, 28, 63, 67]   # people, vehicles, bags, laptops, phones
 VALUABLES = [24, 26, 28, 63, 67]
 BAG_PASS = os.environ.get("ARGUS_UPLOAD_BAG_PASS", "1") != "0"
@@ -75,14 +76,14 @@ def _weights(name: str = "yolo11s.pt") -> str:
 
 def _stem(job_id: str, duration_s: float) -> str:
     """A clip name the vision rules can parse: <date>.<start>.<end>.<site>.<camera>."""
-    end = timedelta(seconds=min(int(math.ceil(duration_s)), 86_399))
+    end = timedelta(hours=CLIP_START_H, seconds=min(int(math.ceil(duration_s)), (24 - CLIP_START_H) * 3600 - 1))
     hh, rem = divmod(int(end.total_seconds()), 3600)
     mm, ss = divmod(rem, 60)
-    return f"{CLIP_DAY}.00-00-00.{hh:02d}-{mm:02d}-{ss:02d}.upload.U{job_id}"
+    return f"{CLIP_DAY}.{CLIP_START_H:02d}-00-00.{hh:02d}-{mm:02d}-{ss:02d}.upload.U{job_id}"
 
 
 def clip_start_epoch() -> float:
-    return site().local_to_epoch(f"{CLIP_DAY} 00:00:00")
+    return site().local_to_epoch(f"{CLIP_DAY} {CLIP_START_H:02d}:00:00")
 
 
 class UploadManager:

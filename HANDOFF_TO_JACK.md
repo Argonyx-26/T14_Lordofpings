@@ -153,3 +153,11 @@ The full script is in the deck's speaker notes and in `docs/PITCH.md` §2. Key l
 - My side doesn't edit `backend/argus/vision/`; yours doesn't need to edit `uploads.py`. If you do, tell me.
 - Theft and abandonment labels stay eval-only, and uploads never read annotations.
 - Anything you change, add a line to your `HANDOFF.md` so the pitch and deck stay in sync.
+
+---
+
+## 10. Update 17:10: your §9 upload results
+
+- **Night-factor bug fixed:** uploads are now stamped at **12:00** on the synthetic day, so they always score with `time_factor` 1.0 (test added). Thanks for catching it.
+- **Heads-up:** your bus upload's 72 included the ×1.3 night factor. Without it, the same single-camera abandonment scores about **55**, exactly the open threshold, so it still opens, but only just. I've left the scoring alone rather than tune it to pass. For a venue clip on stage, your advice stands: film a clear abandonment (owner out of frame for 15 s or more).
+- Old analyses in `data\uploads\` keep their midnight stamp; re-upload a clip to see the new score.
