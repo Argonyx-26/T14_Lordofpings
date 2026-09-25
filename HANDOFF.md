@@ -103,3 +103,15 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
   - `run_demo.ps1 -Prepare -Live` ran end to end, and the site is at `/site/`.
   - Fix needed on the way: this `.venv` was created by `uv`, so it has **no pip**, and `setup_windows.ps1` would have failed at `pip install`. The script now runs `python -m ensurepip --upgrade` first (one line). `python-multipart` was installed; `lap` 0.5.13 was already there.
 - Next on this laptop: **§3 Analyse a video** on the GPU, then the website screenshot, the 2-minute video, and the offline run-through.
+
+## 9. §3 "Analyse a video": GPU results (full pipeline, live tile running at the same time)
+
+| Clip | Time | Events | Incidents | vs ground truth / demo pipeline |
+|---|---|---|---|---|
+| `15-15-00.15-20-00.bus.G331` (5:00, 1080p30) | **318 s** (tracking 147 s + valuables 162 s + rules 5 s) | 7 occupancy, 2 `abandoned_object` (backpack) at **3:26.6 and 3:46.0** | **1: "Unattended object", score 72, open** | GT 3:07. The events are identical to the demo pipeline (3:26.6 / 3:46.0). No errors. |
+| `14-50-00.14-55-00.school.G421` cafe (5:00) | **298 s** | 8 occupancy, 1 `custody_change` (laptop) at **4:19.9**, sev 0.45 | **0** | Theft 2 (GT 4:18) detected; **theft 1 (GT 3:38) missed**. The demo pipeline finds it at 3:41 with sev 0.6, the "carrier exits through a door" variant, which needs the camera's door polygons. **No extra bag alerts**, contrary to the expectation. |
+
+- **Speed ≈ 1× real time** (a 1-min clip takes ~1 min). Only clips of ~30 s or less fit in Q&A.
+- **Why the cafe hit didn't become an incident:** a single source at sev 0.45 scores **33**, just under watch (35). Breakdown: confidence 0.35, criticality 0.84, `time_factor` **1.3**.
+- **Bug-ish, for Tanush:** uploads are stamped `2000-01-01 00:00`, so they get the **night** factor (20:00–06:00). Probably unintended: either stamp uploads at midday, or skip the night factor for the `upload` area.
+- **For a venue clip on stage, film an abandonment** (a bag left behind while its owner walks out of frame for 15 s or more). That's sev 0.8 and opens an incident on its own. A bag hand-off alone (0.45) won't, unless it's followed by the carrier walking out of frame.
