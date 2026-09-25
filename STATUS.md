@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 20:07 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 20:23 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -23,6 +23,7 @@ _Updated Fri 25 Sep 20:07 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+71f853c door_eval.py: per-camera door-sensor scoring with overrides; HANDOFF: door findings (G331 doors held open vs opening labels, G336 door 100 m away, rejected occlusion idea)
 958d9de Evidence stills for uploaded videos: the worker renders them from the original clip (rules canvas mapped back to the clip's frames and pixels; never fails a job), GET /api/uploads/{job}/thumbs/{event}.jpg, a key frame on each upload incident and a still on each event; Still is a shared component
 7ed1a3b HANDOFF Â§11 update: set A result and why it missed, set C, merged report, timing, Ask offline warm-up
 4f77271 Ask ARGUS: python -m argus.ask "<local time>" "<question>" pre-answers a rehearsed question at that replay moment, so it is served from the cache on stage without Wi-Fi
@@ -30,5 +31,4 @@ _Updated Fri 25 Sep 20:07 IST. Refreshed every 5 min and pushed only when someth
 d30850d HANDOFF Â§11: held-out fixes (re-aimed cameras, missing theft annotation), evidence stills, Ask ARGUS, failed AI second-opinion experiment (vlm_check.py), Bengaluru hook checked
 aabfae6 Ask ARGUS: plain-language questions answered only from the log so far, with clickable citations
 0124cff Evidence stills in the incident panel; held-out set A treats re-aimed cameras as new
-c510a7b Held-out evaluation (python -m argus.eval.holdout): unchanged pipeline on unseen MEVA footage (5 Mar with one staged theft; 15 Mar 15:30-15:40, all cameras + GPS), writes docs/HOLDOUT_RESULTS.md; door-sensor experiment and overfitting / sample-size / door answers in the pitch; handoff Â§12 for Jack
 ```
