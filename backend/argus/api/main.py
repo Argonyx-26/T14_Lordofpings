@@ -287,7 +287,7 @@ async def set_profile(body: ProfileIn):
 
 
 class LiveEventIn(BaseModel):
-    type: Literal["abandoned_object"]
+    type: Literal["abandoned_object", "weapon_visible", "violence"]
     severity: float
     confidence: float
     bbox: list[float]

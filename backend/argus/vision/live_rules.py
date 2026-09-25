@@ -13,6 +13,7 @@ The overlay draws each bag's state and countdown, so the audience can watch it h
 from __future__ import annotations
 
 import time
+from collections import deque
 from dataclasses import dataclass, field
 
 BAGS = {24: "backpack", 26: "handbag", 28: "suitcase"}
@@ -126,3 +127,133 @@ class LiveBagRule:
             cv2.rectangle(img, (x1, max(0, y1 - th - 10)), (x1 + tw + 8, y1), col, -1)
             cv2.putText(img, text, (x1 + 4, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2, cv2.LINE_AA)
         return img
+
+
+# --- threats on the live camera ----------------------------------------------------------------------------------
+SHARP = {43: "knife", 76: "scissors"}         # COCO classes: reliable up close, useless at CCTV range (0/24 frames
+SHARP_CONF, SHARP_WIN, SHARP_HITS = 0.35, 10, 5   # on the unseen test camera), so this is a stage-camera rule
+SHARP_REFRACTORY_S = 20.0
+
+
+class LiveSharpRule:
+    """A knife or scissors in someone's hands: the object overlaps (or touches) a person's box on 5 of the last 10
+    frames. Fires weapon_visible (knife 0.85, scissors 0.6) at most every 20 s per object kind."""
+
+    def __init__(self, on_event=None):
+        self.on_event = on_event
+        self.hits: dict[str, deque] = {k: deque(maxlen=SHARP_WIN) for k in SHARP.values()}
+        self.last: dict[str, float] = {}
+        self.boxes: dict[str, list] = {}
+
+    def update(self, dets, now: float | None = None, frame=None) -> None:
+        now = time.monotonic() if now is None else now
+        people = [box for cls, _, _, box in dets if cls == PERSON]
+        seen = {}
+        for cls, _, conf, box in dets:
+            kind = SHARP.get(cls)
+            if kind and conf >= SHARP_CONF and any(_gap(box, p) < 0.15 for p in people):
+                if kind not in seen or conf > seen[kind][0]:
+                    seen[kind] = (conf, box)
+        for kind, q in self.hits.items():
+            q.append(kind in seen)
+            if kind in seen:
+                self.boxes[kind] = seen[kind][1]
+            if sum(q) >= SHARP_HITS and kind in seen and now - self.last.get(kind, -1e9) >= SHARP_REFRACTORY_S:
+                self.last[kind] = now
+                if self.on_event:
+                    self.on_event("weapon_visible", {"weapon": kind, "seen_frames": int(sum(q))}, seen[kind][1],
+                                  0.85 if kind == "knife" else 0.6, float(seen[kind][0]), frame)
+
+    def overlay(self, img, scale: float):
+        import cv2
+        for kind, q in self.hits.items():
+            if sum(q) >= 2 and kind in self.boxes:
+                x1, y1, x2, y2 = (int(v * scale) for v in self.boxes[kind])
+                cv2.rectangle(img, (x1, y1), (x2, y2), (40, 40, 235), 3)
+                cv2.putText(img, f"{kind} in hand", (x1, max(14, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                            (40, 40, 235), 2, cv2.LINE_AA)
+        return img
+
+
+class LiveViolence:
+    """Fights on the live camera, with the same models as uploads: pose rows kept for the last 2.5 s on a 30 fps
+    clock, the pose (+ VideoMAE when available) random forest scored every second, an alert after two hot seconds
+    in a row, then 15 s of quiet. VideoMAE runs on a background thread on the last ~2 s of whole frames."""
+
+    WIN_S, STEP_S, P, REFRACTORY_S = 2.5, 1.0, 0.7, 15.0
+
+    def __init__(self, on_event=None, use_videomae: bool = True):
+        import joblib
+        from argus.vision import violence as vio
+        self.vio, self.on_event = vio, on_event
+        self.models = joblib.load(vio.MODEL_PATH)
+        self.rows: deque = deque()
+        self.frames: deque = deque(maxlen=48)          # ~2 s of whole frames at 24 fps for VideoMAE
+        self.vmae_p, self.p, self.prev_hot = None, 0.0, False
+        self.last_eval, self.last_emit = 0.0, -1e9
+        self.use_vmae = use_videomae
+        self._vmae_busy = False
+        if use_videomae:
+            from argus.vision import violence_videomae as vm
+            self.use_vmae = vm.available()
+
+    def _vmae(self, frames):
+        from argus.vision import violence_videomae as vm
+        try:
+            small = [cv2_resize(f) for f in frames]
+            self.vmae_p = vm.prob(small)
+        except Exception as exc:                       # the pose model alone still works
+            print(f"[live] VideoMAE skipped: {exc}", flush=True)
+            self.use_vmae = False
+        finally:
+            self._vmae_busy = False
+
+    def update(self, pose_result, frame, now: float | None = None) -> None:
+        import threading
+        now = time.monotonic() if now is None else now
+        f = int(now * 30)
+        self.frames.append(frame)
+        r = pose_result
+        if r.boxes is not None and r.boxes.id is not None and r.keypoints is not None:
+            for box, tid, cf, kp in zip(r.boxes.xyxy.tolist(), r.boxes.id.int().tolist(), r.boxes.conf.tolist(),
+                                        r.keypoints.data.tolist()):
+                self.rows.append({"frame": f, "tid": tid, "conf": cf, "xyxy": box, "kp": kp})
+        while self.rows and self.rows[0]["frame"] < f - int(self.WIN_S * 30):
+            self.rows.popleft()
+        if self.use_vmae and not self._vmae_busy and now - self.last_eval >= self.STEP_S and len(self.frames) >= 16:
+            self._vmae_busy = True
+            threading.Thread(target=self._vmae, args=(list(self.frames),), daemon=True).start()
+        if now - self.last_eval < self.STEP_S:
+            return
+        self.last_eval = now
+        window = list(self.rows)
+        if len({x["tid"] for x in window}) < 2:
+            self.p, self.prev_hot = 0.0, False
+            return
+        x = self.vio.vector(self.vio.features(window, 30.0))
+        if self.vmae_p is not None and "pose_videomae" in self.models:
+            self.p = float(self.models["pose_videomae"]["model"].predict_proba([x + [self.vmae_p]])[0, 1])
+        else:
+            self.p = float(self.models.get("pose", self.models)["model"].predict_proba([x])[0, 1])
+        hot = self.p >= self.P
+        if hot and self.prev_hot and now - self.last_emit >= self.REFRACTORY_S and self.on_event:
+            self.last_emit = now
+            xs = [b for row in window for b in (row["xyxy"],)]
+            box = [min(b[0] for b in xs), min(b[1] for b in xs), max(b[2] for b in xs), max(b[3] for b in xs)]
+            self.on_event("violence", {"probability": round(self.p, 3), "model": "pose + VideoMAE" if self.vmae_p is not None
+                                       else "pose", "people": len({x["tid"] for x in window})}, box,
+                          min(0.95, 0.6 + 0.4 * self.p), self.p, frame)
+        self.prev_hot = hot
+
+    def overlay(self, img):
+        import cv2
+        col = (40, 40, 235) if self.p >= self.P else (80, 200, 120)
+        cv2.putText(img, f"fight probability {self.p:.2f}", (12, img.shape[0] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                    col, 2, cv2.LINE_AA)
+        return img
+
+
+def cv2_resize(f, w: int = 480):
+    import cv2
+    h = int(f.shape[0] * w / f.shape[1])
+    return cv2.resize(f, (w, h))

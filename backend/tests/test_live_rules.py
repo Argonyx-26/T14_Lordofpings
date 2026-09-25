@@ -40,3 +40,17 @@ def test_owner_returning_resets_the_countdown():
     carry = [[(0, 1, 0.9, person(480)), (24, None, 0.8, BAG)]] * 6
     away = [[(24, None, 0.8, BAG)]] * 6                                       # 3 s away: under the 5 s limit
     assert run(carry + away + carry + away) == []
+
+
+def test_knife_in_hand_fires_once_knife_on_table_does_not():
+    from argus.vision.live_rules import LiveSharpRule
+    fired = []
+    rule = LiveSharpRule(on_event=lambda etype, attrs, box, sev, conf, frame: fired.append((etype, attrs["weapon"])))
+    hand = [(0, 1, 0.9, [100, 100, 200, 400]), (43, None, 0.6, [190, 200, 230, 260])]    # touching the person
+    table = [(0, 1, 0.9, [100, 100, 200, 400]), (43, None, 0.6, [600, 300, 650, 330])]   # far from anyone
+    for i in range(30):
+        rule.update(table, now=i * 0.1)
+    assert fired == []
+    for i in range(30, 60):
+        rule.update(hand, now=i * 0.1)
+    assert fired == [("weapon_visible", "knife")]                # once, then the 20 s refractory
