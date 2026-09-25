@@ -28,7 +28,11 @@ scripts/         data download helpers
 docs/            team handoff and plans
 ```
 
-## Run the backend (macOS / Linux / Windows)
+## Run the demo (Windows laptop)
+
+See **[docs/RUN_WINDOWS.md](docs/RUN_WINDOWS.md)**: `scripts\setup_windows.ps1` once, then `scripts\run_demo.ps1 -Prepare`. The whole demo is one process at http://localhost:8000.
+
+## Run the backend for development (macOS / Linux / Windows)
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -r backend/requirements.txt   # Windows: .venv\Scripts\pip

@@ -9,14 +9,15 @@ areas:                         # coarse areas used for fusion; GPS polygons live
   bus_station: {name: "Bus station",          criticality: 0.8}
   parking:     {name: "Parking areas",        criticality: 0.4}
 
-cameras:                       # camera -> zone (fine) -> area (coarse)
-  G421: {zone: school_cafe,  area: school,      label: "School cafe"}
-  G419: {zone: school_doors, area: school,      label: "School doors A"}
-  G420: {zone: school_doors, area: school,      label: "School doors B"}
-  G638: {zone: plaza,        area: plaza,       label: "Plaza"}
-  G336: {zone: school_road,  area: plaza,       label: "School exterior / road"}
-  G474: {zone: school_road,  area: plaza,       label: "School exterior (IR)"}
-  G331: {zone: bus_platform, area: bus_station, label: "Bus station"}
+cameras:                       # camera -> zone (fine) -> area (coarse); pos = [lat, lon] for the site map
+  # Exterior positions (G336, G638) come from MEVA KRTD calibrations; indoor ones are placed inside their building.
+  G421: {zone: school_cafe,  area: school,      label: "School cafe",            pos: [39.05060, -85.52880]}
+  G419: {zone: school_doors, area: school,      label: "School doors A",         pos: [39.05052, -85.52850]}
+  G420: {zone: school_doors, area: school,      label: "School doors B",         pos: [39.05062, -85.52832]}
+  G638: {zone: plaza,        area: plaza,       label: "Plaza",                  pos: [39.050537, -85.529133]}
+  G336: {zone: school_road,  area: plaza,       label: "School exterior / road", pos: [39.050541, -85.529185]}
+  G474: {zone: school_road,  area: plaza,       label: "School exterior (IR)",   pos: [39.050541, -85.529185]}
+  G331: {zone: bus_platform, area: bus_station, label: "Bus station",            pos: [39.049010, -85.529500]}
 
 fusion:
   window_s: 120                # signals in the same area within this window join one incident

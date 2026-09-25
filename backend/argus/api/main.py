@@ -149,8 +149,15 @@ def config():
                                                    "context_max_severity")},
         "window": {"start_t": rt.replay.start_t, "end_t": rt.replay.end_t},
         "clips": clips, "fps": cfg.fps,
+        "geometry": _area_geometry(),
         "attribution": "MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0. Incidents are staged by actors.",
     }
+
+
+def _area_geometry() -> dict[str, list[list[float]]]:
+    """Outer ring [lon, lat] of every fusion area, for the console's site map."""
+    geo = json.loads((settings.CONFIG_DIR / "areas.geojson").read_text(encoding="utf-8"))
+    return {f["properties"]["area"]: f["geometry"]["coordinates"][0] for f in geo["features"]}
 
 
 @app.get("/api/state")
@@ -250,3 +257,11 @@ async def ws(websocket: WebSocket):
         pass
     finally:
         rt.clients.discard(websocket)
+
+
+# ---- Console (built frontend) -------------------------------------------------------------
+# `npm run build` in frontend/ produces frontend/dist; serving it here makes the whole demo one process
+# at http://localhost:8000. Mounted last so every /api, /media and /ws route above wins.
+_CONSOLE = settings.REPO_ROOT / "frontend" / "dist"
+if _CONSOLE.is_dir():
+    app.mount("/", StaticFiles(directory=_CONSOLE, html=True), name="console")

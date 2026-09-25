@@ -1,30 +1,77 @@
 @import "tailwindcss";
 
+/* Design language: quiet, dense, typographic. Graphite surfaces separated by hairlines; colour is reserved
+   for meaning (severity, data source). Geist for UI, Geist Mono for every number, Instrument Serif for
+   display figures. Fonts are bundled (offline demo). */
+
 @theme {
-  --color-bg: #0b0f14;
-  --color-panel: #121821;
-  --color-panel-2: #18202b;
-  --color-line: #243041;
-  --color-ink: #e6edf3;
-  --color-mute: #8b98a8;
-  --color-dim: #5b6778;
-  --color-accent: #d4a646;
-  --color-watch: #d9b53f;
-  --color-high: #f08a3c;
-  --color-crit: #ef4f4f;
-  --color-ok: #3fb67a;
-  --color-cctv: #5aa9e6;
-  --color-door: #b58cf0;
-  --color-device: #4fc3a1;
-  --color-auth: #e07bb0;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-bg: #09090b;
+  --color-surface: #0e0f11;
+  --color-surface-2: #141518;
+  --color-surface-3: #1b1c20;
+  --color-hair: rgb(255 255 255 / 0.07);
+  --color-hair-2: rgb(255 255 255 / 0.12);
+  --color-fg: #ececec;
+  --color-fg-2: #a3a3ab;
+  --color-fg-3: #72727b;
+  --color-fg-4: #4f4f57;
+
+  --color-watch: #d4a72c;
+  --color-high: #f76b15;
+  --color-crit: #e5484d;
+  --color-ok: #30a46c;
+
+  --color-cctv: #8aa4ff;
+  --color-door: #c3a6ff;
+  --color-device: #5ec2a8;
+  --color-auth: #f0a3c4;
+
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
 }
 
 html, body, #root { height: 100%; }
-body { margin: 0; background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); }
-.panel { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 10px; }
-.label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-mute); }
-.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-@keyframes pulse-ring { 0% { opacity: .9 } 70% { opacity: .15 } 100% { opacity: .9 } }
-.pulse { animation: pulse-ring 1.6s ease-in-out infinite; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.display { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.01em; line-height: 1; }
+.eyebrow { font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-fg-3); }
+
+.surface { background: var(--color-surface); border: 1px solid var(--color-hair); border-radius: 8px; }
+.hairline-b { border-bottom: 1px solid var(--color-hair); }
+.hairline-t { border-top: 1px solid var(--color-hair); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 6px;
+  color: var(--color-fg-2); background: transparent; border: 1px solid var(--color-hair);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.btn:hover { color: var(--color-fg); background: var(--color-surface-2); border-color: var(--color-hair-2); }
+.btn-primary { color: #0b0b0c; background: var(--color-fg); border-color: var(--color-fg); font-weight: 500; }
+.btn-primary:hover { color: #0b0b0c; background: #ffffff; }
+.btn-icon { width: 28px; padding: 0; justify-content: center; }
+
+.seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: 7px; background: var(--color-surface-2); border: 1px solid var(--color-hair); }
+.seg > button { height: 22px; padding: 0 8px; border-radius: 5px; color: var(--color-fg-3); font-size: 12px; transition: all .15s; }
+.seg > button:hover { color: var(--color-fg); }
+.seg > button[data-on="true"] { background: var(--color-surface-3); color: var(--color-fg); box-shadow: 0 0 0 1px var(--color-hair-2); }
+
+.scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--color-surface-3) transparent; }
+
+@keyframes breathe { 0%, 100% { opacity: 1 } 50% { opacity: .35 } }
+.breathe { animation: breathe 2.4s ease-in-out infinite; }
+@keyframes ring { 0% { transform: scale(.6); opacity: .8 } 100% { transform: scale(2.4); opacity: 0 } }
+.ring { transform-origin: center; transform-box: fill-box; animation: ring 2s ease-out infinite; }
+
+select { background: transparent; }
+option { background: var(--color-surface-2); color: var(--color-fg); }

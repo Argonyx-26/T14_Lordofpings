@@ -16,3 +16,14 @@ def test_api_smoke():
             assert ws.receive_json()["type"] == "snapshot"
         assert client.get("/api/incidents/NOPE").status_code == 404
         assert client.get("/api/audit").json()["verified"] is True
+
+
+def test_console_is_served_when_built():
+    from argus import settings
+    if not (settings.REPO_ROOT / "frontend" / "dist" / "index.html").exists():
+        import pytest
+        pytest.skip("frontend not built")
+    with TestClient(app) as client:
+        r = client.get("/")
+        assert r.status_code == 200 and "<div id=\"root\">" in r.text
+        assert client.get("/api/health").json()["ok"] is True

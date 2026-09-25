@@ -57,7 +57,7 @@ export function useArgus() {
 
   useEffect(() => {
     if (MOCK) {
-      dispatch({ kind: 'config', config: mockConfig as SiteConfigView })
+      dispatch({ kind: 'config', config: mockConfig as unknown as SiteConfigView })
       dispatch({ kind: 'snapshot', snap: mockSnapshot as unknown as Snapshot })
       return
     }
