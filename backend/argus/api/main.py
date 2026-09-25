@@ -68,6 +68,8 @@ class Runtime:
         self.recent.clear()
         new_events, _ = self.replay.seek(at)
         self.remember(new_events)
+        for ev in getattr(self, "live_events", []):      # live-camera alerts survive a profile switch
+            self.engine.ingest(ev)
         self.replay.playing = playing
 
     def clock(self) -> dict:
@@ -282,6 +284,45 @@ async def set_profile(body: ProfileIn):
     snap = rt.snapshot()
     await _broadcast(snap)
     return {"profile": rt.profile, "thresholds": {k: rt.cfg.fusion[k] for k in ("watch_threshold", "open_threshold")}}
+
+
+class LiveEventIn(BaseModel):
+    type: Literal["abandoned_object"]
+    severity: float
+    confidence: float
+    bbox: list[float]
+    track: int
+    attrs: dict = {}
+    still_jpeg_b64: str | None = None
+
+
+@app.post("/api/live/event")
+async def live_event(body: LiveEventIn):
+    """An alert from the live camera (vision/live.py --rules). It joins the replay at the current moment, in the
+    'Stage camera (live)' area, so it is fused, scored, briefed and shown like any other signal."""
+    import base64
+    import time as _time
+
+    from argus.schema import Entity, Media
+    rt.live_seq = getattr(rt, "live_seq", 0) + 1
+    ev = Event(event_id=f"live-{int(_time.time())}-{rt.live_seq}", t=rt.replay.sim_t, source="cctv",
+               sensor_id="LIVE", zone="stage", area="live", type=body.type, severity=body.severity,
+               confidence=body.confidence, entity=Entity(kind="track", id=f"LIVE:t{body.track}"),
+               provenance="computed", media=Media(clip="live", frame=0, bbox=body.bbox),
+               attrs={**body.attrs, "live": True})
+    if body.still_jpeg_b64:
+        thumbs = settings.WEB_VIDEO_DIR / "thumbs"
+        thumbs.mkdir(parents=True, exist_ok=True)
+        (thumbs / f"{ev.event_id}.jpg").write_bytes(base64.b64decode(body.still_jpeg_b64))
+    rt.live_events = getattr(rt, "live_events", []) + [ev]
+    changed = rt.engine.ingest(ev)
+    rt.remember([ev])
+    for inc in changed:
+        _ensure_brief(inc)
+    await _broadcast({"type": "tick", "clock": rt.clock(), "summary": rt.engine.summary(),
+                      "events": [ev.model_dump()], "incidents": [i.model_dump() for i in changed]})
+    return {"event_id": ev.event_id, "incidents": [i.incident_id for i in changed],
+            "status": [i.status for i in changed]}
 
 
 class AskIn(BaseModel):

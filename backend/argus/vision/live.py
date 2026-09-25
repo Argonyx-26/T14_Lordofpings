@@ -3,6 +3,8 @@
   python backend/argus/vision/live.py                         # loops G421 cafe clip at real time
   python backend/argus/vision/live.py --source 0              # laptop webcam
   python backend/argus/vision/live.py --clip <stem> --port 8001
+  python backend/argus/vision/live.py --source 0 --rules      # webcam + the live unattended-bag rule (stage demo):
+                                                              # an incident opens in the console when a bag is left
 
 Frontend: <img src="http://localhost:8001/live.mjpg">   stats: GET http://localhost:8001/live/stats
 Nothing else depends on this process; if it misbehaves on stage, just stop it.
@@ -26,6 +28,7 @@ from ultralytics import YOLO
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from argus.vision.common import MEVA_DIR, camera_cfg, clip_info  # noqa: E402
+from argus.vision.live_rules import LiveBagRule  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 CLASSES = [0, 2, 3, 5, 7, 24, 26, 28]
@@ -52,8 +55,9 @@ def no_power_throttling() -> None:
 
 
 class Live:
-    def __init__(self, source, label: str, polygons: dict, weights: str, imgsz: int, header: bool = False):
-        self.source, self.label, self.polygons, self.header = source, label, polygons, header
+    def __init__(self, source, label: str, polygons: dict, weights: str, imgsz: int, header: bool = False,
+                 rule: LiveBagRule | None = None):
+        self.source, self.label, self.polygons, self.header, self.rule = source, label, polygons, header, rule
         self.model = YOLO(weights)
         self.imgsz = imgsz
         self.jpeg: bytes | None = None
@@ -78,6 +82,8 @@ class Live:
                 cv2.rectangle(img, (x1, y1), (x2, y2), col, 2)
                 tag = f"{NAMES.get(cls, cls)}{'' if tid is None else f' #{tid}'} {cf:.2f}"
                 cv2.putText(img, tag, (x1, max(12, y1 - 4)), cv2.FONT_HERSHEY_SIMPLEX, 0.42, col, 1, cv2.LINE_AA)
+        if self.rule is not None:
+            self.rule.overlay(img, s)
         if self.header:  # standalone use; the console draws its own header from /live/stats
             self._header(img, fps, infer_ms)
         cv2.putText(img, ATTRIBUTION, (8, img.shape[0] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (230, 230, 230), 1, cv2.LINE_AA)
@@ -106,6 +112,10 @@ class Live:
                 r = self.model.track(frame, persist=True, tracker="bytetrack.yaml", classes=CLASSES, conf=0.3,
                                      imgsz=self.imgsz, half=True, verbose=False)[0]
                 infer_ms = (time.perf_counter() - t1) * 1000
+                if self.rule is not None and r.boxes is not None:
+                    ids = r.boxes.id.int().tolist() if r.boxes.id is not None else [None] * len(r.boxes)
+                    self.rule.update(list(zip(r.boxes.cls.int().tolist(), ids, r.boxes.conf.tolist(),
+                                              r.boxes.xyxy.tolist())), frame=frame)
                 times.append(time.perf_counter())
                 fps = (len(times) - 1) / (times[-1] - times[0]) if len(times) > 1 else 0.0
                 img, counts = self.draw(frame, r, fps, infer_ms)
@@ -122,6 +132,37 @@ class Live:
             cap.release()
             self.model.predictor.trackers[0].reset() if getattr(self.model, "predictor", None) and \
                 getattr(self.model.predictor, "trackers", None) else None
+
+
+def event_sender(backend: str, label: str):
+    """on_event for LiveBagRule: post the alert and its evidence still to the ARGUS backend, off the video thread."""
+    import base64
+    import json
+    import urllib.request
+
+    from argus.vision.thumbs import render
+
+    def send(spot, owner_left: bool, alone_s: float, frame) -> None:
+        still = None
+        if frame is not None:
+            ok, buf = cv2.imencode(".jpg", render(frame, spot.box, "abandoned_object"), [cv2.IMWRITE_JPEG_QUALITY, 85])
+            still = base64.b64encode(buf.tobytes()).decode() if ok else None
+        body = {"type": "abandoned_object", "severity": 0.8 if owner_left else 0.7, "confidence": 0.75,
+                "bbox": [round(float(v), 1) for v in spot.box], "track": spot.owner if spot.owner is not None else spot.sid,
+                "attrs": {"object": spot.kind, "unattended_s": round(alone_s, 1), "owner_left_scene": owner_left,
+                          "camera": label}, "still_jpeg_b64": still}
+
+        def post():
+            try:
+                req = urllib.request.Request(f"{backend}/api/live/event", data=json.dumps(body).encode(),
+                                             headers={"Content-Type": "application/json"}, method="POST")
+                urllib.request.urlopen(req, timeout=5).read()
+                print(f"[live] alert sent: unattended {spot.kind} ({'owner left' if owner_left else 'owner away'})",
+                      flush=True)
+            except Exception as exc:
+                print(f"[live] could not reach the backend: {exc}", flush=True)
+        threading.Thread(target=post, daemon=True).start()
+    return send
 
 
 def make_app(live: Live) -> FastAPI:
@@ -158,6 +199,9 @@ if __name__ == "__main__":
     ap.add_argument("--imgsz", type=int, default=960)
     ap.add_argument("--port", type=int, default=8001)
     ap.add_argument("--header", action="store_true", help="burn an fps/latency header into the stream (standalone use)")
+    ap.add_argument("--rules", action="store_true", help="run the live unattended-bag rule and send alerts to ARGUS")
+    ap.add_argument("--abandon-s", type=float, default=15.0, help="seconds a bag must be alone before the alert")
+    ap.add_argument("--backend", default="http://127.0.0.1:8000")
     a = ap.parse_args()
     no_power_throttling()
     if a.source is not None:
@@ -168,6 +212,7 @@ if __name__ == "__main__":
         cam = clip_info(a.clip).camera
         cfg = camera_cfg(cam)
         label, polys = f"{cam} {cfg.get('label', '')}", cfg.get("polygons") or {}
-    live = Live(src, label, polys, a.weights, a.imgsz, header=a.header)
+    rule = LiveBagRule(a.abandon_s, on_event=event_sender(a.backend, label)) if a.rules else None
+    live = Live(src, label, polys, a.weights, a.imgsz, header=a.header, rule=rule)
     threading.Thread(target=live.run, daemon=True).start()
     uvicorn.run(make_app(live), host="127.0.0.1", port=a.port, log_level="warning")

@@ -16,6 +16,8 @@ Usage (from the repo root):
   python backend/argus/vision/train_weapons.py train     # fine-tune -> models/weapons_yolo11s.pt (~40 min on the RTX 5060)
   python backend/argus/vision/train_weapons.py test      # scores on Cam7 -> data/cache/weapons_eval.json
   python backend/argus/vision/train_weapons.py alerts    # alert level: weapon on 3 of 6 consecutive frames (2 fps)
+  python backend/argus/vision/train_weapons.py prepare_v2 && ... train_v2   # + 2,500 synthetic frames (Unity split,
+                                                                            # same authors; guns only) in training
 """
 import json
 import shutil
@@ -151,5 +153,53 @@ def alerts() -> dict:
     return out
 
 
+OUT_V2 = ROOT / "data" / "train" / "weapons_yolo_v2"
+UNITY = ROOT / "data" / "train" / "unity" / "split-2500"
+WEIGHTS_V2 = ROOT / "models" / "weapons_yolo11s_v2.pt"
+
+
+def prepare_v2() -> None:
+    """v1's training split (real Cam1 + Cam5) plus the 2,500 synthetic Unity frames; the same real test camera."""
+    for sub in ("images/train", "labels/train"):
+        (OUT_V2 / sub).mkdir(parents=True, exist_ok=True)
+    n = 0
+    for img in (OUT / "images" / "train").glob("*.jpg"):
+        for src, dst in ((img, OUT_V2 / "images/train" / img.name),
+                         (OUT / "labels/train" / f"{img.stem}.txt", OUT_V2 / "labels/train" / f"{img.stem}.txt")):
+            if not dst.exists():
+                shutil.copyfile(src, dst)
+    for xml in sorted(UNITY.glob("*.xml")):
+        img = xml.with_suffix(".jpg")
+        root = ET.parse(xml).getroot()
+        w, h = float(root.findtext("size/width")), float(root.findtext("size/height"))
+        lines = []
+        for obj in root.iter("object"):
+            cls = NAME_TO_ID.get(obj.findtext("name").replace("Rifle", "Short_rifle"))
+            b = obj.find("bndbox")
+            if cls is None or b is None:
+                continue
+            x1, y1, x2, y2 = (float(b.findtext(k)) for k in ("xmin", "ymin", "xmax", "ymax"))
+            lines.append(f"{cls} {(x1 + x2) / 2 / w:.6f} {(y1 + y2) / 2 / h:.6f} {(x2 - x1) / w:.6f} {(y2 - y1) / h:.6f}")
+        dst = OUT_V2 / "images/train" / f"unity_{img.name}"
+        if not dst.exists():
+            shutil.copyfile(img, dst)
+        (OUT_V2 / "labels/train" / f"unity_{img.stem}.txt").write_text("\n".join(lines), encoding="utf-8")
+        n += 1
+    (OUT_V2 / "data.yaml").write_text(
+        f"path: {OUT_V2.as_posix()}\ntrain: images/train\nval: {(OUT / 'images/test').as_posix()}\n"
+        f"names: {dict(enumerate(CLASSES))}\n", encoding="utf-8")
+    print(f"v2 train: {len(list((OUT_V2 / 'images/train').glob('*.jpg')))} images ({n} synthetic)")
+
+
+def train_v2(epochs: int = 30) -> None:
+    from ultralytics import YOLO
+    model = YOLO(str(ROOT / "models" / "yolo11s.pt"))
+    model.train(data=str(OUT_V2 / "data.yaml"), epochs=epochs, imgsz=IMGSZ, batch=8, workers=4, val=False,
+                project=str(RUNS), name="weapons_v2", exist_ok=True, plots=False, seed=0, verbose=False)
+    shutil.copyfile(RUNS / "weapons_v2" / "weights" / "last.pt", WEIGHTS_V2)
+    print(f"-> {WEIGHTS_V2}")
+
+
 if __name__ == "__main__":
-    {"prepare": prepare, "train": train, "test": test, "alerts": alerts}[sys.argv[1]]()
+    {"prepare": prepare, "train": train, "test": test, "alerts": alerts, "prepare_v2": prepare_v2,
+     "train_v2": train_v2}[sys.argv[1]]()

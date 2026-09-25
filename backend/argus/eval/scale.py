@@ -140,10 +140,15 @@ def process(row: dict) -> dict | None:
                            if e["type"] in ("weapon_visible", "violence", "person_down", "dealing_pattern")],
         )
     done.parent.mkdir(parents=True, exist_ok=True)
-    done.write_text(json.dumps(res), encoding="utf-8")
+    done.write_text(json.dumps(res, default=_plain), encoding="utf-8")
     if os.environ.get("ARGUS_SCALE_KEEP_VIDEO") != "1":
         video.unlink(missing_ok=True)                  # 100 MB per clip: keep the disk free
     return res
+
+
+def _plain(o):
+    """numpy values inside event attrs, for json."""
+    return o.tolist() if hasattr(o, "tolist") else str(o)
 
 
 def _match_points(det: list[float], truth: list[float]) -> int:
@@ -237,7 +242,8 @@ def main(argv=None) -> int:
                 f"doors {r.get('doors_tp', '-')}/{r.get('doors_truth', '-')} tx {r.get('tx_found', '-')}/"
                 f"{r.get('tx_truth', '-')} ({time.time() - t0:.0f} s)")
         s = summarise(results)
-        (ROOT / "results.json").write_text(json.dumps({"summary": s, "clips": results}, indent=1), encoding="utf-8")
+        (ROOT / "results.json").write_text(json.dumps({"summary": s, "clips": results}, indent=1, default=_plain),
+                                           encoding="utf-8")
     log(f"report: {write_report(summarise(results))}")
     print(json.dumps(summarise(results), indent=2))
     return 0

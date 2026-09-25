@@ -32,6 +32,9 @@ interface Props {
 export function CameraWall({ config, clock, incidents, current, evidence, focus, onFocus }: Props) {
   const [mode, setMode] = useState<'replay' | 'live'>('replay')
   const [boxes, setBoxes] = useState(true)
+  // an incident from the stage camera (live.py --rules) is shown on the live feed
+  const liveIncident = current?.area === 'live' ? current.incident_id : null
+  useEffect(() => { if (liveIncident) setMode('live') }, [liveIncident])
 
   // camera evidence per camera, stable between ticks so the overlay loops don't restart
   const byCamera = useMemo(() => {

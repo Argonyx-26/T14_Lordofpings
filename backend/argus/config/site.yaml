@@ -9,6 +9,7 @@ areas:                         # coarse areas used for fusion; GPS polygons live
   bus_station: {name: "Bus station",          criticality: 0.8}
   parking:     {name: "Parking areas",        criticality: 0.4}
   upload:      {name: "Uploaded clip",        criticality: 0.6}   # any video analysed from the console
+  live:        {name: "Stage camera (live)",  criticality: 0.8}   # the laptop webcam running the live bag rule
 
 cameras:                       # camera -> zone (fine) -> area (coarse); pos = [lat, lon] for the site map
   # Exterior positions (G336, G638) come from MEVA KRTD calibrations; indoor ones are placed inside their building.
@@ -19,6 +20,7 @@ cameras:                       # camera -> zone (fine) -> area (coarse); pos = [
   G336: {zone: school_road,  area: plaza,       label: "School exterior / road", pos: [39.050541, -85.529185]}
   G474: {zone: school_road,  area: plaza,       label: "School exterior (IR)",   pos: [39.050541, -85.529185]}
   G331: {zone: bus_platform, area: bus_station, label: "Bus station",            pos: [39.049010, -85.529500]}
+  LIVE: {zone: stage,        area: live,        label: "Stage camera (live)"}
 
 fusion:
   window_s: 120                # signals in the same area within this window join one incident
