@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from argus import settings
 from argus.config import SiteConfig
+from argus.fusion.engine import headline, story_action
 from argus.schema import Brief, Event, Incident
 
 CLAUDE_MODEL = os.environ.get("ARGUS_LLM_MODEL", "claude-opus-5")
@@ -77,12 +78,13 @@ def _evidence_lines(evidence: list[Event], cfg: SiteConfig) -> list[dict]:
 
 
 def template_brief(inc: Incident, evidence: list[Event], cfg: SiteConfig) -> Brief:
-    titles, defaults = cfg.playbook["titles"], cfg.playbook["defaults"]
+    defaults = cfg.playbook["defaults"]
     top = max(evidence, key=lambda e: e.severity) if evidence else None
-    what = titles.get(top.type, top.type) if top else "Activity"
+    what = headline(inc.signal_types, evidence, cfg) if top else "Activity"
     where = cfg.area_name(inc.area)
     srcs = ", ".join(inc.sources)
-    action = defaults.get(top.type, defaults["default"]) if top else defaults["default"]
+    action = (story_action(inc.signal_types, cfg) or defaults.get(top.type, defaults["default"])) if top \
+        else defaults["default"]
     return Brief(
         summary=f"{what} in {where} at {cfg.epoch_to_local(inc.first_signal_at)[11:]}.",
         why=(f"{len(inc.sources)} independent source{'s' if len(inc.sources) != 1 else ''} ({srcs}) "

@@ -35,6 +35,7 @@ export function UploadView({ config, onBack }: { config: SiteConfigView | null; 
   const [job, setJob] = useState<Job | null>(null)
   const [sending, setSending] = useState<{ name: string; pct: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [thorough, setThorough] = useState(true)
 
   const refreshList = useCallback(() => {
     fetch(`${API}/api/uploads`).then((r) => r.json()).then(setJobs).catch(() => {})
@@ -61,6 +62,7 @@ export function UploadView({ config, onBack }: { config: SiteConfigView | null; 
     setError(null)
     const form = new FormData()
     form.append('file', file)
+    form.append('thorough', String(thorough))
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${API}/api/uploads`)
     xhr.upload.onprogress = (e) => e.lengthComputable && setSending({ name: file.name, pct: e.loaded / e.total })
@@ -84,6 +86,13 @@ export function UploadView({ config, onBack }: { config: SiteConfigView | null; 
       <aside className="flex min-h-0 flex-col gap-3">
         <button className="btn self-start" onClick={onBack}><ArrowLeft size={14} strokeWidth={1.75} /> Back to the console</button>
         <Dropzone onFile={send} busy={!!sending} />
+        <label className="flex cursor-pointer items-start gap-2.5 px-1 text-[12px] leading-snug text-[var(--color-fg-2)]">
+          <input type="checkbox" checked={thorough} onChange={(e) => setThorough(e.target.checked)} className="mt-0.5 accent-[var(--color-fg)]" />
+          <span>
+            <span className="text-[var(--color-fg)]">Thorough scan</span>: also looks closely for small bags, phones and
+            laptops. Untick for a quick scan, about twice as fast.
+          </span>
+        </label>
         {sending && (
           <div className="surface px-4 py-3 text-[12px]">
             <div className="truncate text-[var(--color-fg)]">Uploading {sending.name}</div>

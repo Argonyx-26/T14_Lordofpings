@@ -32,3 +32,13 @@ def test_uploads_are_scored_as_daytime():
 
 def test_upload_area_exists_for_fusion():
     assert site().area_name("upload") == "Uploaded clip"
+
+
+def test_quick_scan_is_recorded_on_the_job(tmp_path, monkeypatch):
+    monkeypatch.setattr("argus.uploads.UPLOAD_DIR", tmp_path)
+    mgr = UploadManager()
+    mgr._queue.put = lambda _id: None          # don't start processing in the test
+    job = mgr.submit(io.BytesIO(b"\x00" * 16), "clip.mp4", thorough=False)
+    assert job.meta["thorough"] is False
+    job2 = mgr.submit(io.BytesIO(b"\x00" * 16), "clip.mp4")
+    assert job2.meta["thorough"] is True

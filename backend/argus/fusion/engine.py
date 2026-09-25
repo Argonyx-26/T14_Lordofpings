@@ -15,6 +15,35 @@ from argus.schema import Event, Incident
 ACTIVE = ("candidate", "watch", "open", "ack", "escalated")
 
 
+def headline(signal_types: list[str], signals: list[Event], cfg: SiteConfig) -> str:
+    """What happened, in operator words. A known story (playbook `stories`, all its types present) beats the
+    single strongest signal: an unattended bag that is then carried off is a possible theft, not "an unattended
+    object"."""
+    for story in cfg.playbook.get("stories", []):
+        if set(story["types"]) <= set(signal_types):
+            return story["title"]
+    titles = cfg.playbook["titles"]
+    top = max(signals, key=lambda e: e.severity)
+    return titles.get(top.type, top.type.replace("_", " ").capitalize())
+
+
+def story_action(signal_types: list[str], cfg: SiteConfig) -> str | None:
+    for story in cfg.playbook.get("stories", []):
+        if set(story["types"]) <= set(signal_types):
+            return story.get("action")
+    return None
+
+
+def decisive_signal(signals: list[Event], cfg: SiteConfig) -> Event | None:
+    """A signal that warrants a human on its own (playbook `decisive`), whatever the score says."""
+    rules = cfg.playbook.get("decisive", {})
+    for e in signals:
+        r = rules.get(e.type)
+        if r and e.severity >= r["min_severity"] and e.confidence >= r["min_confidence"]:
+            return e
+    return None
+
+
 class FusionEngine:
     def __init__(self, cfg: SiteConfig):
         self.cfg = cfg
@@ -105,17 +134,17 @@ class FusionEngine:
         inc.score = inc.score_breakdown.score
         inc.peak_score = max(inc.peak_score, inc.score)
         inc.title = self._title(inc, signals)
+        decisive = decisive_signal(signals, self.cfg)
+        inc.decisive = decisive is not None
         if inc.status in ("candidate", "watch"):
-            if inc.score >= f["open_threshold"]:
+            if inc.score >= f["open_threshold"] or decisive is not None:
                 inc.status = "open"
                 inc.opened_at = inc.updated_at
             elif inc.score >= f["watch_threshold"]:
                 inc.status = "watch"
 
     def _title(self, inc: Incident, signals: list[Event]) -> str:
-        titles = self.cfg.playbook["titles"]
-        top = max(signals, key=lambda e: e.severity)
-        name = titles.get(top.type, top.type.replace("_", " ").capitalize())
+        name = headline(inc.signal_types, signals, self.cfg)
         where = self.cfg.area_name(inc.area)
         extra = f" · {len(inc.sources)} sources agree" if len(inc.sources) > 1 else ""
         cause = " · likely common cause" if inc.common_cause else ""

@@ -52,38 +52,60 @@ def door_metrics(events, truth: dict[str, list[float]]) -> dict:
             "recall": round(tp_all / (tp_all + fn_all), 3) if tp_all + fn_all else None}
 
 
-def run() -> dict:
-    cfg = site()
-    events = load_all_events(cfg)
-    start, end = demo_window(cfg)
+INDOOR_DOOR_CAMERAS = {"G419", "G420", "G421"}   # the video door-contact sensor (door-leaf motion) cameras
+
+
+def door_summary(events, truth: dict[str, list[float]]) -> dict:
+    """Door metrics for all cameras and for the indoor door-sensor cameras only."""
+    out = door_metrics(events, truth)
+    if out.get("status") == "ok":
+        indoor = door_metrics([e for e in events if e.sensor_id in INDOOR_DOOR_CAMERAS],
+                              {k: v for k, v in truth.items() if k in INDOOR_DOOR_CAMERAS})
+        out["indoor"] = {k: indoor.get(k) for k in ("precision", "recall")}
+    return out
+
+
+def score_window(events, start: float, end: float, ann_dir, cfg) -> dict:
+    """Replay a window through the fusion engine and score it against the MEVA annotations in ann_dir.
+
+    Shared by the tuning-window evaluation (below) and the held-out evaluation (holdout.py), so both are
+    measured by exactly the same code.
+    """
     engine = FusionEngine(cfg)
     Replay(events, engine, start, end).run_all()
     f = cfg.fusion
-
-    shown = [i for i in engine.incidents.values() if i.peak_score >= f["watch_threshold"]]
+    incidents = list(engine.incidents.values())
+    shown = [i for i in incidents if i.peak_score >= f["watch_threshold"] or i.opened_at is not None]
     ranked = sorted(shown, key=lambda i: -i.peak_score)
+
+    def near(i, g):
+        return i.area == g.area and i.first_signal_at <= g.t_end + GT_SLACK_S and i.updated_at >= g.t_start - GT_SLACK_S
+
+    truth = [g for g in load_ground_truth(ann_dir, cfg) if start <= g.t_start <= end]
     gt_rows = []
-    for g in load_ground_truth(settings.ANNOTATION_DIR, cfg):
-        hits = [i for i in engine.incidents.values()
-                if i.area == g.area and i.first_signal_at <= g.t_end + GT_SLACK_S
-                and i.updated_at >= g.t_start - GT_SLACK_S]
-        best = max(hits, key=lambda i: i.peak_score, default=None)
-        level = ("alerted" if best and best.peak_score >= f["open_threshold"]
+    for g in truth:
+        best = max((i for i in incidents if near(i, g)), key=lambda i: i.peak_score, default=None)
+        level = ("alerted" if best and best.opened_at is not None
                  else "watch" if best and best.peak_score >= f["watch_threshold"] else "missed")
         gt_rows.append({
-            "kind": g.kind, "camera": g.camera, "area": g.area, "time": cfg.epoch_to_local(g.t_start)[11:],
+            "kind": g.kind, "camera": g.camera, "area": g.area, "time": cfg.epoch_to_local(g.t_start),
             "result": level, "incident": best.incident_id if best else None,
             "peak_score": best.peak_score if best else 0,
             "rank": ranked.index(best) + 1 if best in ranked else None,
             "latency_s": round(best.opened_at - g.t_start, 1) if best and best.opened_at else None,
             "sources": best.sources if best else [],
         })
+    # an opened incident with no staged incident near it is a false incident
+    false_incidents = [{"incident": i.incident_id, "title": i.title, "peak_score": i.peak_score,
+                        "time": cfg.epoch_to_local(i.first_signal_at)}
+                       for i in incidents if i.opened_at is not None and not any(near(i, g) for g in truth)]
 
     s = engine.summary()
     raw, silo = s["raw_events"], s["siloed_alerts"]
     surfaced = s["incidents_open"] + s["incidents_watch"]
     return {
         "window": [cfg.epoch_to_local(start), cfg.epoch_to_local(end)],
+        "hours": round((end - start) / 3600, 2),
         "reduction": {
             "raw_events": raw, "siloed_alerts": silo, "incidents_open": s["incidents_open"],
             "incidents_watch": s["incidents_watch"],
@@ -94,9 +116,16 @@ def run() -> dict:
         "ground_truth": gt_rows,
         "ground_truth_alerted": sum(r["result"] == "alerted" for r in gt_rows),
         "ground_truth_total": len(gt_rows),
-        "door_detection": door_metrics(events, load_door_truth(settings.ANNOTATION_DIR, cfg)),
+        "false_incidents": false_incidents,
+        "door_detection": door_summary(events, load_door_truth(ann_dir, cfg)),
         "cctv_events": s["by_source"].get("cctv", 0),
     }
+
+
+def run() -> dict:
+    cfg = site()
+    start, end = demo_window(cfg)
+    return score_window(load_all_events(cfg), start, end, settings.ANNOTATION_DIR, cfg)
 
 
 def main() -> int:
@@ -107,7 +136,8 @@ def main() -> int:
     print(f"Window {m['window'][0]} -> {m['window'][1][11:]}   events by source: {m['by_source']}")
     print(f"Raw events {r['raw_events']}  ->  siloed alerts {r['siloed_alerts']}  ->  "
           f"ARGUS incidents {r['incidents_open']} open + {r['incidents_watch']} watch")
-    print(f"Ground truth alerted: {m['ground_truth_alerted']}/{m['ground_truth_total']}")
+    print(f"Ground truth alerted: {m['ground_truth_alerted']}/{m['ground_truth_total']}   "
+          f"false incidents: {len(m['false_incidents'])}")
     for g in m["ground_truth"]:
         print(f"  {g['time']} {g['kind']:<18} {g['camera']} {g['area']:<12} {g['result']:<8} "
               f"score {g['peak_score']:>3} rank {g['rank']} latency {g['latency_s']} sources {g['sources']}")

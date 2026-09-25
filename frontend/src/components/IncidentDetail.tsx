@@ -96,6 +96,12 @@ export function IncidentDetail({ incident, config, role, evidence, onJump, repla
 
         <div>
           <div className="eyebrow mb-2.5">Why this score</div>
+          {incident.decisive && (
+            <p className="mb-3 text-[12px] leading-relaxed text-[var(--color-fg-2)]">
+              <span className="text-[var(--color-fg)]">Opened at once:</span> an object left behind by someone who has
+              walked out of view always goes to a human, whatever the score.
+            </p>
+          )}
           <div className="space-y-2">
             {factors.map(([name, value, level, note]) => (
               <div key={name} className="grid grid-cols-[112px_1fr_48px] items-center gap-3 text-[12px]">

@@ -88,3 +88,35 @@ def test_replay_seek_matches_straight_run(cfg):
     b.seek(start + 300)      # rewind
     b.seek(end)
     assert a.engine.summary() == b.engine.summary()
+
+
+def test_unattended_object_then_carried_off_is_titled_as_possible_theft(cfg):
+    eng = FusionEngine(cfg)
+    eng.ingest(ev(1, "cctv", "abandoned_object", 0.8, 0.65))
+    eng.ingest(ev(2, "cctv", "custody_change", 0.45, 0.55, t=T0 + 20))
+    (inc,) = eng.incidents.values()
+    assert inc.title.startswith("Possible theft: unattended object taken")
+    from argus.brief.llm import template_brief
+    brief = template_brief(inc, eng.evidence(inc.incident_id), cfg)
+    assert brief.summary.startswith("Possible theft") and brief.action_id == "track_subject"
+
+
+def test_single_signal_title_is_unchanged(cfg):
+    eng = FusionEngine(cfg)
+    eng.ingest(ev(1, "cctv", "abandoned_object", 0.7, 0.65))
+    assert next(iter(eng.incidents.values())).title.startswith("Unattended object")
+
+
+def test_owner_left_abandonment_opens_on_its_own_even_below_threshold(cfg):
+    eng = FusionEngine(cfg)
+    eng.ingest(ev(1, "cctv", "abandoned_object", 0.8, 0.65, area="parking"))   # least critical area
+    (inc,) = eng.incidents.values()
+    assert inc.score < cfg.fusion["open_threshold"]
+    assert inc.status == "open" and inc.decisive
+
+
+def test_weaker_abandonment_is_not_decisive(cfg):
+    eng = FusionEngine(cfg)
+    eng.ingest(ev(1, "cctv", "abandoned_object", 0.7, 0.65, area="parking"))
+    (inc,) = eng.incidents.values()
+    assert not inc.decisive and inc.status != "open"

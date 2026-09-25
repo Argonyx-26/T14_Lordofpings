@@ -56,6 +56,7 @@ export interface Incident {
   brief: Brief | null
   composed: boolean
   common_cause: boolean
+  decisive?: boolean
 }
 
 export interface Clock {

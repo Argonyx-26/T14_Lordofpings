@@ -75,3 +75,4 @@ class Incident(BaseModel):
     brief: Brief | None = None
     composed: bool = Field(False, description="True if any evidence relies on a cross-dataset mapping we created")
     common_cause: bool = False
+    decisive: bool = Field(False, description="Opened by a decisive signal (playbook), not only by its score")

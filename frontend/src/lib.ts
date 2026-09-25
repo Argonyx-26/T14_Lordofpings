@@ -1,9 +1,11 @@
 import type { SiteConfigView } from './types'
 
 // Served by the backend (demo): same origin. Vite dev server on :5173: talk to the backend on :8000.
-export const API = import.meta.env.VITE_ARGUS_API ?? (location.port === '5173' ? 'http://localhost:8000' : location.origin)
+// (`location` is absent outside a browser, e.g. in unit tests.)
+const loc = typeof location === 'undefined' ? undefined : location
+export const API = import.meta.env.VITE_ARGUS_API ?? (!loc || loc.port === '5173' ? 'http://localhost:8000' : loc.origin)
 export const WS_URL = API.replace(/^http/, 'ws') + '/ws'
-export const MOCK = new URLSearchParams(location.search).has('mock')
+export const MOCK = !!loc && new URLSearchParams(loc.search).has('mock')
 
 const UTC_OFFSET_H = -4 // MEVA site local time (EDT)
 

@@ -22,6 +22,17 @@ defaults:
   occupancy_anomaly:   review_footage
   default:             monitor
 
+# Evidence that tells a known story gets that story as the incident's title (all listed types present).
+stories:
+  - types: [abandoned_object, custody_change]
+    title: "Possible theft: unattended object taken"
+    action: track_subject
+
+# Signals that always warrant a human, whatever else agrees: an incident holding one opens at once.
+# abandoned_object reaches 0.8 only when its owner has walked out of view (0.7 while they are merely away).
+decisive:
+  abandoned_object: {min_severity: 0.8, min_confidence: 0.6}
+
 # Human-readable names for signal types
 titles:
   abandoned_object:    "Unattended object"

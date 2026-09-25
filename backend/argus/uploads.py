@@ -101,7 +101,9 @@ class UploadManager:
         threading.Thread(target=self._worker, daemon=True, name="argus-uploads").start()
 
     # ---- intake ----------------------------------------------------------------------------
-    def submit(self, stream: BinaryIO, filename: str) -> Job:
+    def submit(self, stream: BinaryIO, filename: str, thorough: bool = True) -> Job:
+        """thorough=False skips the valuables pass: about twice as fast, but small bags, phones and laptops
+        are only seen by the main detector (good for a short clip in Q&A)."""
         suffix = Path(filename or "").suffix.lower()
         if suffix not in ALLOWED_SUFFIXES:
             raise ValueError(f"Unsupported file type {suffix or '(none)'}; use {', '.join(sorted(ALLOWED_SUFFIXES))}")
@@ -119,6 +121,7 @@ class UploadManager:
                 f.write(chunk)
         job.meta["original"] = dest.name
         job.meta["bytes"] = written
+        job.meta["thorough"] = bool(thorough and BAG_PASS)
         job.save()
         self.jobs[job.id] = job
         self._queue.put(job.id)
@@ -172,10 +175,11 @@ class UploadManager:
 
         transcode = self._start_transcode(src, job.dir / "web.mp4")
         tracks = job.dir / f"{stem}.jsonl"
-        last = self._track(job, src, tracks, fps, width, height, frames, stride, share=0.6 if BAG_PASS else 1.0)
+        thorough = job.meta.get("thorough", BAG_PASS)
+        last = self._track(job, src, tracks, fps, width, height, frames, stride, share=0.6 if thorough else 1.0)
         if not duration:                                # container had no frame count: use what was decoded
             job.meta["duration_s"] = round((last + 1) / fps, 2)
-        if BAG_PASS:
+        if thorough:
             job.message = "Looking closely for bags, laptops and phones"
             job.save()
             self._valuables(job, src, tracks.with_name(f"{stem}.bags.jsonl"), fps, width, height, frames, stride)

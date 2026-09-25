@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Literal
 
-from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -265,10 +265,10 @@ def _job_or_404(job_id: str):
 
 
 @app.post("/api/uploads")
-def upload_video(file: UploadFile = File(...)):
+def upload_video(file: UploadFile = File(...), thorough: bool = Form(True)):
     from argus.uploads import manager
     try:
-        job = manager().submit(file.file, file.filename or "")
+        job = manager().submit(file.file, file.filename or "", thorough=thorough)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     return job.__dict__

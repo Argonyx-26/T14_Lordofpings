@@ -23,7 +23,7 @@ type Action =
 
 const MAX_EVENTS = 400
 
-function reducer(s: ArgusState, a: Action): ArgusState {
+export function reducer(s: ArgusState, a: Action): ArgusState {
   switch (a.kind) {
     case 'config':
       return { ...s, config: a.config }
@@ -47,7 +47,7 @@ function reducer(s: ArgusState, a: Action): ArgusState {
   }
 }
 
-const initial: ArgusState = {
+export const initial: ArgusState = {
   config: null, clock: null, summary: null, incidents: {}, events: [], connected: false, mock: MOCK, mockEvidence: {},
 }
 
