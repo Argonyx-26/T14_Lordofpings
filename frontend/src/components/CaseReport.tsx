@@ -21,7 +21,7 @@ interface Props {
 
 interface Row { t: number; what: string; detail: string; kind: 'signal' | 'argus' | 'decision' | 'linked' }
 
-const DECISION: Record<string, string> = { ack: 'Acknowledged', escalate: 'Escalated', dismiss: 'Dismissed' }
+const DECISION: Record<string, string> = { ack: 'Acknowledged', escalate: 'Escalated', dismiss: 'Dismissed', reopen: 'Reopened' }
 
 /**
  * The case so far, as a report someone can hand over: assembled only from the incident, its evidence, the forecast,

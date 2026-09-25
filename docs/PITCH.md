@@ -48,6 +48,8 @@ half"), and `python -m argus.export_snapshot` so the hosted console shows the sa
 | Isn't linking incidents just a guess? | "It's a stated rule: same crime script, the same act, inside 30 minutes, and a walking-time check from the site map. ARGUS calls it a working hypothesis on screen, and it never changes a score or opens an incident." |
 | Could it link innocent people? | "It links incidents, not people: no faces, no phone IDs. A link says the behaviour repeated; a person decides what that means." |
 | Does the watch actually predict anything? | "On the staged events in our window, [WATCH] later events were in a watch-next area, where chance was half. Five events is tiny and we say so; it's a prompt for attention, not a prediction of a crime." |
+| Anyone can click "Supervisor". | "The backend enforces the roles, not the buttons: a duty officer's requests for the full log, detector internals or a dismissal are refused. With a PIN set the role needs it; on a real site it's single sign-on." |
+| What does a supervisor get? | "Oversight: every decision on the site, what ARGUS has learned from dismissals and the power to undo a lesson, dismissed incidents to reopen, and the detector internals behind a score. The duty officer gets what they need to act, no more." |
 | Why is the parking lot 'blind'? | "It has no camera, only phone counts. ARGUS can count people there but cannot see a bag or a fight, and it says so on the map and in every score." |
 
 ---

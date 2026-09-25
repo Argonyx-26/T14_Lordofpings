@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
-import { API, MOCK, WS_URL } from './lib'
+import { API, MOCK, WS_URL, get } from './lib'
 import type { ArgusEvent, Clock, Forecast, Incident, Intel, SiteConfigView, Snapshot, Summary, Tick } from './types'
 
 export interface ArgusState {
@@ -109,7 +109,7 @@ export function useArgus() {
   const evidenceFor = useCallback(
     async (id: string): Promise<ArgusEvent[]> => {
       if (MOCK) return state.mockEvidence[id] ?? []
-      const r = await fetch(`${API}/api/incidents/${id}`)
+      const r = await get(`/api/incidents/${id}`)
       return r.ok ? (await r.json()).evidence : []
     },
     [state.mockEvidence],

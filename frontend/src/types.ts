@@ -93,6 +93,7 @@ export interface SiteConfigView {
   fps: number
   attribution: string
   geometry?: Record<string, [number, number][]>
+  supervisor_pin_required?: boolean
 }
 
 export interface Snapshot {
@@ -260,4 +261,23 @@ export interface Intel {
   series: Series[]
   watch: NearRepeatWatch | null
   coverage: Coverage
+}
+
+// Supervisor-only (backend/argus/api/main.py _internals, /api/learning, /api/dismissed)
+export interface Internals {
+  profile: string | null
+  signals: {
+    event_id: string; t: number; type: string; source: Source; sensor_id: string; severity: number; raw_severity: number
+    profile_weight: number | null; confidence: number; entity: { kind: string; id: string } | null
+    media: { clip: string; frame: number; bbox: number[] | null } | null; attrs: Record<string, unknown>; provenance: Provenance
+    counts_for_source: boolean
+  }[]
+  contributions: { source: Source; score_without: number; adds: number }[]
+  feedback: { factor: number; from: { area: string; type: string; factor: number }[] }
+  burst_damping: number
+}
+
+export interface LearnedRule {
+  area: string; area_name: string; type: string; factor: number; penalty: number
+  dismissals: { incident_id: string; sim_t: number; role: string }[]
 }

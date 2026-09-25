@@ -1,11 +1,11 @@
-import { ArrowUpRight, ChevronRight, Cpu, CornerDownRight, Eye, FileText, Link2, Radar, ShieldCheck, UserCheck } from 'lucide-react'
+import { ArrowUpRight, ChevronRight, Cpu, CornerDownRight, Eye, FileText, Link2, Lock, Radar, ShieldCheck, UserCheck } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { ForecastCard, ResponsePlanner } from './Forecast'
 import { BlurIn, Decode } from './Motion'
 import {
-  API, LEVEL_COLOR, MOCK, PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, fmt, levelOf, localTime, modelName, post, severityLabel, track,
+  LEVEL_COLOR, MOCK, get, PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, fmt, levelOf, localTime, modelName, post, severityLabel, track,
 } from '../lib'
-import type { ArgusEvent, Clock, Forecast, Incident, Intel, SiteConfigView, Summary } from '../types'
+import type { ArgusEvent, Clock, Forecast, Incident, Intel, Internals, SiteConfigView, Summary } from '../types'
 import { CaseReport } from './CaseReport'
 import { CoverageNote, PatternCard } from './Patterns'
 import { ResponseMenu, type Action } from './ResponseMenu'
@@ -37,6 +37,7 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
   const cfg = config ?? undefined
   const log = useAudit(incident, clock)
   const fc = useForecast(incident, clock, forecastFor, profile)
+  const internals = useInternals(incident, role)
   // ?plan=1 opens the response planner on load (links and screenshots)
   const [planning, setPlanning] = useState(() => new URLSearchParams(location.search).has('plan'))
   // ?report=1 opens the case report on load (links and screenshots)
@@ -184,6 +185,19 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
           <CoverageNote incident={incident} area={intel?.coverage.areas.find((a) => a.area === incident.area)} />
         </Section>
 
+        {role === 'supervisor' ? (
+          <Section title="Detector internals" hint={internals ? `supervisor · ${internals.signals.length} signals · ${internals.contributions.length} source${internals.contributions.length === 1 ? '' : 's'}` : MOCK ? 'needs the backend' : 'loading'}>
+            {internals ? <InternalsView internals={internals} score={incident.score} config={config} /> : (
+              <p className="text-[12px] text-[var(--color-fg-3)]">{MOCK ? 'Detector internals come from the backend; the offline demo has none.' : 'Loading…'}</p>
+            )}
+          </Section>
+        ) : (
+          <div className="flex items-start gap-2 rounded-lg px-3 py-2.5 text-[11.5px] leading-relaxed text-[var(--color-fg-3)]" style={{ boxShadow: 'inset 0 0 0 1px var(--color-hair)' }}>
+            <Lock size={12} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+            <span><span className="text-[var(--color-fg-2)]">Detector internals are supervisor-only</span>: raw strengths, profile weighting, track ids and what each source adds to the score. So are the whole decision log, what ARGUS has learned and dismissed incidents.</span>
+          </div>
+        )}
+
         <Section title="Decision log" hint={log.entries.length ? `${log.entries.length} decision${log.entries.length > 1 ? 's' : ''} · ${log.verified ? 'chain verified' : 'chain broken'}` : 'no decisions yet'}
           open={log.entries.length > 0}>
           {log.entries.length === 0 ? (
@@ -197,7 +211,7 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
                   <li key={a.hash} className="flex items-start gap-2.5 text-[12px]">
                     <UserCheck size={13} strokeWidth={1.75} className="mt-0.5 shrink-0 text-[var(--color-fg-3)]" />
                     <span className="min-w-0 flex-1">
-                      <span className="text-[var(--color-fg)]">{STATUS_LABEL[a.action === 'ack' ? 'ack' : a.action === 'escalate' ? 'escalated' : 'dismissed']}</span>
+                      <span className="text-[var(--color-fg)]">{a.action === 'reopen' ? 'Reopened' : STATUS_LABEL[a.action === 'ack' ? 'ack' : a.action === 'escalate' ? 'escalated' : 'dismissed']}</span>
                       <span className="text-[var(--color-fg-3)]"> by {a.role === 'supervisor' ? 'Supervisor' : 'Duty officer'}</span>
                       {a.note && config?.playbook[a.note] && <span className="block text-[11.5px] text-[var(--color-fg-2)]">{config.playbook[a.note]}</span>}
                       {a.note === 'false_alarm' && <span className="block text-[11.5px] text-[var(--color-fg-2)]">Marked as a false alarm</span>}
@@ -329,6 +343,67 @@ function Section({ title, hint, open, children }: { title: string; hint: string;
   )
 }
 
+/** Supervisor view: how each signal was weighted, the ones the score counts, and what each source adds. */
+function InternalsView({ internals, score, config }: { internals: Internals; score: number; config: SiteConfigView | null }) {
+  return (
+    <div className="space-y-3 text-[11.5px]">
+      <div>
+        <div className="eyebrow mb-1">What each source adds</div>
+        {internals.contributions.map((c) => (
+          <div key={c.source} className="flex items-center gap-2">
+            <SourceIcon source={c.source} size={11} />
+            <span className="text-[var(--color-fg-2)]">{SOURCE_LABEL[c.source]}</span>
+            <span className="ml-auto num text-[var(--color-fg-3)]">without it {c.score_without}</span>
+            <span className="num w-10 text-right text-[var(--color-fg)]">+{c.adds}</span>
+          </div>
+        ))}
+        <p className="mt-1 text-[10.5px] text-[var(--color-fg-4)]">The real scorer re-run without that source's evidence (score now {score}).</p>
+      </div>
+      <div>
+        <div className="eyebrow mb-1">Signals as the detectors emitted them</div>
+        <ul className="space-y-1">
+          {internals.signals.map((x) => (
+            <li key={x.event_id} className="grid grid-cols-[52px_1fr_auto] gap-2">
+              <span className="num text-[var(--color-fg-3)]">{localTime(x.t)}</span>
+              <span className="min-w-0">
+                <span className={x.counts_for_source ? 'text-[var(--color-fg)]' : 'text-[var(--color-fg-2)]'}>{eventLabel(x.type)}</span>
+                {x.counts_for_source && <span className="chip ml-1.5 h-[16px] px-1.5 text-[10px]">counted</span>}
+                <span className="block truncate text-[10.5px] text-[var(--color-fg-4)]">
+                  {x.sensor_id}{x.entity ? ` · ${x.entity.id}` : ''}{x.media ? ` · frame ${x.media.frame}` : ''}
+                  {Object.keys(x.attrs).length ? ` · ${Object.entries(x.attrs).filter(([k]) => k !== 'raw_severity').slice(0, 3).map(([k, v]) => `${k} ${typeof v === 'number' ? +v.toFixed(2) : String(v)}`).join(', ')}` : ''}
+                </span>
+              </span>
+              <span className="num text-right text-[var(--color-fg-2)]" title="severity used (raw from the detector × profile weight) · confidence">
+                {x.severity.toFixed(2)}{x.profile_weight !== null && x.profile_weight !== 1 ? <span className="text-[var(--color-fg-4)]"> ({x.raw_severity.toFixed(2)}×{x.profile_weight})</span> : null} · {x.confidence.toFixed(2)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="text-[10.5px] text-[var(--color-fg-4)]">
+        Profile <span className="num">{internals.profile ?? 'as tuned'}</span> · feedback ×{internals.feedback.factor}
+        {internals.feedback.from.length > 0 && ` (dismissals of ${internals.feedback.from.map((f) => `${eventLabel(f.type).toLowerCase()} in ${config?.areas[f.area]?.name ?? f.area}`).join(', ')})`}
+        {internals.burst_damping < 1 && ` · common-cause damping ×${internals.burst_damping}`}
+      </p>
+    </div>
+  )
+}
+
+/** Detector internals for the incident on screen, when a supervisor is signed in (the backend refuses anyone else). */
+function useInternals(incident: Incident | null, role: Role) {
+  const [data, setData] = useState<{ id: string; internals: Internals } | null>(null)
+  const id = incident?.incident_id
+  const key = incident ? `${incident.incident_id}:${incident.event_ids.length}:${incident.score}` : ''
+  useEffect(() => {
+    if (!id || role !== 'supervisor' || MOCK) return
+    let stale = false
+    get(`/api/incidents/${id}`).then((r) => (r.ok ? r.json() : null)).then((d) => { if (!stale && d?.internals) setData({ id, internals: d.internals }) }).catch(() => {})
+    return () => { stale = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, role])
+  return role === 'supervisor' && data && data.id === id ? data.internals : null
+}
+
 /** The incident's forecast, refetched when its evidence, status or profile changes, and every 30 s of replay time. */
 function useForecast(incident: Incident | null, clock: Clock | null, forecastFor: (id: string) => Promise<Forecast | null>, profile?: string) {
   const [fc, setFc] = useState<Forecast | null>(null)
@@ -358,7 +433,7 @@ function useAudit(incident: Incident | null, clock: Clock | null) {
   useEffect(() => {
     if (!id || MOCK) return
     let stale = false
-    fetch(`${API}/api/audit`).then((r) => r.json()).then((d) => { if (!stale) setData(d) }).catch(() => {})
+    get(`/api/audit?incident=${encodeURIComponent(id)}`).then((r) => r.json()).then((d) => { if (!stale && d.entries) setData(d) }).catch(() => {})
     return () => { stale = true }
   }, [id, status, n])
   const decided = status === 'ack' || status === 'escalated' || status === 'dismissed'

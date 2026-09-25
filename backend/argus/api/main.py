@@ -9,13 +9,14 @@ import logging
 import os
 from typing import Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from argus import settings
+from argus.access import for_duty_officer, pin_required, require_supervisor, role_of
 from argus.audit import AuditLog
 from argus.brief.llm import MODEL, brief_for, template_brief
 from argus.config import profiles, site
@@ -183,6 +184,7 @@ async def config():
         "profiles": [{"id": k, "label": v["label"], "description": v.get("description", "")}
                      for k, v in profiles()["profiles"].items()],
         "geometry": _area_geometry(),
+        "supervisor_pin_required": pin_required(),
         "attribution": "MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0. Incidents are staged by actors.",
     }
 
@@ -198,12 +200,52 @@ async def state():
     return rt.snapshot()
 
 
+@app.get("/api/role")
+async def whoami(request: Request):
+    """The caller's role as the backend sees it (checks the supervisor PIN when one is set)."""
+    return {"role": role_of(request), "pin_required": pin_required()}
+
+
 @app.get("/api/incidents/{incident_id}")
-async def incident(incident_id: str):
+async def incident(incident_id: str, request: Request):
+    """An incident and its evidence. A duty officer gets the evidence without detector internals; a supervisor gets
+    it whole, plus `internals`: how each signal was weighted and what each source contributed to the score."""
     inc = rt.engine.incidents.get(incident_id)
     if inc is None:
         raise HTTPException(404, "unknown incident")
-    return {"incident": inc.model_dump(), "evidence": [e.model_dump() for e in rt.engine.evidence(incident_id)]}
+    role = role_of(request)
+    evidence = [e.model_dump() for e in rt.engine.evidence(incident_id)]
+    if role != "supervisor":
+        return {"incident": inc.model_dump(), "evidence": [for_duty_officer(e) for e in evidence], "role": role}
+    return {"incident": inc.model_dump(), "evidence": evidence, "role": role, "internals": _internals(inc)}
+
+
+def _internals(inc: Incident) -> dict:
+    """Detector internals for supervisors: every signal's raw strength and the profile's weighting of it, the
+    strongest signal of each source (the ones the score uses), and each source's marginal contribution: the score
+    with that source's evidence removed, re-run through the real scorer."""
+    from argus.fusion.score import score_incident, strongest_per_source
+    signals = rt.engine.evidence(inc.incident_id)
+    feedback = min((rt.engine._feedback[(inc.area, t)] for t in inc.signal_types), default=1.0)
+    damping = rt.cfg.fusion["burst"]["damping"] if inc.common_cause else 1.0
+    best = {e.event_id for e in strongest_per_source(signals).values()}
+    rows = []
+    for e in signals:
+        raw = e.attrs.get("raw_severity", e.severity)
+        rows.append({"event_id": e.event_id, "t": e.t, "type": e.type, "source": e.source, "sensor_id": e.sensor_id,
+                     "severity": e.severity, "raw_severity": raw, "profile_weight": round(e.severity / raw, 3) if raw else None,
+                     "confidence": e.confidence, "entity": e.entity.model_dump() if e.entity else None,
+                     "media": e.media.model_dump() if e.media else None, "attrs": e.attrs, "provenance": e.provenance,
+                     "counts_for_source": e.event_id in best})
+    contributions = []
+    for src in inc.sources:
+        rest = [e for e in signals if e.source != src]
+        without = score_incident(rest, inc.area, inc.updated_at, rt.cfg, feedback, damping).score if rest else 0
+        contributions.append({"source": src, "score_without": without, "adds": inc.score - without})
+    return {"profile": rt.profile, "signals": rows, "contributions": contributions,
+            "feedback": {"factor": round(feedback, 3),
+                         "from": [x for x in rt.engine.learned() if x["area"] == inc.area and x["type"] in inc.signal_types]},
+            "burst_damping": damping}
 
 
 @app.get("/api/incidents/{incident_id}/forecast")
@@ -238,19 +280,25 @@ SUPERVISOR_NOTES = {"notify_police", "false_alarm"}
 
 
 class ActionIn(BaseModel):
-    action: Literal["ack", "escalate", "dismiss"]
+    action: Literal["ack", "escalate", "dismiss", "reopen"]
     role: Literal["duty_officer", "supervisor"] = "duty_officer"
     note: str = ""
 
 
 @app.post("/api/incidents/{incident_id}/action")
-async def act(incident_id: str, body: ActionIn):
+async def act(incident_id: str, body: ActionIn, request: Request):
     if incident_id not in rt.engine.incidents:
         raise HTTPException(404, "unknown incident")
-    if body.role != "supervisor" and (body.action == "dismiss" or body.note in SUPERVISOR_NOTES):
+    role = role_of(request, "supervisor" if body.role == "supervisor" else None)
+    if role != "supervisor" and (body.action in ("dismiss", "reopen") or body.note in SUPERVISOR_NOTES):
         raise HTTPException(403, "Only a supervisor can do that: escalate it to them")
-    inc = rt.engine.act(incident_id, body.action)
-    entry = rt.audit.append(incident_id=incident_id, action=body.action, role=body.role, note=body.note,
+    try:
+        inc = rt.engine.act(incident_id, body.action)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    if inc.status == "open":
+        _ensure_brief(inc)
+    entry = rt.audit.append(incident_id=incident_id, action=body.action, role=role, note=body.note,
                             sim_t=rt.replay.sim_t, score=inc.score)
     await _broadcast({"type": "tick", "clock": rt.clock(), "summary": rt.engine.summary(), "events": [],
                       "incidents": [inc.model_dump()]})
@@ -294,11 +342,11 @@ class ProfileIn(BaseModel):
 
 
 @app.post("/api/profile")
-async def set_profile(body: ProfileIn):
+async def set_profile(body: ProfileIn, request: Request):
     """Switch the site's security profile (profiles.yaml) and re-score the replay so far."""
     if body.name not in profiles()["profiles"]:
         raise HTTPException(400, f"unknown profile {body.name}")
-    if body.role != "supervisor":
+    if role_of(request, "supervisor" if body.role == "supervisor" else None) != "supervisor":
         raise HTTPException(403, "Only a supervisor can change how strict the site is")
     rt.set_profile(body.name)
     rt.audit.append(incident_id="-", action="profile", role=body.role, note=body.name, sim_t=rt.replay.sim_t, score=0)
@@ -432,8 +480,71 @@ async def agent_stream(q: str | None = None, incident: str | None = None):
 
 
 @app.get("/api/audit")
-async def audit():
-    return {"verified": rt.audit.verify(), "entries": rt.audit.entries()}
+async def audit(request: Request, incident: str | None = None):
+    """The hash-chained decision log. A duty officer reads the decisions on one incident (?incident=INC-0007); the
+    whole log is a supervisor's. The chain is verified over the whole log either way."""
+    role = role_of(request)
+    entries = rt.audit.entries()
+    if role != "supervisor":
+        if not incident:
+            raise HTTPException(403, "The full decision log is supervisor-only: ask for one incident's decisions")
+        entries = [e for e in entries if e.get("incident_id") == incident]
+    elif incident:
+        entries = [e for e in entries if e.get("incident_id") == incident]
+    return {"verified": rt.audit.verify(), "entries": entries, "scope": "incident" if incident else "all"}
+
+
+@app.get("/api/audit/export")
+async def audit_export(request: Request):
+    """The whole decision log as JSON Lines, as written (supervisor). Anyone can re-verify the chain from it."""
+    from fastapi.responses import PlainTextResponse
+    require_supervisor(request, "Exporting the decision log")
+    path = rt.audit.path
+    body = path.read_text(encoding="utf-8") if path.exists() else ""
+    return PlainTextResponse(body, media_type="application/x-ndjson",
+                             headers={"Content-Disposition": 'attachment; filename="argus-decision-log.jsonl"'})
+
+
+@app.get("/api/learning")
+async def learning(request: Request):
+    """What ARGUS has learned from dismissals (supervisor): each area and signal whose future scores are damped, by
+    how much, and the dismissals that taught it."""
+    require_supervisor(request, "What ARGUS has learned")
+    dismissals = [e for e in rt.audit.entries() if e.get("action") == "dismiss"]
+    out = []
+    for x in rt.engine.learned():
+        taught = [d for d in dismissals if (inc := rt.engine.incidents.get(d["incident_id"])) is not None
+                  and inc.area == x["area"] and x["type"] in inc.signal_types and inc.status == "dismissed"]
+        out.append({**x, "area_name": rt.cfg.area_name(x["area"]), "penalty": rt.cfg.fusion["dismiss_penalty"],
+                    "dismissals": [{"incident_id": d["incident_id"], "sim_t": d["sim_t"], "role": d["role"]} for d in taught]})
+    return {"rules": out, "penalty": rt.cfg.fusion["dismiss_penalty"]}
+
+
+class LearningResetIn(BaseModel):
+    area: str
+    type: str
+
+
+@app.post("/api/learning/reset")
+async def learning_reset(body: LearningResetIn, request: Request):
+    """Forget what dismissals taught for one area and signal (supervisor); audit-logged, live incidents re-scored."""
+    require_supervisor(request, "Resetting what ARGUS has learned")
+    changed = rt.engine.reset_learning(body.area, body.type)
+    entry = rt.audit.append(incident_id="-", action="reset_learning", role="supervisor", note=f"{body.area}:{body.type}",
+                            sim_t=rt.replay.sim_t, score=0)
+    await _broadcast({"type": "tick", "clock": rt.clock(), "summary": rt.engine.summary(), "events": [],
+                      "incidents": [i.model_dump() for i in changed]})
+    return {"audit": entry, "rescored": [i.incident_id for i in changed]}
+
+
+@app.get("/api/dismissed")
+async def dismissed(request: Request):
+    """Incidents dismissed as false alarms, with who dismissed them and when (supervisor): the oversight view of
+    what the floor chose to ignore. Each can be reopened (POST .../action {"action": "reopen"})."""
+    require_supervisor(request, "Reviewing dismissals")
+    by = {e["incident_id"]: e for e in rt.audit.entries() if e.get("action") == "dismiss"}
+    return {"incidents": [{**i.model_dump(), "dismissed_by": by.get(i.incident_id)} for i in rt.engine.incidents.values()
+                          if i.status == "dismissed"]}
 
 
 @app.get("/api/metrics")

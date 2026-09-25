@@ -45,8 +45,19 @@ export function track(name: string, props: Record<string, string | number | bool
   try { if (r.track) r.track(name, props); else r.q?.push(['track', name, props]) } catch { /* analytics never breaks the console */ }
 }
 
+// ---- who is signed in -------------------------------------------------------------------------------------------
+// The backend decides what each role may see and do (backend/argus/access.py); every request says who is asking.
+export type SessionRole = 'duty_officer' | 'supervisor'
+let session: { role: SessionRole; pin?: string } = { role: 'duty_officer' }
+export function setSession(role: SessionRole, pin?: string) { session = { role, pin } }
+export function authHeaders(): Record<string, string> {
+  return { 'X-Argus-Role': session.role, ...(session.pin ? { 'X-Argus-Pin': session.pin } : {}) }
+}
+/** GET with the caller's role. */
+export const get = (path: string, extra: Record<string, string> = {}) => fetch(API + path, { headers: { ...authHeaders(), ...extra } })
+
 export async function post(path: string, body: unknown) {
-  const r = await fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  const r = await fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(body) })
   if (!r.ok) throw new Error(`${path}: ${r.status}`)
   return r.json()
 }

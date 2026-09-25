@@ -11,6 +11,7 @@ import { SiteMap } from './components/SiteMap'
 import { SituationBand } from './components/SituationBand'
 import { StreamPanel } from './components/StreamPanel'
 import { TopBar, type Role } from './components/TopBar'
+import { SupervisorDesk } from './components/SupervisorDesk'
 import { UploadView } from './components/UploadView'
 import { MOCK, WALL, camerasFor, clipAt, isActive, levelOf, pickPrimary, post, rankIncidents, shouldBoot, situation } from './lib'
 import type { ArgusEvent, Incident } from './types'
@@ -24,6 +25,7 @@ export default function App() {
   // ?incident=INC-0007 preselects an incident (handy for screenshots and links)
   const [selected, setSelected] = useState<string | null>(new URLSearchParams(location.search).get('incident'))
   const [role, setRole] = useState<Role>('duty_officer')
+  const [desk, setDesk] = useState(false)
   const [siloed, setSiloed] = useState(false)
   const [streamOpen, setStreamOpen] = useState(false)
   // ?upload=<job id> opens that analysed clip
@@ -41,7 +43,7 @@ export default function App() {
   const replayingLeadUp = !live && current !== null
   const [evidence, setEvidence] = useState<ArgusEvent[]>([])
   const [focus, setFocus] = useState<string | null>(null)
-  const evidenceKey = live ? `${live.incident_id}:${live.event_ids.length}` : ''
+  const evidenceKey = live ? `${live.incident_id}:${live.event_ids.length}:${role}` : ''   // the role decides how much of it the backend sends
 
   useEffect(() => {
     if (!live) { if (!current) setEvidence([]); return }
@@ -89,9 +91,10 @@ export default function App() {
         onLeave={() => setEyeHome(true)}
         onDone={() => { setBoot(false); try { sessionStorage.setItem('argus-booted', '1') } catch { /* private mode */ } }} />
     )}
+    {desk && role === 'supervisor' && <SupervisorDesk config={state.config} onClose={() => setDesk(false)} onOpen={select} />}
     <div className="app">
       <TopBar config={state.config} summary={state.summary} connected={state.connected} mock={state.mock} role={role} onRole={setRole}
-        onAnalyse={() => setView(view === 'upload' ? 'console' : 'upload')} analysing={view === 'upload'}
+        onAnalyse={() => setView(view === 'upload' ? 'console' : 'upload')} analysing={view === 'upload'} onDesk={() => setDesk(true)}
         ask={<AskBar incidents={state.incidents} onSelect={select} onJump={jumpTo} />} />
       {view === 'upload' ? <UploadView config={state.config} /> : <>
         <ReplayBar clock={state.clock} config={state.config} incidents={incidents} mock={state.mock} onSelect={select} />

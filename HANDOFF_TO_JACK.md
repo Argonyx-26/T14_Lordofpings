@@ -373,3 +373,17 @@ git push
 
 **Not changed on purpose:** the investigator agent's tools (a new tool changes its cache key and would drop your
 rehearsed runs).
+
+## 17. Update 05:45: duty officer vs supervisor, enforced by the backend
+
+Pull and rebuild the console (`npm --prefix frontend run build`). What changes on stage:
+- **Duty officer** (default): same console, but evidence comes without track ids and detector internals, and the
+  incident panel shows a lock note: *Detector internals are supervisor-only*. `GET /api/audit` without `?incident=` is 403.
+- **Supervisor**: a **Supervisor desk** button in the top bar (whole decision log with the chain check and a JSON Lines
+  export; *What ARGUS learned* from dismissals, each resettable; *Dismissed* incidents with **Reopen**), and a
+  **Detector internals** section in every incident (what each source adds to the score, raw strength × profile weight).
+- Optional PIN: put `ARGUS_SUPERVISOR_PIN=<digits>` in `.env` and switching to Supervisor asks for it (wrong PIN is
+  refused by the backend). Leave it unset if you don't want the extra step on stage.
+- Demo beat (20 s): as duty officer, dismiss is greyed; escalate. Switch to Supervisor, open the incident's *Detector
+  internals* ("the camera adds 37 points, the phones 33"), dismiss it as a false alarm, open **Supervisor desk →
+  What ARGUS learned** (the lesson it just learned), then **Dismissed → Reopen** (the lesson is taken back).

@@ -67,6 +67,8 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 
 **4. Keeps a person in charge.** One *Respond* menu: acknowledge, escalate, dispatch a guard, call the police, or dismiss as a false alarm. Each decision is appended to a hash-chained audit log, and a dismissal teaches ARGUS to score similar alerts lower in that area.
 
+**Two roles, enforced by the backend.** A **duty officer** runs the floor: incidents, briefs, plain-language evidence (no track ids or detector internals), forecasts, patterns, and the decisions on the incident in front of them. A **supervisor** has oversight and policy on top: the whole hash-chained decision log and its export, **detector internals** per incident (raw strength × profile weight, the signals the score counts, and what each source adds, re-scored without it), **what ARGUS has learned** from dismissals (each lesson resettable), **dismissed incidents** (reopening one takes its lesson back), and the supervisor-only decisions (dismiss, police, site profile). Set `ARGUS_SUPERVISOR_PIN` and the supervisor role needs a PIN (single sign-on on a real site); the rules live in `backend/argus/access.py`.
+
 **5. Assesses any footage.** Drop in a clip from any camera, even a phone. ARGUS tracks everything in it, flags threats with the same rules, and returns a threat assessment (verdict, risk over time, incidents with forecasts) under the security profile you pick.
 
 
@@ -247,7 +249,7 @@ On the website the same eye becomes the hero: real footage from the bus-station 
 
 ## 🛠 Engineering
 
-- **73 backend tests and 14 frontend tests** on every push ([CI](https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml)). Tests that need MEVA video skip themselves; the rest run anywhere.
+- **78 backend tests and 15 frontend tests** on every push ([CI](https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml)). Tests that need MEVA video skip themselves; the rest run anywhere.
 - **Deterministic**: the same events in the same order give the same incidents, scores and forecasts.
 - **Offline on stage**: fonts, briefs and Ask ARGUS answers are cached; nothing needs the network.
 - **Windows-first demo**: PowerShell setup, run and stop scripts, UTF-8 file I/O everywhere, one process at `http://localhost:8000`.

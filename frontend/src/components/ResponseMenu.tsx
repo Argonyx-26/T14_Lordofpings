@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { STATUS_LABEL } from '../lib'
 import type { Incident, SiteConfigView } from '../types'
 
-export type Action = 'ack' | 'escalate' | 'dismiss'
+export type Action = 'ack' | 'escalate' | 'dismiss' | 'reopen'   // reopen: supervisor desk only
 
 interface Choice {
   key: string

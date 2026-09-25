@@ -2,6 +2,8 @@ from fastapi.testclient import TestClient
 
 from argus.api.main import app
 
+SUP = {"X-Argus-Role": "supervisor"}
+
 
 def test_api_smoke():
     with TestClient(app) as client:
@@ -15,7 +17,8 @@ def test_api_smoke():
         with client.websocket_connect("/ws") as ws:
             assert ws.receive_json()["type"] == "snapshot"
         assert client.get("/api/incidents/NOPE").status_code == 404
-        assert client.get("/api/audit").json()["verified"] is True
+        assert client.get("/api/audit", headers=SUP).json()["verified"] is True
+        assert client.get("/api/audit").status_code == 403                  # the whole log is a supervisor's
 
 
 def test_console_is_served_when_built():
@@ -40,16 +43,25 @@ def test_project_site_is_served():
         assert client.get("/site/fonts/geist-latin-wght-normal.woff2").status_code == 200
 
 
-def test_supervisor_only_decisions_are_enforced_by_the_backend():
-    """A duty officer can't dismiss, call the police or change the profile; the refusal writes nothing."""
+def test_supervisor_only_decisions_are_enforced_by_the_backend(tmp_path):
+    """A duty officer can't dismiss, call the police or change the profile; the refusal writes nothing. The incident
+    is made here, so the test does not depend on MEVA data being present (CI has none)."""
+    from argus.api import main
+    from argus.audit import AuditLog
+    from argus.schema import Event
     with TestClient(app) as client:
-        cfg = client.get("/api/config").json()
-        client.post("/api/replay", json={"cmd": "seek", "value": cfg["window"]["end_t"]})
-        iid = next(iter(client.get("/api/state").json()["incidents"]))["incident_id"]
-        before = len(client.get("/api/audit").json()["entries"])
+        main.rt.audit = AuditLog(tmp_path / "audit.jsonl")
+        main.rt.engine.reset()
+        main.rt.engine.ingest(Event(event_id="sup-1", t=1521140000.0, source="cctv", sensor_id="G331", zone="bus_platform",
+                                    area="bus_station", type="abandoned_object", severity=0.8, confidence=0.8,
+                                    provenance="computed"))
+        iid = next(iter(main.rt.engine.incidents))
+        before = len(client.get("/api/audit", headers=SUP).json()["entries"])
         for body in ({"action": "dismiss", "note": "false_alarm"}, {"action": "escalate", "note": "notify_police"}):
             r = client.post(f"/api/incidents/{iid}/action", json={**body, "role": "duty_officer"})
             assert r.status_code == 403
         assert client.post("/api/profile", json={"name": "park"}).status_code == 403
         assert client.post("/api/profile", json={"name": "park", "role": "duty_officer"}).status_code == 403
-        assert len(client.get("/api/audit").json()["entries"]) == before
+        assert len(client.get("/api/audit", headers=SUP).json()["entries"]) == before
+        # and a supervisor can
+        assert client.post(f"/api/incidents/{iid}/action", json={"action": "dismiss", "note": "false_alarm", "role": "supervisor"}).status_code == 200

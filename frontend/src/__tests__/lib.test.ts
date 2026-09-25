@@ -87,3 +87,14 @@ describe('plain language', () => {
     expect(duration(3725)).toBe('1:02:05')
   })
 })
+
+describe('session', () => {
+  it('sends the signed-in role, and the supervisor PIN only when there is one', async () => {
+    const { authHeaders, setSession } = await import('../lib')
+    expect(authHeaders()).toEqual({ 'X-Argus-Role': 'duty_officer' })
+    setSession('supervisor', '4821')
+    expect(authHeaders()).toEqual({ 'X-Argus-Role': 'supervisor', 'X-Argus-Pin': '4821' })
+    setSession('duty_officer')
+    expect(authHeaders()).toEqual({ 'X-Argus-Role': 'duty_officer' })
+  })
+})

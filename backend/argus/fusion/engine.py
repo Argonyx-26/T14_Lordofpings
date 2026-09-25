@@ -180,9 +180,34 @@ class FusionEngine:
                 self._feedback[(inc.area, t)] *= self.cfg.fusion["dismiss_penalty"]
             if self._active_by_area.get(inc.area) == incident_id:
                 del self._active_by_area[inc.area]
+        elif action == "reopen":
+            # a supervisor reverses a dismissal: the incident goes back in front of a person, and the lesson that
+            # dismissal taught (lower scores for these signals here) is taken back
+            if inc.status != "dismissed":
+                raise ValueError("only a dismissed incident can be reopened")
+            for t in inc.signal_types:
+                self._feedback[(inc.area, t)] = min(1.0, self._feedback[(inc.area, t)] / self.cfg.fusion["dismiss_penalty"])
+            inc.status = "open"
+            if self._active_by_area.get(inc.area) is None:
+                self._active_by_area[inc.area] = incident_id
+            self._rescore(inc)
         else:
             raise ValueError(f"unknown action {action!r}")
         return inc
+
+    def learned(self) -> list[dict]:
+        """What operator feedback has taught the engine: each (area, signal) whose future scores are damped."""
+        return [{"area": a, "type": t, "factor": round(f, 3)} for (a, t), f in sorted(self._feedback.items()) if f < 1.0]
+
+    def reset_learning(self, area: str, signal_type: str) -> list[Incident]:
+        """Forget what dismissals taught for one (area, signal); live incidents there are re-scored at once."""
+        self._feedback.pop((area, signal_type), None)
+        changed = []
+        for inc in self.incidents.values():
+            if inc.area == area and signal_type in inc.signal_types and inc.status in ACTIVE:
+                self._rescore(inc)
+                changed.append(inc)
+        return changed
 
     # ---- views -----------------------------------------------------------------------------
     def ranked(self, include_candidates: bool = False) -> list[Incident]:

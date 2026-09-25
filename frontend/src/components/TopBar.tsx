@@ -1,6 +1,6 @@
-import { ArrowLeft, Upload, LogOut } from 'lucide-react'
+import { ArrowLeft, LogOut, ShieldCheck, Upload } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { SOURCE_LABEL, fmt, post } from '../lib'
+import { API, SOURCE_LABEL, fmt, post, setSession } from '../lib'
 import type { SiteConfigView, Summary } from '../types'
 import { SourceIcon } from './Symbols'
 
@@ -16,11 +16,25 @@ interface Props {
   onAnalyse: () => void
   analysing: boolean
   ask: ReactNode
+  onDesk?: () => void
 }
 
 /** Global status bar: identity, the question box, stream health, link state and who is signed in. */
-export function TopBar({ config, summary, connected, mock, role, onRole, onAnalyse, analysing, ask }: Props) {
+export function TopBar({ config, summary, connected, mock, role, onRole, onAnalyse, analysing, ask, onDesk }: Props) {
   const sources = Object.entries(summary?.by_source ?? {})
+  const [asking, setAsking] = useState(false)
+  const [pin, setPin] = useState('')
+  const [pinError, setPinError] = useState<string | null>(null)
+  /** Sign in as a role. With a supervisor PIN set on the backend, the PIN is checked there before the switch. */
+  const choose = async (r: Role) => {
+    if (r === 'supervisor' && config?.supervisor_pin_required && !mock) { setAsking(true); setPinError(null); return }
+    setSession(r); onRole(r)
+  }
+  const verify = async () => {
+    const r = await fetch(API + '/api/role', { headers: { 'X-Argus-Role': 'supervisor', 'X-Argus-Pin': pin } }).catch(() => null)
+    if (r?.ok) { setSession('supervisor', pin); onRole('supervisor'); setAsking(false); setPin('') }
+    else setPinError(r?.status === 401 ? 'Wrong PIN' : 'Backend unreachable')
+  }
   return (
     <header className="flex h-12 shrink-0 items-center gap-4 px-4 hairline-b" style={{ background: 'var(--color-surface)' }}>
       <div className="flex min-w-0 items-baseline gap-2.5">
@@ -61,13 +75,35 @@ export function TopBar({ config, summary, connected, mock, role, onRole, onAnaly
 
       {!mock && config?.profiles && <ProfileSwitch config={config} role={role} />}
 
-      <div className="seg hidden md:inline-flex" aria-label="Signed in as">
-        {(['duty_officer', 'supervisor'] as Role[]).map((r) => (
-          <button key={r} data-on={role === r} onClick={() => onRole(r)}
-            title={r === 'supervisor' ? 'Can also dismiss false alarms, call the police and change how strict the site is'
-              : 'Acknowledges, dispatches guards and escalates to a supervisor'}>
-            {r === 'duty_officer' ? 'Duty officer' : 'Supervisor'}</button>
-        ))}
+      {role === 'supervisor' && onDesk && (
+        <button className="btn btn-sm" onClick={onDesk} title="The whole decision log, what ARGUS has learned from dismissals, and dismissed incidents">
+          <ShieldCheck size={13} strokeWidth={1.75} /> <span className="hidden lg:inline">Supervisor desk</span>
+        </button>
+      )}
+
+      <div className="relative hidden md:block">
+        <div className="seg" aria-label="Signed in as">
+          {(['duty_officer', 'supervisor'] as Role[]).map((r) => (
+            <button key={r} data-on={role === r} onClick={() => choose(r)}
+              title={r === 'supervisor'
+                ? 'Oversight and policy: also dismisses false alarms, calls the police, changes how strict the site is, reopens dismissals, and sees detector internals, the whole decision log and what ARGUS has learned'
+                : 'Runs the floor: acknowledges, dispatches guards, escalates; sees each incident\'s evidence in plain language and its own decisions'}>
+              {r === 'duty_officer' ? 'Duty officer' : 'Supervisor'}</button>
+          ))}
+        </div>
+        {asking && (
+          <form className="pop absolute right-0 top-full z-50 mt-2 w-[220px] rounded-xl p-3" onSubmit={(e) => { e.preventDefault(); verify() }}
+            style={{ background: 'var(--color-surface-2)', boxShadow: '0 18px 50px rgb(0 0 0 / .6), inset 0 0 0 1px var(--color-hair-2)' }}>
+            <label className="eyebrow mb-1.5 block" htmlFor="sup-pin">Supervisor PIN</label>
+            <input id="sup-pin" type="password" inputMode="numeric" autoFocus value={pin} onChange={(e) => setPin(e.target.value)}
+              className="num h-8 w-full rounded-md bg-[var(--color-surface-3)] px-2.5 text-[13px] text-[var(--color-fg)] outline-none" style={{ boxShadow: 'inset 0 0 0 1px var(--color-hair-2)' }} />
+            {pinError && <p className="mt-1.5 text-[11px] text-[var(--color-crit)]">{pinError}</p>}
+            <div className="mt-2.5 flex justify-end gap-1.5">
+              <button type="button" className="btn btn-sm btn-ghost" onClick={() => { setAsking(false); setPin('') }}>Cancel</button>
+              <button type="submit" className="btn btn-sm btn-primary">Sign in</button>
+            </div>
+          </form>
+        )}
       </div>
 
       <a className="btn btn-sm" href={homeHref()} title="Leave the demo and go back to the project's home page">
