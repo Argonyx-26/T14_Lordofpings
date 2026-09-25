@@ -340,6 +340,67 @@ async def ask_argus(body: AskIn):
     return await asyncio.to_thread(ask, q, rt.events, incidents, rt.replay.sim_t, rt.cfg)
 
 
+class InvestigateIn(BaseModel):
+    question: str | None = None
+    incident_id: str | None = None
+
+
+def _case_and_question(question: str | None, incident_id: str | None):
+    from argus.agent import Case
+    if incident_id:
+        inc = rt.engine.incidents.get(incident_id)
+        if inc is None:
+            raise HTTPException(404, "unknown incident")
+        question = question or f"Investigate {incident_id} ({inc.title.split(' — ')[0]}): is it real, and what should we do?"
+    question = (question or "").strip()[:300]
+    if not question:
+        raise HTTPException(400, "empty question")
+    events = rt.events + getattr(rt, "live_events", [])
+    case = Case(events, list(rt.engine.incidents.values()), rt.replay.sim_t, rt.cfg, evidence=rt.engine.evidence,
+                feedback=lambda inc: min((rt.engine._feedback[(inc.area, t)] for t in inc.signal_types), default=1.0))
+    return case, question
+
+
+@app.post("/api/agent")
+async def agent(body: InvestigateIn):
+    """The ARGUS investigator (argus/agent.py): a tool-using agent that works the case and returns a case file with
+    its verdict, the steps it took and the frames it looked at."""
+    from argus.agent import investigate
+    case, question = _case_and_question(body.question, body.incident_id)
+    return await asyncio.to_thread(investigate, question, case, None, 0)
+
+
+@app.get("/api/agent/stream")
+async def agent_stream(q: str | None = None, incident: str | None = None):
+    """The same, as server-sent events: one 'step' event per tool call as it happens, then 'done' with the case
+    file. EventSource('/api/agent/stream?incident=INC-0009')."""
+    from fastapi.responses import StreamingResponse
+
+    from argus.agent import investigate
+    case, question = _case_and_question(q, incident)
+    loop = asyncio.get_running_loop()
+    queue: asyncio.Queue = asyncio.Queue()
+
+    def work():
+        try:
+            out = investigate(question, case, lambda s: loop.call_soon_threadsafe(queue.put_nowait, ("step", s)))
+        except Exception as exc:                                  # the stream must always end
+            out = {"question": question, "error": f"{type(exc).__name__}: {exc}"}
+        loop.call_soon_threadsafe(queue.put_nowait, ("done", out))
+
+    async def events():
+        yield f"event: start\ndata: {json.dumps({'question': question, 'as_of': rt.cfg.epoch_to_local(case.now)})}\n\n"
+        task = asyncio.create_task(asyncio.to_thread(work))
+        rt._tasks.add(task)
+        task.add_done_callback(rt._tasks.discard)
+        while True:
+            kind, data = await queue.get()
+            yield f"event: {kind}\ndata: {json.dumps(data)}\n\n"
+            if kind == "done":
+                break
+    return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/api/audit")
 async def audit():
     return {"verified": rt.audit.verify(), "entries": rt.audit.entries()}
