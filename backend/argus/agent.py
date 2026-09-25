@@ -474,7 +474,8 @@ def _fallback(question: str, case: Case, steps: list, on_step) -> dict:
 def cache_key(question: str, case: Case) -> str:
     q = re.sub(r"\s+", " ", question.strip().lower())
     sig = ",".join(f"{i}{v.peak_score}" for i, v in sorted(case.incidents.items())) + f"|{len(case.log)}"
-    return hashlib.sha1(f"{q}|{sig}".encode()).hexdigest()[:16]
+    brain = hashlib.sha1((SYSTEM + json.dumps(TOOLS) + GEMINI_MODEL).encode()).hexdigest()[:8]   # a new prompt: new runs
+    return hashlib.sha1(f"{q}|{sig}|{brain}".encode()).hexdigest()[:16]
 
 
 def cached(key: str) -> dict | None:
