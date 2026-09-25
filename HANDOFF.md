@@ -174,3 +174,10 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
   - `--set` now takes several sets (`--no-detect --set A B C`), and the report **merges** earlier runs instead of overwriting them.
 - **Timing:** the venue network dropped to under 1 MB/s, so set B is still downloading. Expected order: B on the GPU until about 21:25 (C downloads meanwhile), then the GPU benchmark (live tile stopped for 2 minutes), then C on the GPU overnight. I'll push `docs/HOLDOUT_RESULTS.md` after B and again after C.
 - **Ask ARGUS offline:** on Wi-Fi, run `cd backend; ..\.venv\Scripts\python -m argus.ask "2018-03-15 15:19:00" "What happened at the bus station after 15:10?"` for each question you'll ask on stage, **at the replay time you'll pause at**. On stage the answer then comes from the cache in under a second, with no network. Verified: the command-line answer and the console answer at 15:19 hit the same cache entry.
+
+**Door sensor, 20:20 (Mohit asked for accuracy work; measured on the tuning window only; nothing changed in the rules).** `python -m argus.vision.door_eval` scores the door rule per camera and accepts overrides, e.g. `G331=leaf`.
+- **G331 bus, P 0.02:** the doors stand open. MEVA labels **1** `opens_facility_door` in 20 min, while dozens of people walk through (checked on frames). Our 63 "false" detections are mostly real passages, and MEVA has no passage labels in these clips. The leaf method there is worse (93 detected, 0 correct). **Report G331 as "doors held open: we count passages, the annotation counts openings".**
+- **G336, recall 0:** all 10 annotated openings are at one door about 100 m away (located from MEVA's box annotations). YOLO at 960 px detects nobody there (0 of 10). That's out of range for this camera, and no zone fixes it.
+- **G421 extra left-door triggers:** I tested "someone nearer the camera covers the door top". The overlap was 0 at every one of those events, so the hypothesis is wrong and I reverted it.
+- **G638:** no timing bias (median offset −1.1 s), so nothing to calibrate.
+- Conclusion: the honest door number is still **indoor P 0.54 / R 0.75**. Sets B and C will test it on unseen footage.
