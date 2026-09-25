@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 23:14 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 23:29 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -11,7 +11,7 @@ _Updated Fri 25 Sep 23:14 IST. Refreshed every 5 min and pushed only when someth
 ## Demo laptop
 
 - Backend + console: **up** at http://localhost:8000 · 1242 events · briefs by `gemini-flash-latest`
-- Live tile: **down**
+- Live tile: **up** · 10 fps (rounded)
 - AI briefs cached: 7
 - Metrics: 4/5 caught · 1242 → 20 → 3
 
@@ -23,6 +23,7 @@ _Updated Fri 25 Sep 23:14 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+f50e47e Pages: Raah analytics (project proj_wwwp2pa8sqx7ytp4, domain argonyx-26.github.io) injected into the site, judges page and hosted console at build time; the offline demo on the laptop stays network-free
 6f29088 README and judges page: fight detection at 76.7% / AUC 0.854 (pose + pretrained VideoMAE, 87/150 fights, 12 false) per 659e8df
 d12960e What happens next, in the console and for uploads: 'Where this is heading' card and a response planner (crime-script stages with intervention points, what would change the score as bars on the site's bands, course-of-action comparison with a simulation, apply through the audit-logged action); Analyse a video becomes a threat assessment (verdict, risk over the clip, Airport / School / Park switch, forecast and planner per incident); offline demo snapshot carries forecasts (python -m argus.forecast snapshot); ?plan=1 and ?upload=<id> deep links. Packaging: CI (backend pytest, frontend lint/types/tests/build), GitHub Pages workflow (site + offline console, Raah when RAAH_PID is set; deploys once Pages is enabled), README rewritten (banner, badges, results with n and method, 90-second tour, mermaid architecture, forecasting method, privacy, AI disclosure, team), judges page, live-demo links on the site; HANDOFF_TO_JACK Â§14
 659e8df Violence: pretrained surveillance video model fused with pose; accuracy 76.7 %, AUC 0.854 on 300 CCTV clips
@@ -30,5 +31,4 @@ cb040c4 Forecast and response planning (argus/forecast.py): crime-script stage (
 2f37032 HANDOFF Â§12: mentor round (profiles, weapons, violence, person down, hand-offs, dealing pattern) with numbers, n and method, and what to say on stage
 2355441 Weapon detector results on an unseen camera (Cam7, 3,511 frames): AP50 handgun 0.51, rifle 0.54, knife 0.09; alert level 42/84 weapon appearances, 14 false alerts in 29 min (dark phones in hand); train_weapons.py alerts reproduces it; scale.py also runs the weapon pass and logs threat events on ordinary footage
 84af8e5 Violence classifier: random forest on pose features, 300 surveillance fight/no-fight clips, 5-fold CV grouped by source recording: accuracy 0.747, AUC 0.821 (dataset authors' best: 72% on a random 80/20 split); at the pipeline threshold 0.7: 80/150 fights, 17/150 false alarms (precision 0.825)
-c9f75b9 scale.py: camera-view check by phase-correlation shift of edge maps (re-aimed G331/G336 shift 26-77 px, same-view clips 0-3 px; the edge-correlation check wrongly rejected same-view clips in evening light)
 ```
