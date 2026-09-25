@@ -473,7 +473,9 @@ def _fallback(question: str, case: Case, steps: list, on_step) -> dict:
 # --- cache, so a rehearsed investigation also works with the Wi-Fi off ---------------------------------------
 def cache_key(question: str, case: Case) -> str:
     q = re.sub(r"\s+", " ", question.strip().lower())
-    sig = ",".join(f"{i}{v.peak_score}" for i, v in sorted(case.incidents.items())) + f"|{len(case.log)}"
+    # which incidents are on the board, not the exact second: a rehearsed question matches on stage wherever the
+    # replay is, as long as the same incidents are showing (the console marks such answers "replayed")
+    sig = ",".join(sorted(case.incidents))
     brain = hashlib.sha1((SYSTEM + json.dumps(TOOLS) + GEMINI_MODEL).encode()).hexdigest()[:8]   # a new prompt: new runs
     return hashlib.sha1(f"{q}|{sig}|{brain}".encode()).hexdigest()[:16]
 
