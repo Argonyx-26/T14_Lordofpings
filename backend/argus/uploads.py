@@ -41,6 +41,7 @@ ID_RE = re.compile(r"^[0-9a-f]{10}$")
 
 ANALYSIS_FPS = 15                 # frames analysed per second of footage
 CANVAS_W, CANVAS_H = 1920, 1072   # the vision rules' pixel space
+FPS_CLOCK = 30.0                  # the vision rules' frame clock (FPS in vision/common.py)
 CLIP_DAY = "2000-01-01"           # uploaded clips get a synthetic clock on this day ...
 CLIP_START_H = 12                 # ... starting at noon, so the unknown time of day never triggers the night factor
 TRACK_CLASSES = [0, 2, 3, 5, 7, 24, 26, 28, 63, 67]   # people, vehicles, bags, laptops, phones
@@ -183,6 +184,7 @@ class UploadManager:
             job.message = "Looking closely for bags, laptops and phones"
             job.save()
             self._valuables(job, src, tracks.with_name(f"{stem}.bags.jsonl"), fps, width, height, frames, stride)
+        self._threat_passes(job, src, tracks, fps, width, height, stride)
 
         job.status, job.progress, job.message = "rules", 1.0, "Applying rules and fusion"
         job.save()
@@ -279,6 +281,27 @@ class UploadManager:
             "evidence": evidence,
             "summary": engine.summary(),
         }
+
+    @staticmethod
+    def _threat_passes(job: Job, src: Path, tracks: Path, fps: float, width: int, height: int, stride: int) -> None:
+        """Pose (violence, person down, hand-offs) and weapon passes on the rules' canvas, when their models exist.
+        Optional: a failure here never fails the job; the clip then simply gets no threat events."""
+        from argus.vision import run_pose, run_weapons
+        scale = (CANVAS_W / width, CANVAS_H / height)
+        frame_scale = FPS_CLOCK / fps
+        try:
+            if run_pose.WEIGHTS.exists():
+                job.message = "Reading body movement (fights, falls, hand-offs)"
+                job.save()
+                run_pose.run(src, tracks.with_name(f"{tracks.stem}.pose.jsonl"), stride=stride,
+                             frame_scale=frame_scale, box_scale=scale)
+            if run_weapons.available():
+                job.message = "Looking for weapons"
+                job.save()
+                run_weapons.run(src, tracks.with_name(f"{tracks.stem}.weapons.jsonl"), stride=stride,
+                                frame_scale=frame_scale, box_scale=scale)
+        except Exception as exc:
+            print(f"[uploads] threat passes skipped for {job.id}: {type(exc).__name__}: {exc}")
 
     @staticmethod
     def _stills(job: Job, src: Path, tracks: Path, events: "list[dict]") -> None:

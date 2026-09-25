@@ -18,7 +18,7 @@ TRACK_DIR = ROOT / "data" / "tracks"
 
 
 def run(clip: pathlib.Path, out: pathlib.Path, stride: int = 2, imgsz: int = 960, fps: float | None = None,
-        frame_scale: float = 1.0, model: YOLO | None = None) -> None:
+        frame_scale: float = 1.0, model: YOLO | None = None, box_scale=(1.0, 1.0)) -> None:
     """stride: analyse every Nth frame. Rows carry the clip's own frame index times frame_scale (uploads map their
     frames onto the rules' 30 fps clock), boxes and keypoints in the clip's pixels. Pass a loaded model to reuse
     it across many short clips (the tracker still starts fresh for each clip)."""
@@ -33,12 +33,14 @@ def run(clip: pathlib.Path, out: pathlib.Path, stride: int = 2, imgsz: int = 960
             n = i + 1
             if r.boxes.id is None or r.keypoints is None:
                 continue
-            frame = round(i * stride * frame_scale)
+            frame = 2 * round(i * stride * frame_scale / 2)       # even frames: the rules' clock
+            sx, sy = box_scale
             kps = r.keypoints.data.tolist()
             for box, tid, cf, kp in zip(r.boxes.xyxy.tolist(), r.boxes.id.int().tolist(), r.boxes.conf.tolist(), kps):
                 f.write(json.dumps({"frame": frame, "tid": tid, "conf": round(cf, 3),
-                                    "xyxy": [round(v, 1) for v in box],
-                                    "kp": [[round(x, 1), round(y, 1), round(c, 2)] for x, y, c in kp]}) + "\n")
+                                    "xyxy": [round(box[0] * sx, 1), round(box[1] * sy, 1),
+                                             round(box[2] * sx, 1), round(box[3] * sy, 1)],
+                                    "kp": [[round(x * sx, 1), round(y * sy, 1), round(c, 2)] for x, y, c in kp]}) + "\n")
     tmp.replace(out)
     dt = time.time() - t0
     print(f"{clip.stem}: {n} frames in {dt:.0f}s ({n / max(dt, 1e-6):.0f} fps) -> {out}", flush=True)

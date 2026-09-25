@@ -33,7 +33,7 @@ def run(clip: pathlib.Path, out: pathlib.Path, stride: int = 2, frame_scale: flo
                                             vid_stride=stride, verbose=False)):
             n = i + 1
             for box, cls, cf in zip(r.boxes.xyxy.tolist(), r.boxes.cls.int().tolist(), r.boxes.conf.tolist()):
-                f.write(json.dumps({"frame": round(i * stride * frame_scale), "cls": cls, "conf": round(cf, 3),
+                f.write(json.dumps({"frame": 2 * round(i * stride * frame_scale / 2), "cls": cls, "conf": round(cf, 3),
                                     "xyxy": [round(box[0] * sx, 1), round(box[1] * sy, 1),
                                              round(box[2] * sx, 1), round(box[3] * sy, 1)]}) + "\n")
     tmp.replace(out)
