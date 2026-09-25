@@ -162,3 +162,15 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
 **Bengaluru hook (checked).** On 4 June 2025, a crowd crush outside Chinnaswamy Stadium during RCB's IPL victory celebration killed 11 people and injured more than 50 (suffocation). The Justice D'Cunha commission named unregulated entry at the gates as the root cause. Use it only for the crowding and gate signals, and don't claim ARGUS would have prevented it. Sources: [Deccan Herald](https://www.deccanherald.com/india/karnataka/chinnaswamy-stadium-stampede-karnataka-cabinet-accepts-justice-dcunhas-report-3646246), [LawChakra](https://lawchakra.in/legal-updates/report-on-bengaluru-stampede-stadium/).
 
 **Still to come tonight:** held-out numbers (about 20:45), then a GPU throughput benchmark with the GPU otherwise idle, for a cost-per-camera figure.
+
+**Update 19:55.**
+- **Set A scored: the staged theft was missed, with 0 false incidents** (re-scored with the zone fix; same result as before).
+  - Why: the stolen suitcase sits at the very bottom edge of the bus-station frame with only its handle in view. YOLO first sees it when the thief lifts it, so the rule never saw it resting and never gave it an owner. The thief then walks out of the bottom of the frame.
+  - The only camera signal was "running" at 13:18:32 (score 24; watch is 35), and 5 March has no GPS to corroborate it.
+  - Same class of miss as the black purse: an object the detector can't see at rest. **Nothing was tuned on held-out data.**
+  - On stage: *"On footage from a different day, we missed the one staged theft (a bag hidden at the edge of the frame) and raised no false alarms."*
+- **Set C added** (commit 19cebd3): 12 Mar 10:00–10:15, all six cameras with GPS, nothing staged.
+  - I checked side by side that all six views match 15 March, so the tuned zones apply. This makes it a clean second false-alarm test on another day.
+  - `--set` now takes several sets (`--no-detect --set A B C`), and the report **merges** earlier runs instead of overwriting them.
+- **Timing:** the venue network dropped to under 1 MB/s, so set B is still downloading. Expected order: B on the GPU until about 21:25 (C downloads meanwhile), then the GPU benchmark (live tile stopped for 2 minutes), then C on the GPU overnight. I'll push `docs/HOLDOUT_RESULTS.md` after B and again after C.
+- **Ask ARGUS offline:** on Wi-Fi, run `cd backend; ..\.venv\Scripts\python -m argus.ask "2018-03-15 15:19:00" "What happened at the bus station after 15:10?"` for each question you'll ask on stage, **at the replay time you'll pause at**. On stage the answer then comes from the cache in under a second, with no network. Verified: the command-line answer and the console answer at 15:19 hit the same cache entry.
