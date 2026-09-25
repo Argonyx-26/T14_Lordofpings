@@ -13,7 +13,8 @@ import { useArgus } from './useArgus'
 
 export default function App() {
   const { state, evidenceFor } = useArgus()
-  const [selected, setSelected] = useState<string | null>(null)
+  // ?incident=INC-0007 preselects an incident (handy for screenshots and links)
+  const [selected, setSelected] = useState<string | null>(new URLSearchParams(location.search).get('incident'))
   const [role, setRole] = useState<Role>('duty_officer')
   const [siloed, setSiloed] = useState(false)
   const [view, setView] = useState<'console' | 'upload'>('console')

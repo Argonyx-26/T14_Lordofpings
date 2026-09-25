@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Argus: We don't watch more. We notice sooner.</title>
+  <meta name="description" content="Argus fuses camera analytics, door activity and device location into a handful of ranked, explained incidents for security control rooms. Built at ARGONYX '26 by Lord of the Pings." />
+  <meta property="og:title" content="Argus: We don't watch more. We notice sooner." />
+  <meta property="og:description" content="Situational awareness for security control rooms, measured on real multi-camera footage: 4 of 5 staged incidents caught, 0 false incidents, 99.8% of events never reach a human." />
+  <!-- After deploying, make this an absolute URL (https://<your-domain>/assets/detections-bus-station.jpg) so LinkedIn shows the preview. -->
+  <meta property="og:image" content="assets/detections-bus-station.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230c0d0f'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%23f76b15' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23ececec'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <!-- Raah analytics: create a project at https://raah.dev, then replace RAAH_PROJECT_ID and the domain. -->
+  <script defer src="https://t.raah.dev/script.js" data-pid="RAAH_PROJECT_ID" data-domain="YOUR-DOMAIN"></script>
+  <style>
+    :root {
+      --bg: #0c0d0f; --surface: #121316; --surface-2: #17181c; --hair: rgba(255,255,255,.08); --hair-2: rgba(255,255,255,.14);
+      --fg: #ececec; --fg-2: #a3a3ab; --fg-3: #7d7d86; --accent: #f76b15; --ivory: #f3f1eb; --ink: #141518; --ink-2: #4a4a52;
+      --serif: "Instrument Serif", Georgia, serif; --sans: "Geist", ui-sans-serif, system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    img { max-width: 100%; display: block; }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+    .eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+    .display { font-family: var(--serif); font-weight: 400; letter-spacing: -.01em; line-height: 1.02; }
+    h2.display { font-size: clamp(38px, 5vw, 64px); margin: 12px 0 18px; }
+    .lead { font-size: 19px; color: var(--fg-2); max-width: 680px; }
+    section { padding: 110px 0; }
+    .hair-t { border-top: 1px solid var(--hair); }
+
+    /* nav */
+    nav { position: sticky; top: 0; z-index: 10; background: rgba(12,13,15,.82); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hair); }
+    nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+    nav .brand { font-family: var(--serif); font-size: 26px; text-decoration: none; }
+    nav .links { display: flex; gap: 22px; margin-left: auto; font-size: 14px; }
+    nav .links a { color: var(--fg-2); text-decoration: none; }
+    nav .links a:hover { color: var(--fg); }
+    .btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 8px; font-size: 14.5px; text-decoration: none; border: 1px solid var(--hair-2); color: var(--fg); transition: .15s; }
+    .btn:hover { background: var(--surface-2); }
+    .btn.primary { background: var(--fg); color: #0b0b0c; border-color: var(--fg); font-weight: 500; }
+    .btn.primary:hover { background: #fff; }
+    nav .btn { height: 34px; font-size: 13.5px; }
+
+    /* hero */
+    .hero { padding: 96px 0 56px; background: radial-gradient(900px 480px at 78% 0%, #1c1d22 0%, transparent 70%); }
+    .hero h1 { font-size: clamp(54px, 8.2vw, 112px); margin: 18px 0 22px; }
+    .hero h1 i { color: var(--fg-2); }
+    .hero .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+    .figure { margin-top: 64px; border-radius: 12px; overflow: hidden; border: 1px solid var(--hair); background: #000; }
+    .caption { font-size: 13px; color: var(--fg-3); margin-top: 12px; }
+
+    /* funnel */
+    .funnel { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
+    .funnel > div { padding: 34px 26px; border-left: 1px solid var(--hair); }
+    .funnel > div:first-child { border-left: none; }
+    .funnel .n { font-family: var(--serif); font-size: clamp(44px, 5vw, 64px); line-height: 1; }
+    .funnel .l { color: var(--fg-2); font-size: 14.5px; margin-top: 10px; }
+    .funnel .n.accent { color: var(--accent); }
+
+    /* problem */
+    .stats { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 48px; margin-top: 52px; align-items: start; }
+    .stats .n { font-family: var(--serif); font-size: clamp(72px, 9vw, 128px); line-height: .95; }
+    .stats p { color: var(--fg-2); margin: 10px 0 0; }
+    .stats .aside { border-left: 1px solid var(--hair-2); padding-left: 32px; color: var(--fg-2); }
+    .source { font-size: 13px; color: var(--fg-3); margin-top: 40px; }
+
+    /* insight (ivory) */
+    .ivory { background: var(--ivory); color: var(--ink); }
+    .ivory .lead { color: var(--ink-2); }
+    .ivory .eyebrow { color: #9a4a0f; }
+    .signals { display: grid; grid-template-columns: repeat(3, 1fr) 56px 1.25fr; gap: 18px; margin-top: 52px; align-items: stretch; }
+    .signal { background: #e6e2d8; border-radius: 14px; padding: 26px; }
+    .signal .k { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+    .signal .t { font-size: 19px; margin: 10px 0 14px; }
+    .signal .s { font-size: 13.5px; color: var(--ink-2); }
+    .arrow { align-self: center; justify-self: center; font-size: 34px; color: var(--ink); }
+    .together { background: var(--bg); color: var(--fg); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; justify-content: center; }
+    .together .k { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+    .together .t { font-family: var(--serif); font-size: 40px; line-height: 1; margin: 10px 0; }
+    .together .s { color: var(--fg-2); font-size: 14.5px; }
+
+    /* how */
+    .steps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 22px; margin-top: 56px; }
+    .step { border-top: 1px solid var(--hair-2); padding-top: 20px; }
+    .step .no { font-family: var(--mono); color: var(--accent); font-size: 13px; }
+    .step h3 { font-size: 20px; font-weight: 500; margin: 10px 0 8px; }
+    .step p { font-size: 14.5px; color: var(--fg-2); margin: 0; }
+
+    /* features */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 12px; overflow: hidden; margin-top: 56px; }
+    .feature { background: var(--bg); padding: 30px; }
+    .feature h3 { font-size: 18px; font-weight: 500; margin: 0 0 8px; }
+    .feature p { font-size: 14.5px; color: var(--fg-2); margin: 0; }
+
+    /* results */
+    .results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 44px 40px; margin-top: 56px; }
+    .results .n { font-family: var(--serif); font-size: clamp(52px, 6vw, 84px); line-height: 1; }
+    .results .n.accent { color: var(--accent); }
+    .results p { color: var(--fg-2); font-size: 15px; margin: 10px 0 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 56px; font-size: 15px; }
+    th, td { text-align: left; padding: 13px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
+    th { font-weight: 500; color: var(--fg-3); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; }
+    td:first-child { color: var(--fg); padding-right: 24px; width: 34%; }
+    td { color: var(--fg-2); }
+
+    /* data */
+    .two { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+    .two ul { color: var(--fg-2); padding-left: 18px; }
+    .two li { margin: 8px 0; }
+
+    /* journey */
+    .timeline { margin-top: 48px; border-left: 1px solid var(--hair-2); margin-left: 6px; }
+    .tl { position: relative; padding: 0 0 26px 28px; }
+    .tl::before { content: ""; position: absolute; left: -5px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--fg-2); }
+    .tl.key::before { background: var(--accent); }
+    .tl .time { font-family: var(--mono); font-size: 13px; color: var(--fg-3); }
+    .tl .what { color: var(--fg); margin-top: 2px; }
+    .tl .who { font-size: 13.5px; color: var(--fg-3); }
+
+    /* team */
+    .team { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 48px; }
+    .member { border: 1px solid var(--hair); border-radius: 12px; padding: 24px; }
+    .member .name { font-family: var(--serif); font-size: 28px; line-height: 1.05; }
+    .member .role { font-size: 13.5px; color: var(--fg-3); margin-top: 8px; }
+
+    footer { border-top: 1px solid var(--hair); padding: 40px 0 56px; font-size: 13.5px; color: var(--fg-3); }
+    footer .wrap { display: flex; gap: 28px; flex-wrap: wrap; justify-content: space-between; }
+    footer a { color: var(--fg-2); }
+    .raah { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--hair-2); border-radius: 999px; padding: 4px 12px; text-decoration: none; }
+    .raah::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #30a46c; }
+
+    @media (max-width: 980px) {
+      .funnel { grid-template-columns: 1fr 1fr; } .funnel > div:nth-child(3) { border-left: none; } .funnel > div:nth-child(n+3) { border-top: 1px solid var(--hair); }
+      .stats, .two { grid-template-columns: 1fr; } .stats .aside { border-left: none; padding-left: 0; }
+      .signals { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); }
+      .steps { grid-template-columns: repeat(2, 1fr); }
+      .features, .results { grid-template-columns: 1fr 1fr; }
+      .team { grid-template-columns: 1fr 1fr; }
+      nav .links { display: none; }
+      nav .btn { margin-left: auto; }
+    }
+    @media (max-width: 600px) {
+      section { padding: 76px 0; }
+      .features, .results, .steps, .team { grid-template-columns: 1fr; }
+      td:first-child { width: 45%; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="#top">Argus</a>
+      <div class="links">
+        <a href="#problem">Problem</a><a href="#how">How it works</a><a href="#results">Results</a><a href="#journey">Build log</a><a href="#team">Team</a>
+      </div>
+      <a class="btn" href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="wrap">
+      <div class="eyebrow">ARGONYX '26 · Problem statement 5 · Threat detection &amp; situational awareness</div>
+      <h1 class="display">We don't watch more.<br /><i>We notice sooner.</i></h1>
+      <p class="lead">Argus is a situational-awareness layer for security control rooms. It reads the cameras and sensors a site already owns, fuses weak signals that share a place and a minute, and hands a human a handful of ranked, explained incidents instead of a wall of alerts.</p>
+      <div class="cta">
+        <a class="btn primary" href="#how">See how it works</a>
+        <a class="btn" href="https://github.com/Argonyx-26/T14_Lordofpings">View the code</a>
+      </div>
+      <figure class="figure" style="margin-left:0;margin-right:0">
+        <img src="assets/detections-bus-station.jpg" alt="A bus station waiting room from a real security camera, with every person, backpack, handbag and phone outlined and numbered by Argus" width="1600" height="900" />
+      </figure>
+      <p class="caption">Real footage, real output: Argus's detector and tracker on the MEVA bus-station camera. Every box is what the system saw, not a mock-up.</p>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="funnel">
+      <div><div class="n">1,242</div><div class="l">events from every stream in 30 minutes</div></div>
+      <div><div class="n">20</div><div class="l">alerts that siloed, per-stream thresholds would page</div></div>
+      <div><div class="n accent">3</div><div class="l">incidents Argus raises, each explained</div></div>
+      <div><div class="n">99.8%</div><div class="l">of events never need a human</div></div>
+    </div>
+  </div>
+
+  <section id="problem">
+    <div class="wrap">
+      <div class="eyebrow">The problem</div>
+      <h2 class="display">Control rooms are drowning in alerts</h2>
+      <p class="lead">Security teams are not short of cameras or sensors. They are short of attention. Every system raises its own alarms on its own screen, and the real threat gets buried.</p>
+      <div class="stats">
+        <div><div class="n">4,484</div><p>alerts reach the average security operations team every day</p></div>
+        <div><div class="n" style="color:var(--accent)">67%</div><p>of them are ignored, buried by the rest</p></div>
+        <div class="aside"><p style="color:var(--fg);margin-top:0">Physical security has the same wall.</p><p>One corporate control room cut its false alarms by 94% only after automating triage. On a campus, the people watching the screens are a handful, and the threat rarely sits on a single screen.</p></div>
+      </div>
+      <p class="source">Sources: Vectra AI, 2023 State of Threat Detection (survey of 2,000 SOC analysts); Ambient.ai, ServiceNow customer case study.</p>
+    </div>
+  </section>
+
+  <section class="ivory" id="insight">
+    <div class="wrap">
+      <div class="eyebrow">The insight</div>
+      <h2 class="display">The threat lives between the screens</h2>
+      <p class="lead">Each signal on its own is noise. The same place and the same minute, confirmed by independent sources, is an incident.</p>
+      <div class="signals">
+        <div class="signal"><div class="k">Camera</div><div class="t">An object changes hands</div><div class="s">Alone: noise</div></div>
+        <div class="signal"><div class="k">Phones</div><div class="t">A crowd forms in the same minute</div><div class="s">Alone: noise</div></div>
+        <div class="signal"><div class="k">Doors</div><div class="t">Traffic spikes at the same entrance</div><div class="s">Alone: noise</div></div>
+        <div class="arrow">→</div>
+        <div class="together"><div class="k">Together</div><div class="t">One incident</div><div class="s">Ranked first, explained, handed to a human</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="eyebrow">How it works</div>
+      <h2 class="display">Six steps from raw footage to a decision</h2>
+      <p class="lead">No training and no labels. Detection and scoring are deterministic and explainable; the language model only writes the explanation.</p>
+      <div class="steps">
+        <div class="step"><div class="no">01</div><h3>Streams</h3><p>Multi-camera CCTV, door activity and device location, normalised into one event schema.</p></div>
+        <div class="step"><div class="no">02</div><h3>Detect</h3><p>YOLO11 and ByteTrack on one laptop GPU; rules and rolling baselines turn tracks into events.</p></div>
+        <div class="step"><div class="no">03</div><h3>Fuse</h3><p>Signals in the same area within two minutes join one incident; each source counts once.</p></div>
+        <div class="step"><div class="no">04</div><h3>Score</h3><p>A transparent 0 to 100: severity, confidence, area criticality, corroboration, time, feedback.</p></div>
+        <div class="step"><div class="no">05</div><h3>Explain</h3><p>Gemini writes a two-line brief; it cannot create, hide or re-rank incidents, and every line is checked against the evidence.</p></div>
+        <div class="step"><div class="no">06</div><h3>Decide</h3><p>A human acknowledges, escalates or dismisses; every action is written to a tamper-evident log.</p></div>
+      </div>
+
+      <div class="features">
+        <div class="feature"><h3>Siloed vs fused, side by side</h3><p>Flip the event stream between every per-stream alert and what Argus actually surfaces.</p></div>
+        <div class="feature"><h3>Every score shows its working</h3><p>Each incident breaks its score into the factors behind it. No black box.</p></div>
+        <div class="feature"><h3>Replay the moment</h3><p>Click any piece of evidence and the camera that saw it jumps there, with the object outlined.</p></div>
+        <div class="feature"><h3>Analyse any footage</h3><p>Upload a clip and the same detector, rules and fusion run on it, with detections drawn on the video.</p></div>
+        <div class="feature"><h3>Live inference</h3><p>The detector runs in real time at 30 frames a second on a single laptop GPU.</p></div>
+        <div class="feature"><h3>Private by design</h3><p>No face recognition, no identity inference; people are track numbers, and briefs work offline from a cache.</p></div>
+      </div>
+
+      <figure class="figure" style="margin-left:0;margin-right:0">
+        <img src="assets/console-preview.jpg" alt="The Argus console: event funnel, camera wall, ranked incidents, a to-scale site map and an incident's score breakdown" width="1536" height="864" loading="lazy" />
+      </figure>
+      <p class="caption">The Argus console. This preview uses the console's sample-data mode; the live demo runs on the full MEVA replay.</p>
+    </div>
+  </section>
+
+  <section id="results" class="hair-t">
+    <div class="wrap">
+      <div class="eyebrow">Results</div>
+      <h2 class="display">Measured on real footage</h2>
+      <p class="lead">Thirty minutes, six cameras, one facility: the MEVA dataset's 15 March 2018 recording, scored against its own human ground truth.</p>
+      <div class="results">
+        <div><div class="n accent">4 of 5</div><p>staged incidents caught: two thefts in the cafe, a theft and an abandoned package at the bus station</p></div>
+        <div><div class="n">0</div><p>false incidents: of two stray camera alerts, fusion kept one below the incident line and folded the other into a real incident</p></div>
+        <div><div class="n">20 → 3</div><p>what siloed thresholds would page, against what Argus raises</p></div>
+        <div><div class="n">0.54</div><p>precision of the video door sensor on indoor doors, with recall 0.75</p></div>
+        <div><div class="n">30 fps</div><p>live detection and tracking on one RTX 5060 laptop GPU (13 to 23 ms a frame)</p></div>
+        <div><div class="n">1</div><p>miss: a black purse on a black bench, which the detector never sees. We report it.</p></div>
+      </div>
+      <table>
+        <tr><th>Measure</th><th>Result</th></tr>
+        <tr><td>Staged incidents caught</td><td>4 / 5 (cafe thefts 14:53:38 and 14:54:18; bus-station theft 15:13:30 and abandonment 15:18:07)</td></tr>
+        <tr><td>False incidents</td><td>0 in 30 minutes across 6 cameras</td></tr>
+        <tr><td>Event funnel</td><td>1,242 raw events → 20 per-stream alerts → 3 incidents</td></tr>
+        <tr><td>Door sensor, indoor doors</td><td>precision 0.54, recall 0.75 (±2 s against human door-open annotations)</td></tr>
+        <tr><td>Door sensor, all six cameras</td><td>precision 0.21, recall 0.52: exterior doors use a simpler rule that fires on people queueing near a door</td></tr>
+        <tr><td>Live inference</td><td>30 fps, 13 to 23 ms per frame, YOLO11s at 960 px with FP16</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="data" class="hair-t">
+    <div class="wrap two">
+      <div>
+        <div class="eyebrow">Real data, honestly labelled</div>
+        <h2 class="display">No synthetic data</h2>
+        <p class="lead">Everything in the demo comes from MEVA (Kitware Inc. and IARPA): real multi-camera 1080p footage of a school, cafe, plaza and bus station, real GPS tracks from people on site, and human annotations.</p>
+        <ul>
+          <li>Incidents are staged by actors among ordinary passers-by; theft and abandonment labels are used only to score Argus, never as inputs.</li>
+          <li>The door stream is derived from MEVA's door annotations, standing in for an access-control system; our video door sensor is measured against it.</li>
+          <li>Device locations are recorded GPS, standing in for Wi-Fi access-point data on a campus. Fusion uses place and time, never identity.</li>
+          <li>Area outlines were placed from satellite imagery, OpenStreetMap footprints and MEVA's camera calibrations.</li>
+        </ul>
+      </div>
+      <figure style="margin:0">
+        <img src="assets/site-areas.jpg" alt="Satellite view of the MEVA facility with the school, plaza, parking and bus-station areas outlined and real GPS fixes in magenta" width="798" height="994" loading="lazy" style="border-radius:12px;border:1px solid var(--hair)" />
+        <p class="caption">Fusion areas over satellite imagery; magenta dots are real GPS fixes. Imagery © Esri, Maxar, Earthstar Geographics; footprints © OpenStreetMap contributors.</p>
+      </figure>
+    </div>
+  </section>
+
+  <section id="journey" class="hair-t">
+    <div class="wrap">
+      <div class="eyebrow">Build log</div>
+      <h2 class="display">Built in 24 hours, in public</h2>
+      <p class="lead">Every step is in the repository's commit history. Friday 25 September 2026, RV University, Bengaluru.</p>
+      <div class="timeline">
+        <div class="tl"><div class="time">Fri 11:00</div><div class="what">Hackathon starts on site at RV University.</div></div>
+        <div class="tl key"><div class="time">Fri 12:30</div><div class="what">Decision: no synthetic data. MEVA chosen as the real multi-camera source.</div></div>
+        <div class="tl"><div class="time">Fri 12:42</div><div class="what">Repository, team handoff and data plan for the Windows GPU laptop.</div></div>
+        <div class="tl"><div class="time">Fri 12:50</div><div class="what">Backend core: event schema, door and GPS loaders, fusion engine, scoring, replay clock, API.</div></div>
+        <div class="tl"><div class="time">Fri 12:53</div><div class="what">Vision pipeline: YOLO11 tracking, a low-confidence valuables pass, camera rules.</div></div>
+        <div class="tl"><div class="time">Fri 13:06</div><div class="what">Fusion areas refined from satellite imagery, OpenStreetMap and camera calibrations.</div></div>
+        <div class="tl"><div class="time">Fri 13:23</div><div class="what">Bag false alarms cut from 6 to 2 with recall unchanged at 4 of 5.</div></div>
+        <div class="tl"><div class="time">Fri 13:38</div><div class="what">Console redesign: the signal funnel, ranked incidents, score breakdown and to-scale site map.</div></div>
+        <div class="tl"><div class="time">Fri 13:40</div><div class="what">Video door-contact sensor from door-leaf motion, with no training.</div></div>
+        <div class="tl key"><div class="time">Fri 15:46</div><div class="what">Measured results: 4 of 5 caught, 0 false incidents, 30 fps live.</div></div>
+        <div class="tl"><div class="time">Fri 16:15</div><div class="what">Analyse any footage: upload a clip and the full pipeline runs on it.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="team" class="hair-t">
+    <div class="wrap">
+      <div class="eyebrow">Team</div>
+      <h2 class="display">Lord of the Pings</h2>
+      <div class="team">
+        <div class="member"><div class="name">Tanush Deepak</div><div class="role">Team lead</div></div>
+        <div class="member"><div class="name">L Mohit Jain</div><div class="role">Vision pipeline and demo laptop</div></div>
+        <div class="member"><div class="name">Utkarsh Singh Yadav</div><div class="role">Team member</div></div>
+        <div class="member"><div class="name">Ojus B Airani</div><div class="role">Team member</div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>Argus · ARGONYX '26 · RV University, Bengaluru<br />Data: MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0. Incidents are staged by actors.</div>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <a href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
+        <a class="raah" href="https://raah.dev" rel="noopener">Analytics by Raah</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
