@@ -168,7 +168,7 @@ def _groups() -> dict[str, str]:
 
 def train() -> dict:
     import joblib
-    from sklearn.ensemble import HistGradientBoostingClassifier
+    from sklearn.ensemble import RandomForestClassifier
     from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
     from sklearn.model_selection import StratifiedGroupKFold
 
@@ -185,7 +185,8 @@ def train() -> dict:
             g.append(groups.get(clip.stem, clip.stem))
             names.append(clip.stem)
     X, y = np.array(X), np.array(y)
-    clf = HistGradientBoostingClassifier(max_iter=200, learning_rate=0.05, max_depth=4, random_state=0)
+    # chosen over gradient boosting (AUC 0.79) and logistic regression (0.81) on this same cross-validation
+    clf = RandomForestClassifier(n_estimators=500, min_samples_leaf=3, random_state=0)
     prob = np.zeros(len(y))
     for tr, te in StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=0).split(X, y, g):
         prob[te] = clf.fit(X[tr], y[tr]).predict_proba(X[te])[:, 1]
@@ -199,7 +200,14 @@ def train() -> dict:
         "recall": round(recall_score(y, pred), 3), "f1": round(f1_score(y, pred), 3),
         "roc_auc": round(roc_auc_score(y, prob), 3),
         "fights_caught": int(((pred == 1) & (y == 1)).sum()), "false_alarms": int(((pred == 1) & (y == 0)).sum()),
+        "model_selection": "random forest, chosen over gradient boosting and logistic regression on this same "
+                           "cross-validation (a small optimistic bias)",
     }
+    hi = prob >= 0.7                                   # the operating point threats.py uses
+    res["at_pipeline_threshold_0_7"] = {
+        "fights_caught": int((hi & (y == 1)).sum()), "false_alarms": int((hi & (y == 0)).sum()),
+        "precision": round(float((hi & (y == 1)).sum() / max(hi.sum(), 1)), 3),
+        "recall": round(float((hi & (y == 1)).sum() / max((y == 1).sum(), 1)), 3)}
     clf.fit(X, y)
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump({"model": clf, "features": FEATURES}, MODEL_PATH)
