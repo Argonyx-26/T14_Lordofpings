@@ -213,7 +213,7 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
       )}
 
       <footer className="flex shrink-0 items-center gap-3 px-4 py-3 hairline-t">
-        <ResponseMenu incident={incident} config={config} onAct={act}
+        <ResponseMenu incident={incident} config={config} onAct={act} role={role}
           disabled={MOCK || !!replayingLeadUp} disabledReason={MOCK ? 'Needs the backend' : 'Wait for the incident to re-form'} />
       </footer>
     </section>

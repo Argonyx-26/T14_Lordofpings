@@ -35,7 +35,9 @@ export function SiteMap({ config, incidents, primary, onFocus }: {
     <section className="surface shrink-0 px-3.5 pb-2.5 pt-3">
       <div className="mb-1 flex items-center">
         <span className="text-[13px] font-medium">Site</span>
-        <span className="ml-auto truncate text-[11px] text-[var(--color-fg-3)]">click a camera to view it</span>
+        <span className="ml-auto truncate text-[11px] text-[var(--color-fg-3)]">
+          {primary && config?.cameras[primary] ? <>on screen: <span className="num text-[var(--color-accent)]">{primary}</span>, looking at {SHORT[config.cameras[primary].area] ?? config.cameras[primary].area}</> : 'click a camera to view it'}
+        </span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="max-h-[240px] w-full">
         <defs>
@@ -64,6 +66,29 @@ export function SiteMap({ config, incidents, primary, onFocus }: {
             </g>
           )
         })}
+        {/* what the camera on the main screen is looking at: a sight cone to the area it watches, outlined */}
+        {(() => {
+          const cam = primary ? config?.cameras[primary] : null
+          const ring = cam?.area ? geometry[cam.area] : null
+          if (!cam?.pos || !ring) return null
+          const [x, y] = proj(cam.pos[1], cam.pos[0])
+          const pts = ring.map(([lon, lat]) => proj(lon, lat))
+          const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length
+          const cy = pts.reduce((a, p) => a + p[1], 0) / pts.length
+          const ang = Math.atan2(cy - y, cx - x)
+          const len = Math.max(18, Math.min(70, Math.hypot(cx - x, cy - y) * 1.15))
+          const half = 0.42                                     // ~48 degree cone: a typical CCTV lens
+          const p1 = [x + len * Math.cos(ang - half), y + len * Math.sin(ang - half)]
+          const p2 = [x + len * Math.cos(ang + half), y + len * Math.sin(ang + half)]
+          const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0]} ${p[1]}`).join('') + 'Z'
+          return (
+            <g pointerEvents="none">
+              <path d={d} fill="none" stroke="var(--color-accent)" strokeWidth="1.2" strokeDasharray="3 2" />
+              <path d={`M${x} ${y}L${p1[0]} ${p1[1]}A${len} ${len} 0 0 1 ${p2[0]} ${p2[1]}Z`}
+                fill="color-mix(in srgb, var(--color-accent) 22%, transparent)" stroke="var(--color-accent)" strokeWidth="0.6" />
+            </g>
+          )
+        })()}
         {groupCameras(cams.map(([id, c]) => ({ id, area: c.area, xy: proj(c.pos![1], c.pos![0]) }))).map((g) => {
           const [x, y] = g.xy
           const hot = g.areas.some((a) => top(a) >= (config?.thresholds.open_threshold ?? 55))

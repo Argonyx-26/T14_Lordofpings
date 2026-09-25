@@ -220,6 +220,11 @@ async def incident_forecast(incident_id: str):
     return await asyncio.to_thread(forecast, inc, rt.engine.evidence(incident_id), rt.cfg, now, log=log, feedback=feedback)
 
 
+# Supervisor-only decisions. Dismissing lowers how similar alerts score in that area (policy, not handling), and
+# calling the police commits outside resources; a duty officer escalates instead. Enforced here, not only in the UI.
+SUPERVISOR_NOTES = {"notify_police", "false_alarm"}
+
+
 class ActionIn(BaseModel):
     action: Literal["ack", "escalate", "dismiss"]
     role: Literal["duty_officer", "supervisor"] = "duty_officer"
@@ -230,6 +235,8 @@ class ActionIn(BaseModel):
 async def act(incident_id: str, body: ActionIn):
     if incident_id not in rt.engine.incidents:
         raise HTTPException(404, "unknown incident")
+    if body.role != "supervisor" and (body.action == "dismiss" or body.note in SUPERVISOR_NOTES):
+        raise HTTPException(403, "Only a supervisor can do that: escalate it to them")
     inc = rt.engine.act(incident_id, body.action)
     entry = rt.audit.append(incident_id=incident_id, action=body.action, role=body.role, note=body.note,
                             sim_t=rt.replay.sim_t, score=inc.score)
@@ -271,6 +278,7 @@ async def replay_control(body: ReplayIn):
 
 class ProfileIn(BaseModel):
     name: str
+    role: Literal["duty_officer", "supervisor"] = "duty_officer"
 
 
 @app.post("/api/profile")
@@ -278,7 +286,10 @@ async def set_profile(body: ProfileIn):
     """Switch the site's security profile (profiles.yaml) and re-score the replay so far."""
     if body.name not in profiles()["profiles"]:
         raise HTTPException(400, f"unknown profile {body.name}")
+    if body.role != "supervisor":
+        raise HTTPException(403, "Only a supervisor can change how strict the site is")
     rt.set_profile(body.name)
+    rt.audit.append(incident_id="-", action="profile", role=body.role, note=body.name, sim_t=rt.replay.sim_t, score=0)
     for inc in rt.engine.incidents.values():
         _ensure_brief(inc)
     snap = rt.snapshot()

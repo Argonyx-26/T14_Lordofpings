@@ -13,6 +13,7 @@ interface Choice {
   note: string
   Icon: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
   recommended?: boolean
+  supervisorOnly?: boolean
 }
 
 /** Playbook actions that hand the incident up the chain rather than handling it on site. */
@@ -22,8 +23,9 @@ const ESCALATING = new Set(['notify_police'])
  * The human decision, one menu. Every choice is one of the three things the backend records (acknowledge,
  * escalate, dismiss); the specific response is logged with it as a note in the hash-chained audit log.
  */
-export function ResponseMenu({ incident, config, disabled, disabledReason, onAct }: {
+export function ResponseMenu({ incident, config, disabled, disabledReason, onAct, role = 'duty_officer' }: {
   incident: Incident
+  role?: 'duty_officer' | 'supervisor'
   config: SiteConfigView | null
   disabled: boolean
   disabledReason?: string
@@ -58,6 +60,9 @@ export function ResponseMenu({ incident, config, disabled, disabledReason, onAct
     choices.push({ key: 'notify_police', label: playbook.notify_police, detail: 'Marks it escalated and logs the call', action: 'escalate', note: 'notify_police', Icon: Siren })
   }
   choices.push({ key: 'dismiss', label: 'Dismiss as a false alarm', detail: 'Closes it. Similar alerts in this area will score lower', action: 'dismiss', note: 'false_alarm', Icon: X })
+  // Supervisor-only (the backend enforces it too): dismissing changes scoring policy, calling the police commits
+  // outside resources. A duty officer sees them, greyed, and escalates instead.
+  for (const c of choices) c.supervisorOnly = c.action === 'dismiss' || c.note === 'notify_police'
 
   const choose = async (c: Choice) => {
     setBusy(c.key)
@@ -82,7 +87,8 @@ export function ResponseMenu({ incident, config, disabled, disabledReason, onAct
             <div key={c.key}>
               {k > 0 && choices[k - 1].recommended && <div className="mx-3 my-1.5 hairline-t" />}
               {c.key === 'dismiss' && <div className="mx-3 my-1.5 hairline-t" />}
-              <button role="menuitem" onClick={() => choose(c)} disabled={!!busy}
+              <button role="menuitem" onClick={() => choose(c)} disabled={!!busy || (c.supervisorOnly && role !== 'supervisor')}
+                title={c.supervisorOnly && role !== 'supervisor' ? 'Supervisor only: escalate it to them' : undefined}
                 className="flex w-full items-start gap-3 px-3.5 py-2 text-left transition hover:bg-[var(--color-surface-3)] disabled:opacity-60">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
                   style={{ background: c.recommended ? 'var(--color-fg)' : 'var(--color-surface-4)', color: c.recommended ? '#0a0c0f' : c.key === 'dismiss' ? 'var(--color-fg-2)' : 'var(--color-fg)' }}>
@@ -90,6 +96,7 @@ export function ResponseMenu({ incident, config, disabled, disabledReason, onAct
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] text-[var(--color-fg)]">{c.label}</span>
+                  {c.supervisorOnly && <span className="float-right ml-2 text-[10px] uppercase tracking-wide text-[var(--color-fg-4)]">Supervisor</span>}
                   <span className="block text-[11px] text-[var(--color-fg-3)]">{c.detail}</span>
                 </span>
                 {incident.status === (c.action === 'ack' ? 'ack' : c.action === 'escalate' ? 'escalated' : 'dismissed') && !c.note && (

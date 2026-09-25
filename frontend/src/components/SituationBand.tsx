@@ -177,7 +177,8 @@ function Validation() {
                 <span className="capitalize text-[var(--color-fg)]">{g.kind.replaceAll('_', ' ')}</span>
                 <span className="num text-[var(--color-fg-4)]">{g.camera}</span>
                 <span className="ml-auto text-[11px] text-[var(--color-fg-3)]">
-                  {g.result === 'alerted' ? (g.latency_s !== null ? `caught in ${Math.round(g.latency_s)} s` : 'caught') : 'missed'}
+                  {g.result === 'alerted' ? (g.latency_s === null ? 'caught'
+                    : g.latency_s < 0 ? `flagged ${Math.round(-g.latency_s)} s before` : `caught in ${Math.round(g.latency_s)} s`) : 'missed'}
                 </span>
               </li>
             ))}

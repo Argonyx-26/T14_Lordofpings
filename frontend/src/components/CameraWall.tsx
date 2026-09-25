@@ -307,7 +307,7 @@ function Tile({ camera, config, clock, incident, primary, order, boxes, evidence
               )}
             </div>
           ) : (
-            <span className="relative hidden text-[10.5px] text-[var(--color-fg-4)] sm:inline">{config.clips.length ? 'No footage now' : 'No footage'}</span>
+            <span className="relative hidden text-[10.5px] text-[var(--color-fg-4)] sm:inline">{config.clips.length ? 'Not recorded at this time' : 'No footage'}</span>
           )}
         </div>
       )}

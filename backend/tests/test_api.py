@@ -38,3 +38,18 @@ def test_project_site_is_served():
         r = client.get("/site/")
         assert r.status_code == 200 and "We notice sooner" in r.text
         assert client.get("/site/fonts/geist-latin-wght-normal.woff2").status_code == 200
+
+
+def test_supervisor_only_decisions_are_enforced_by_the_backend():
+    """A duty officer can't dismiss, call the police or change the profile; the refusal writes nothing."""
+    with TestClient(app) as client:
+        cfg = client.get("/api/config").json()
+        client.post("/api/replay", json={"cmd": "seek", "value": cfg["window"]["end_t"]})
+        iid = next(iter(client.get("/api/state").json()["incidents"]))["incident_id"]
+        before = len(client.get("/api/audit").json()["entries"])
+        for body in ({"action": "dismiss", "note": "false_alarm"}, {"action": "escalate", "note": "notify_police"}):
+            r = client.post(f"/api/incidents/{iid}/action", json={**body, "role": "duty_officer"})
+            assert r.status_code == 403
+        assert client.post("/api/profile", json={"name": "park"}).status_code == 403
+        assert client.post("/api/profile", json={"name": "park", "role": "duty_officer"}).status_code == 403
+        assert len(client.get("/api/audit").json()["entries"]) == before
