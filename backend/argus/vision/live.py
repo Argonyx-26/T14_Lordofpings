@@ -36,8 +36,8 @@ ATTRIBUTION = "MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0"
 
 
 class Live:
-    def __init__(self, source, label: str, polygons: dict, weights: str, imgsz: int):
-        self.source, self.label, self.polygons = source, label, polygons
+    def __init__(self, source, label: str, polygons: dict, weights: str, imgsz: int, header: bool = False):
+        self.source, self.label, self.polygons, self.header = source, label, polygons, header
         self.model = YOLO(weights)
         self.imgsz = imgsz
         self.jpeg: bytes | None = None
@@ -62,13 +62,16 @@ class Live:
                 cv2.rectangle(img, (x1, y1), (x2, y2), col, 2)
                 tag = f"{NAMES.get(cls, cls)}{'' if tid is None else f' #{tid}'} {cf:.2f}"
                 cv2.putText(img, tag, (x1, max(12, y1 - 4)), cv2.FONT_HERSHEY_SIMPLEX, 0.42, col, 1, cv2.LINE_AA)
-        # header bar
+        if self.header:  # standalone use; the console draws its own header from /live/stats
+            self._header(img, fps, infer_ms)
+        cv2.putText(img, ATTRIBUTION, (8, img.shape[0] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (230, 230, 230), 1, cv2.LINE_AA)
+        return img, counts
+
+    def _header(self, img, fps, infer_ms):
         cv2.rectangle(img, (0, 0), (OUT_W, 26), (20, 20, 20), -1)
         cv2.circle(img, (14, 13), 6, (0, 0, 255), -1)
         cv2.putText(img, f"LIVE INFERENCE  YOLO11 + ByteTrack  {fps:4.1f} fps  {infer_ms:4.1f} ms/frame  |  {self.label}",
                     (28, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
-        cv2.putText(img, ATTRIBUTION, (8, img.shape[0] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (230, 230, 230), 1, cv2.LINE_AA)
-        return img, counts
 
     def run(self):
         while not self.stop:
@@ -138,6 +141,7 @@ if __name__ == "__main__":
     ap.add_argument("--weights", default=str(ROOT / "models" / "yolo11s.pt"))
     ap.add_argument("--imgsz", type=int, default=960)
     ap.add_argument("--port", type=int, default=8001)
+    ap.add_argument("--header", action="store_true", help="burn an fps/latency header into the stream (standalone use)")
     a = ap.parse_args()
     if a.source is not None:
         src = int(a.source) if a.source.isdigit() else a.source
@@ -147,6 +151,6 @@ if __name__ == "__main__":
         cam = clip_info(a.clip).camera
         cfg = camera_cfg(cam)
         label, polys = f"{cam} {cfg.get('label', '')}", cfg.get("polygons") or {}
-    live = Live(src, label, polys, a.weights, a.imgsz)
+    live = Live(src, label, polys, a.weights, a.imgsz, header=a.header)
     threading.Thread(target=live.run, daemon=True).start()
     uvicorn.run(make_app(live), host="127.0.0.1", port=a.port, log_level="warning")
