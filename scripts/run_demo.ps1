@@ -48,7 +48,7 @@ if ($Prepare) {
     Step "Evaluation against MEVA ground truth"
     Push-Location backend
     & $Py -m argus.eval.evaluate
-    Step "Caching AI briefs (needs internet + ANTHROPIC_API_KEY in .env)"
+    Step "Caching AI briefs (needs internet + GEMINI_API_KEY or ANTHROPIC_API_KEY in .env)"
     & $Py -m argus.brief.warm
     Pop-Location
 
