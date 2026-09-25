@@ -124,4 +124,5 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
   - the G331 tile shows real footage with detection boxes.
 - The five school tiles read "No recording at this moment", which is true at 15:18: those clips end at 14:55.
 - The "sample-data mode" caption is replaced with a factual one.
-- Team roles for Utkarsh and Ojus are still "Team member"; waiting on Jack.
+- **Team: Utkarsh and Ojus didn't come, so Jack asked to remove them.** The site's team section now lists Tanush and Mohit only, in a 2-column grid.
+- **Pitch impact (Tanush):** `docs/PITCH.md` assumes four speakers (A lead, B demo driver, C vision, D business). With two of you, split it as **Tanush = A + D** (problem, business, close) and **Jack = B + C** (drives the live demo, then slides 5–6). Update the deck's speaker notes to match. Also check whether the rule that every member speaks needs an organiser's OK for absentees.
