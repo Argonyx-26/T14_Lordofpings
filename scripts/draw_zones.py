@@ -20,5 +20,8 @@ for jpg in sorted((MEVA_DIR / "frames").glob("*.jpg")):
         p = np.array(pts, np.int32)
         cv2.polylines(img, [p], True, COLORS[i % len(COLORS)], 4)
         cv2.putText(img, name, tuple(p[0]), cv2.FONT_HERSHEY_SIMPLEX, 1.4, COLORS[i % len(COLORS)], 3)
+    for name, (x1, y1, x2, y2) in (camera_cfg(cam).get("door_leaf") or {}).items():
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 255), 3)
+        cv2.putText(img, f"leaf:{name}", (x1, y2 + 30), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (0, 255, 255), 3)
     cv2.imwrite(str(out_dir / f"{cam}.jpg"), cv2.resize(img, (960, 536)))
     print(cam, list(polys))

@@ -2,6 +2,7 @@
 # config/site.yaml. Rules test a track's FOOT point (bottom-centre of its box), so polygons are
 # drawn on the floor. Check visually with: python scripts/draw_zones.py
 G421:   # school cafe
+  door_method: leaf
   polygons:
     door:     [[860,300],[1120,300],[1140,410],[840,410]]      # centre glass double door
     door_r:   [[1240,400],[1600,420],[1600,530],[1230,510]]    # right double door
@@ -11,21 +12,38 @@ G421:   # school cafe
   bag_ignore:                                                  # snack packets on the counter, trash bin
     - [[0,520],[440,520],[440,1072],[0,1072]]
     - [[1500,380],[1680,380],[1680,530],[1500,530]]
+  door_leaf:                                                   # upper door panels, above head height
+    center: [930,60,1090,150]
+    right:  [1250,90,1580,190]
+    left:   [210,110,360,190]
 G419:   # stairwell doors
+  door_method: leaf
   polygons:
     door:     [[760,720],[1090,720],[1090,880],[760,880]]
+  door_leaf:
+    main:   [820,300,1120,420]
 G420:   # main-hall doors
+  door_method: leaf
   polygons:
     door:     [[660,640],[1460,760],[1440,1000],[660,840]]
+  door_leaf:
+    a:      [860,400,1110,520]
+    b:      [1140,460,1430,600]
 G638:   # plaza (exterior)
+  door_method: feet
   polygons:
     door:     [[430,500],[1040,480],[1040,580],[430,600]]      # strip in front of entrances
     walkway:  [[460,580],[1440,500],[1400,1072],[660,1072]]    # pedestrian-only plaza
+  door_leaf:
+    left:   [440,350,560,430]
+    mid:    [690,340,800,420]
+    right:  [910,300,1040,400]
 G336:   # road / roundabout (exterior)
   polygons: {}
 G474:   # IR pair of G336
   polygons: {}
 G331:   # bus station interior
+  door_method: feet
   polygons:
     door:     [[460,290],[690,290],[690,380],[460,380]]        # glass double door (left, street side)
     door_b:   [[1320,210],[1450,210],[1450,280],[1320,280]]    # back door by the ATM
@@ -33,3 +51,8 @@ G331:   # bus station interior
   bag_ignore:
     - [[0,900],[180,900],[180,1072],[0,1072]]                  # newspaper rack
     - [[1000,40],[1290,40],[1290,330],[1000,330]]              # ATM queue + trash can
+
+  door_leaf:
+    front:  [490,70,670,190]
+    back:   [1350,30,1420,140]
+    side:   [1840,100,1920,300]

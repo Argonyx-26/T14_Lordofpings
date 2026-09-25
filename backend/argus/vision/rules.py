@@ -20,6 +20,7 @@ from shapely.geometry import Point, Polygon
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from argus.schema import Entity, Event, Media  # noqa: E402
+from argus.vision import door_sensor  # noqa: E402
 from argus.vision.common import EVENTS_DIR, FPS, TRACKS_DIR, camera_cfg, clip_info, frame_to_t  # noqa: E402
 
 PERSON = 0
@@ -39,7 +40,7 @@ TAKEN_REST_S = 5.0        # an object resting this long that vanishes while a no
 TAKEN_GONE_S = 15.0       # ...and is not seen at that spot again for this long -> taken
 RUN_SPEED = 1.8           # body-heights per second
 RUN_MIN_S = 1.0
-DOOR_COOLDOWN_S = 3.0
+DOOR_GROUP_S = 4.0       # feet method: door-zone entries within this gap = one opening
 DOOR_LOITER_S = 45.0
 OCC_BUCKET_S = 10.0
 OCC_Z = 2.5
@@ -182,7 +183,7 @@ class ClipRules:
     def __init__(self, track_path: pathlib.Path):
         clip = clip_info(track_path.stem)
         self.stem, self.cam = clip.stem, clip.camera
-        cfg = camera_cfg(self.cam)
+        cfg = self.cfg = camera_cfg(self.cam)
         self.zone, self.area = cfg["zone"], cfg["area"]
         self.polys = {k: Polygon(v) for k, v in (cfg.get("polygons") or {}).items()}
         self.tracks = load_tracks(track_path)
@@ -302,26 +303,63 @@ class ClipRules:
 
     # ---------- rules ----------
     def door_activity(self):
+        """One door_activity event per door OPENING (the metric the door sensor is scored on).
+
+        door_method: leaf  -> video door-contact sensor: the upper door panel moves (door_sensor.py),
+                              kept only when a person is at that door within +/-3 s
+        door_method: feet  -> a person's feet enter the door zone; bursts within DOOR_GROUP_S at the
+                              same door are one opening (a group walking through)
+        """
+        leaf_file = TRACKS_DIR / f"{self.stem}.doors.npz"
+        if self.cfg.get("door_method", "feet") == "leaf" and leaf_file.exists():
+            z = np.load(leaf_file)
+            sig = {k: z[k] for k in z.files if k != "frames"}
+            for door, frame, strength in door_sensor.door_events(z["frames"], sig):
+                who = self.person_at_doors(frame, 3 * FPS)
+                if who is None:
+                    continue  # reflections / lighting, nobody at a door
+                tid, box = who
+                self.emit("door_activity", frame, 0.05, min(0.95, 0.5 + 0.1 * strength), tid, box,
+                          door=door, method="door_leaf_motion", strength=strength)
+        else:
+            hits = []
+            for t in self.persons.values():
+                if len(t.frames) < 4:
+                    continue
+                for door in self.door_names():
+                    inside = np.array([self.in_poly(door, p) for p in t.feet])
+                    for i in range(len(inside)):
+                        if inside[i] and (i == 0 or not inside[i - 1]):
+                            direction = "in" if i == 0 else ("out" if inside[-1] else "pass")
+                            hits.append((int(t.frames[i]), door, t, i, direction))
+            last: dict = {}
+            for frame, door, t, i, direction in sorted(hits, key=lambda h: h[0]):
+                if frame - last.get(door, -1e9) > DOOR_GROUP_S * FPS:
+                    self.emit("door_activity", frame, 0.05, min(0.95, t.conf + 0.2), t.tid, t.boxes[i],
+                              door=door, direction=direction, method="feet_in_door_zone")
+                last[door] = frame
+        # loitering at a door (propping / tailgating wait)
         for t in self.persons.values():
-            if len(t.frames) < 4:
-                continue
             for door in self.door_names():
                 inside = np.array([self.in_poly(door, p) for p in t.feet])
-                last_emit = -1e9
-                for i in range(len(inside)):
-                    entered = inside[i] and (i == 0 or not inside[i - 1])
-                    if entered and t.frames[i] - last_emit > DOOR_COOLDOWN_S * FPS:
-                        # direction: track born near the door = coming in; dies near the door = going out
-                        direction = "in" if i == 0 else ("out" if inside[-1] else "pass")
-                        self.emit("door_activity", t.frames[i], 0.05, min(0.95, t.conf + 0.2), t.tid, t.boxes[i],
-                                  door=door, direction=direction)
-                        last_emit = t.frames[i]
-                # loitering at a door (propping / tailgating wait)
                 span = t.frames[inside]
                 if len(span) and span[-1] - span[0] > DOOR_LOITER_S * FPS and inside.mean() > 0.5:
                     j = int(np.argmax(inside))
                     self.emit("loitering", span[0] + DOOR_LOITER_S * FPS, 0.3, 0.6, t.tid, t.boxes[j],
                               polygon=door, dwell_s=round(float(span[-1] - span[0]) / FPS, 1))
+
+    def person_at_doors(self, frame: int, window: float):
+        """Nearest person to any door zone within +/-window frames: (tid, box) or None."""
+        best = None
+        for f in range(int(frame - window) // 2 * 2, int(frame + window) + 1, 2):
+            for tid, b in self.by_frame.get(f, []):
+                pt = Point((b[0] + b[2]) / 2, b[3])
+                hgt = max(b[3] - b[1], 1)
+                for d in self.door_names():
+                    dist = self.polys[d].distance(pt) / hgt
+                    if dist < 1.0 and (best is None or dist < best[0]):
+                        best = (dist, tid, b)
+        return None if best is None else (best[1], best[2])
 
     def bag_rules(self):
         for bag in chain_bags(self.bag_tracks):
