@@ -220,6 +220,18 @@ async def incident_forecast(incident_id: str):
     return await asyncio.to_thread(forecast, inc, rt.engine.evidence(incident_id), rt.cfg, now, log=log, feedback=feedback)
 
 
+@app.get("/api/intel")
+async def intel():
+    """The layer above incidents (argus/intel.py): pattern links between incidents, series, the near-repeat watch
+    and what ARGUS can and cannot see. Read-only, as of the replay clock."""
+    from argus.intel import build_intel
+    now = rt.replay.sim_t
+    live = getattr(rt, "live_events", [])
+    log = [e for e in rt.events if e.t <= now] + live
+    return await asyncio.to_thread(build_intel, list(rt.engine.incidents.values()), rt.engine.evidence, rt.cfg, now, log,
+                                   bool(live))
+
+
 # Supervisor-only decisions. Dismissing lowers how similar alerts score in that area (policy, not handling), and
 # calling the police commits outside resources; a duty officer escalates instead. Enforced here, not only in the UI.
 SUPERVISOR_NOTES = {"notify_police", "false_alarm"}

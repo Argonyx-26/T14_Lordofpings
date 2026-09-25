@@ -137,3 +137,24 @@ action_meta:
   intervene:        {responder: guard,   disruption: 2, records: escalate}
   notify_police:    {responder: police,  disruption: 3, records: escalate}
   armed_response:   {responder: police,  disruption: 3, records: escalate}
+
+# ---- Pattern links and near-repeat watch (argus/patterns.py) ----------------------------------------------------
+# Incidents that follow the same offender script and share its act (link_stages) inside the window are linked; walking
+# time between the areas says whether one person could have done both. Linked incidents form a series. Only camera-seen behaviour counts (phone counts never make a series). Crowd build-up is
+# not an offender script, so it never links. After an offender-script incident the site is on near-repeat watch
+# for `window_s`: areas ranked by criticality x exp(-walk / watch_decay_walk_s) x time left in the window.
+patterns:
+  scripts: [theft, assault, dealing]
+  link_stages: {theft: [taken, leaving], assault: [fight, armed, injury], dealing: [exchange, pattern]}
+  window_s: 1800             # near-repeat window: 30 min
+  walk_slack_s: 30           # a link may be up to this much faster than a brisk walk
+  watch_decay_walk_s: 180    # nearness halves roughly every 2 min on foot
+  nouns: {theft: "bag thefts", assault: "assaults", dealing: "exchange spots"}
+
+# What each kind of behaviour needs to be seen at all (argus/coverage.py): an area with none of these streams is
+# blind to it.
+visibility:
+  - {id: bags,     label: "Bags left or taken",        needs: [cctv]}
+  - {id: violence, label: "Weapons, fights, falls",    needs: [cctv]}
+  - {id: crowds,   label: "Crowds and people leaving", needs: [device, cctv]}
+  - {id: doors,    label: "Door traffic",              needs: [door]}
