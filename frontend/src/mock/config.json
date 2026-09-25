@@ -1,0 +1,102 @@
+{
+ "site_name": "MUTC facility (MEVA)",
+ "areas": {
+  "school": {
+   "name": "School building",
+   "criticality": 0.7
+  },
+  "plaza": {
+   "name": "School plaza & road",
+   "criticality": 0.5
+  },
+  "bus_station": {
+   "name": "Bus station",
+   "criticality": 0.8
+  },
+  "parking": {
+   "name": "Parking areas",
+   "criticality": 0.4
+  }
+ },
+ "cameras": {
+  "G421": {
+   "zone": "school_cafe",
+   "area": "school",
+   "label": "School cafe"
+  },
+  "G419": {
+   "zone": "school_doors",
+   "area": "school",
+   "label": "School doors A"
+  },
+  "G420": {
+   "zone": "school_doors",
+   "area": "school",
+   "label": "School doors B"
+  },
+  "G638": {
+   "zone": "plaza",
+   "area": "plaza",
+   "label": "Plaza"
+  },
+  "G336": {
+   "zone": "school_road",
+   "area": "plaza",
+   "label": "School exterior / road"
+  },
+  "G474": {
+   "zone": "school_road",
+   "area": "plaza",
+   "label": "School exterior (IR)"
+  },
+  "G331": {
+   "zone": "bus_platform",
+   "area": "bus_station",
+   "label": "Bus station"
+  }
+ },
+ "bookmarks": [
+  {
+   "label": "Start of window",
+   "t": 1521139800.0
+  },
+  {
+   "label": "School cafe (staged scenario)",
+   "t": 1521139970.0
+  },
+  {
+   "label": "Bus station (staged scenario)",
+   "t": 1521140170.0
+  },
+  {
+   "label": "Bus station (staged scenario)",
+   "t": 1521141165.0
+  },
+  {
+   "label": "Bus station (staged scenario)",
+   "t": 1521141440.0
+  }
+ ],
+ "playbook": {
+  "dispatch_guard": "Dispatch the nearest guard to the area",
+  "review_footage": "Review the linked camera footage before acting",
+  "secure_object": "Cordon off and inspect the unattended object",
+  "track_subject": "Follow the subject across adjacent cameras",
+  "crowd_control": "Send staff to manage the crowd and keep exits clear",
+  "notify_police": "Escalate to local police with the evidence pack",
+  "monitor": "Keep monitoring; no action yet"
+ },
+ "thresholds": {
+  "watch_threshold": 35,
+  "open_threshold": 55,
+  "siloed_alert_severity": 0.25,
+  "context_max_severity": 0.2
+ },
+ "window": {
+  "start_t": 1521139800.0,
+  "end_t": 1521141600.0
+ },
+ "clips": [],
+ "fps": 30,
+ "attribution": "MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0. Incidents are staged by actors."
+}
