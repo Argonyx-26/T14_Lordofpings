@@ -23,7 +23,7 @@ def run(clip: pathlib.Path, out: pathlib.Path) -> None:
     model = YOLO(str(ROOT / "models" / "yolo11m.pt"))
     tmp = out.with_suffix(".part")
     t0, n = time.time(), 0
-    with tmp.open("w") as f:
+    with tmp.open("w", encoding="utf-8") as f:
         for i, r in enumerate(model.predict(source=str(clip), stream=True, classes=BAGS, conf=0.1, imgsz=1280,
                                             half=True, vid_stride=VID_STRIDE, verbose=False)):
             n = i + 1

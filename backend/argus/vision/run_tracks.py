@@ -23,7 +23,7 @@ def run(clip: pathlib.Path, out: pathlib.Path, weights: str = WEIGHTS) -> None:
     model = YOLO(weights)  # one model instance per clip so tracker state is fresh
     tmp = out.with_suffix(".jsonl.part")
     t0, n = time.time(), 0
-    with tmp.open("w") as f:
+    with tmp.open("w", encoding="utf-8") as f:
         for i, r in enumerate(model.track(source=str(clip), stream=True, persist=True, tracker="bytetrack.yaml",
                                           classes=CLASSES, conf=0.3, imgsz=960, half=True,
                                           vid_stride=VID_STRIDE, verbose=False)):

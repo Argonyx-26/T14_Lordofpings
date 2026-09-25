@@ -33,7 +33,7 @@ PERSON_PAD = 0.12
 
 def person_boxes(track_path: pathlib.Path) -> dict[int, list]:
     by_sec = defaultdict(list)
-    with track_path.open() as f:
+    with track_path.open(encoding="utf-8") as f:
         for line in f:
             d = json.loads(line)
             if d["cls"] == 0 and d["frame"] % 30 == 0:
@@ -114,7 +114,7 @@ def run(clip: pathlib.Path, out: pathlib.Path) -> int:
             else:
                 nxt.append({"box": box, "first": t, "last": t, "n": 1})
         active = [a for a in nxt if t - a["last"] <= 1]
-    with out.open("w") as fo:
+    with out.open("w", encoding="utf-8") as fo:
         for c in found:
             fo.write(json.dumps(c) + "\n")
     return len(found)

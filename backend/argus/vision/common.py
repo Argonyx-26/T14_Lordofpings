@@ -24,7 +24,7 @@ def frame_to_t(stem: str, frame: int) -> float:
 
 def camera_cfg(cam: str) -> dict:
     """site.yaml camera entry (zone/area/label) merged with this camera's pixel polygons."""
-    with ZONES_FILE.open() as f:
+    with ZONES_FILE.open(encoding="utf-8") as f:
         polys = yaml.safe_load(f).get(cam) or {}
     return {**site().camera(cam), **polys}
 

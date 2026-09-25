@@ -71,7 +71,7 @@ class Track:
 
 def load_tracks(path: pathlib.Path) -> dict[int, Track]:
     raw = defaultdict(list)
-    with path.open() as f:
+    with path.open(encoding="utf-8") as f:
         for line in f:
             d = json.loads(line)
             raw[d["tid"]].append((d["frame"], d["cls"], d["conf"], d["xyxy"]))
@@ -106,7 +106,7 @@ def iou(a, b) -> float:
 def link_bag_dets(path: pathlib.Path, ignore: list[Polygon]) -> tuple[dict[int, Track], dict]:
     """Low-confidence bag detections (run_bags.py) -> tracklets by greedy centre matching."""
     by_frame = defaultdict(list)
-    with path.open() as f:
+    with path.open(encoding="utf-8") as f:
         for line in f:
             d = json.loads(line)
             b = d["xyxy"]
@@ -560,7 +560,7 @@ def main(paths: list[pathlib.Path]):
     counters: Counter = Counter()
     out = EVENTS_DIR / "cctv.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w") as f:
+    with out.open("w", encoding="utf-8") as f:
         for e in events:
             counters[e["sensor_id"]] += 1
             ev = Event(event_id=f"cctv-{e['sensor_id']}-{counters[e['sensor_id']]:06d}", **e)

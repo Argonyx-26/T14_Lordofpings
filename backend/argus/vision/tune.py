@@ -15,7 +15,7 @@ from argus.settings import ANNOTATION_DIR, EVENTS_DIR, TRACKS_DIR  # noqa: E402
 TOL_BEFORE, TOL_AFTER = 5.0, 15.0  # alert may lead GT slightly, or confirm shortly after
 BAG_TYPES = ("custody_change", "abandoned_object")
 
-events = [json.loads(l) for l in (EVENTS_DIR / "cctv.jsonl").open()]
+events = [json.loads(l) for l in (EVENTS_DIR / "cctv.jsonl").open(encoding="utf-8")]
 bag = [e for e in events if e["type"] in BAG_TYPES]
 tracked = {p.name.removesuffix(".jsonl") for p in TRACKS_DIR.glob("*.jsonl") if p.name.count(".") == 5}
 used = set()
