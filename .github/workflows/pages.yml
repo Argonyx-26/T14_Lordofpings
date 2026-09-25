@@ -1,5 +1,5 @@
 # Publishes the project site at the Pages root and the console's offline demo (a real MEVA replay snapshot, no
-# backend needed) under /console/. Raah analytics is added when the repository variable RAAH_PID is set.
+# backend needed) under /console/, each with Raah analytics. The laptop's offline demo never loads it.
 name: pages
 
 on:
@@ -46,14 +46,16 @@ jobs:
           VITE_ARGUS_MOCK: "1"
       - name: Assemble site + console
         env:
-          RAAH_PID: ${{ vars.RAAH_PID }}
+          # Raah project for argonyx-26.github.io (the id is public: it appears in every page's source)
+          RAAH_PID: ${{ vars.RAAH_PID || 'proj_wwwp2pa8sqx7ytp4' }}
+          RAAH_DOMAIN: argonyx-26.github.io
         run: |
           mkdir -p _site
           cp -r site/. _site/
           cp -r frontend/dist _site/console
           rm -f _site/README.md
           if [ -n "$RAAH_PID" ]; then
-            tag="<script defer src=\"https://t.raah.dev/script.js\" data-pid=\"$RAAH_PID\"></script>"
+            tag="<script defer src=\"https://t.raah.dev/script.js\" data-pid=\"$RAAH_PID\" data-domain=\"$RAAH_DOMAIN\"></script>"
             for f in _site/index.html _site/judges.html _site/console/index.html; do
               [ -f "$f" ] && sed -i "s#</head>#  $tag\n</head>#" "$f"
             done
