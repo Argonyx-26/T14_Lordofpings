@@ -1,0 +1,29 @@
+# Vision-only pixel polygons, ORIGINAL 1920x1072 coordinates. zone/area/label come from
+# config/site.yaml. Rules test a track's FOOT point (bottom-centre of its box), so polygons are
+# drawn on the floor. Check visually with: python scripts/draw_zones.py
+G421:   # school cafe
+  polygons:
+    door:     [[860,300],[1120,300],[1140,410],[840,410]]      # centre glass double door
+    door_r:   [[1240,400],[1600,420],[1600,530],[1230,510]]    # right double door
+    door_l:   [[190,270],[390,270],[390,350],[190,350]]        # far-left wooden door
+    seating:  [[120,300],[1120,300],[1120,660],[120,660]]
+    counter:  [[0,520],[440,520],[440,1072],[0,1072]]
+  bag_ignore:                                                  # snack packets on the counter, trash bin
+    - [[0,520],[440,520],[440,1072],[0,1072]]
+    - [[1500,380],[1680,380],[1680,530],[1500,530]]
+G419:   # stairwell doors
+  polygons:
+    door:     [[760,720],[1090,720],[1090,880],[760,880]]
+G420:   # main-hall doors
+  polygons:
+    door:     [[660,640],[1460,760],[1440,1000],[660,840]]
+G638:   # plaza (exterior)
+  polygons:
+    door:     [[430,500],[1040,480],[1040,580],[430,600]]      # strip in front of entrances
+    walkway:  [[460,580],[1440,500],[1400,1072],[660,1072]]    # pedestrian-only plaza
+G336:   # road / roundabout (exterior)
+  polygons: {}
+G474:   # IR pair of G336
+  polygons: {}
+G331:   # bus station interior
+  polygons: {}

@@ -25,3 +25,6 @@ frontend/dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local model weights (yolo11*.pt etc.)
+models/
