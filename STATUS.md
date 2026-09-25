@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 17:42 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 18:28 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -23,6 +23,7 @@ _Updated Fri 25 Sep 17:42 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+1a7685b Story titles (unattended object then carried off = possible theft), decisive signals open on their own, quick-scan uploads, false-incident metric and indoor door split in a shared evaluator, vision-rule regression tests, headline-number guard, frontend unit tests (vitest)
 e209fdf Review fixes: resilient replay loop, safe broadcasts, read endpoints on the event loop, bounded buffers, thread-safe upload manager, ffmpeg failure handling, upload duration fallback, memoised upload overlay; dead code removed; repo-relative transcode.ps1; stale docs updated
 79ffd6d Site: team is Tanush and Mohit (Utkarsh and Ojus did not attend), 2-column team grid; HANDOFF: two-speaker split for the pitch
 4d234ed Site: real console screenshot (bus-station incident at 15:18:40, Gemini brief), caption no longer says sample data; HANDOFF Â§10
@@ -30,5 +31,4 @@ e209fdf Review fixes: resilient replay loop, safe broadcasts, read endpoints on 
 c1f7f0d HANDOFF: GPU results of Analyse a video (bus 318 s, abandonment found, incident 72; cafe 298 s, 1 of 2 thefts, below watch); upload night-factor note
 af10032 Demo video script as its own file: prep checklist, shot list with timings and voice-over, Clipchamp steps, honesty rules
 784a0a1 Briefs in plain words (phones, bags changing hands; no internal type names), warm.py provider-aware key warning, setup_windows bootstraps pip in a uv venv; HANDOFF update
-57485e5 HANDOFF_TO_JACK.md: what changed on Tanush's side and everything left to do on the demo laptop, in order
 ```
