@@ -28,3 +28,6 @@ Thumbs.db
 
 # Local model weights (yolo11*.pt etc.)
 models/
+
+# Local tooling
+.claude/
