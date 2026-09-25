@@ -1,0 +1,58 @@
+# Security profiles: how strict a site is.
+#
+# The vision rules always run at their most sensitive settings. A profile decides which of those signals matter,
+# how much, and when an incident opens:
+#   fusion           overrides of site.yaml `fusion` (watch / open thresholds)
+#   criticality_floor every area counts as at least this critical (0-1)
+#   signals          per signal type: weight (multiplies severity, capped at 1) and minimum evidence
+#                    (min_unattended_s for abandoned objects); a signal below its minimum becomes routine context
+#   decisive         signals that open an incident on their own, whatever the score (replaces playbook `decisive`)
+#
+# `campus` is exactly the setting measured on the MEVA school site (4/5 staged incidents, 0 false incidents).
+# `airport` and `park` are measured on the same footage by `python -m argus.eval.evaluate --profiles`.
+
+default: airport
+
+profiles:
+  airport:
+    label: "Airport"
+    description: "High security: every area is critical, any unattended bag or weapon goes straight to a human"
+    fusion: {watch_threshold: 25, open_threshold: 45}
+    criticality_floor: 0.9
+    signals:
+      abandoned_object: {weight: 1.1, min_unattended_s: 15}
+      custody_change:   {weight: 1.2}
+      running:          {weight: 1.3}
+      loitering:        {weight: 1.5}
+    decisive:
+      weapon_visible:   {min_severity: 0.5, min_confidence: 0.5}
+      violence:         {min_severity: 0.6, min_confidence: 0.5}
+      person_down:      {min_severity: 0.6, min_confidence: 0.5}
+      abandoned_object: {min_severity: 0.7, min_confidence: 0.5}   # owner away, not only out of view
+
+  campus:
+    label: "School / college"
+    description: "The tuned setting: a bag left behind by someone who walked out, weapons and fights go to a human"
+    fusion: {watch_threshold: 35, open_threshold: 55}
+    criticality_floor: 0.0
+    signals: {}
+    decisive:
+      weapon_visible:   {min_severity: 0.5, min_confidence: 0.5}
+      violence:         {min_severity: 0.6, min_confidence: 0.5}
+      person_down:      {min_severity: 0.7, min_confidence: 0.6}
+      abandoned_object: {min_severity: 0.8, min_confidence: 0.6}   # owner walked out of view
+
+  park:
+    label: "Public park"
+    description: "Open public space: running and crowds are normal; a bag must sit alone for minutes"
+    fusion: {watch_threshold: 45, open_threshold: 65}
+    criticality_floor: 0.0
+    signals:
+      abandoned_object: {weight: 0.9, min_unattended_s: 120}
+      running:          {weight: 0.3}
+      door_activity:    {weight: 0.5}
+      device_crowding:  {weight: 0.6}
+      occupancy:        {weight: 0.6}
+    decisive:
+      weapon_visible:   {min_severity: 0.5, min_confidence: 0.6}
+      violence:         {min_severity: 0.7, min_confidence: 0.6}

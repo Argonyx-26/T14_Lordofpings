@@ -1,4 +1,5 @@
-"""Loads site.yaml, areas.geojson and playbook.yaml into one SiteConfig."""
+"""Loads site.yaml, areas.geojson, playbook.yaml and profiles.yaml into one SiteConfig."""
+import copy
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -17,6 +18,8 @@ class SiteConfig:
     raw: dict
     playbook: dict
     area_shapes: dict = field(default_factory=dict)
+    profile: str | None = None                   # security profile applied on top (profiles.yaml), None = as tuned
+    signal_policy: dict = field(default_factory=dict)
 
     @property
     def utc_offset(self) -> timedelta:
@@ -58,6 +61,22 @@ class SiteConfig:
     def epoch_to_local(self, t: float) -> str:
         return (datetime.fromtimestamp(t, timezone.utc) + self.utc_offset).strftime("%Y-%m-%d %H:%M:%S")
 
+    def with_profile(self, name: str | None) -> "SiteConfig":
+        """This site under a security profile: fusion thresholds, area criticality floor, per-signal weights and
+        minimums, and the signals that open an incident on their own. None returns the site as tuned."""
+        if name is None:
+            return self
+        prof = profiles()["profiles"][name]
+        raw = copy.deepcopy(self.raw)
+        raw["fusion"].update(prof.get("fusion", {}))
+        floor = prof.get("criticality_floor", 0.0)
+        for area in raw["areas"].values():
+            area["criticality"] = max(area.get("criticality", 0.5), floor)
+        playbook = copy.deepcopy(self.playbook)
+        playbook["decisive"] = prof.get("decisive", playbook.get("decisive", {}))
+        return SiteConfig(raw=raw, playbook=playbook, area_shapes=self.area_shapes, profile=name,
+                          signal_policy=prof.get("signals") or {})
+
     def bookmarks(self) -> list[dict]:
         return [{"label": b["label"], "t": self.local_to_epoch(b["t_local"])} for b in self.raw.get("bookmarks", [])]
 
@@ -73,3 +92,8 @@ def load_site(config_dir: Path = CONFIG_DIR) -> SiteConfig:
 @lru_cache(maxsize=1)
 def site() -> SiteConfig:
     return load_site()
+
+
+@lru_cache(maxsize=1)
+def profiles(config_dir: Path = CONFIG_DIR) -> dict:
+    return yaml.safe_load((config_dir / "profiles.yaml").read_text(encoding="utf-8"))

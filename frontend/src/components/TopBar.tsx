@@ -1,6 +1,6 @@
 import { ArrowLeft, Upload } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { SOURCE_LABEL, fmt } from '../lib'
+import { useState, type ReactNode } from 'react'
+import { SOURCE_LABEL, fmt, post } from '../lib'
 import type { SiteConfigView, Summary } from '../types'
 import { SourceIcon } from './Symbols'
 
@@ -56,11 +56,33 @@ export function TopBar({ config, summary, connected, mock, role, onRole, onAnaly
         </span>
       )}
 
+      {!mock && config?.profiles && <ProfileSwitch config={config} />}
+
       <div className="seg hidden md:inline-flex" aria-label="Signed in as">
         {(['duty_officer', 'supervisor'] as Role[]).map((r) => (
           <button key={r} data-on={role === r} onClick={() => onRole(r)}>{r === 'duty_officer' ? 'Duty officer' : 'Supervisor'}</button>
         ))}
       </div>
     </header>
+  )
+}
+
+/** Security profile of the site (backend profiles.yaml): how strict ARGUS is. Switching re-scores the replay so far. */
+function ProfileSwitch({ config }: { config: SiteConfigView }) {
+  const [busy, setBusy] = useState(false)
+  const current = config.profile
+  const pick = async (id: string) => {
+    if (id === current || busy) return
+    setBusy(true)
+    try { await post('/api/profile', { name: id }) } finally { setBusy(false) }
+  }
+  return (
+    <div className="seg hidden lg:inline-flex" aria-label="Security profile" title="How strict ARGUS is at this site">
+      {config.profiles!.map((p) => (
+        <button key={p.id} data-on={p.id === current} disabled={busy} onClick={() => pick(p.id)} title={p.description}>
+          {p.label}
+        </button>
+      ))}
+    </div>
   )
 }

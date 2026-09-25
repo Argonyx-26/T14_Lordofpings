@@ -87,6 +87,8 @@ export interface SiteConfigView {
   playbook: Record<string, string>
   thresholds: { watch_threshold: number; open_threshold: number; siloed_alert_severity: number; context_max_severity: number }
   window: { start_t: number; end_t: number }
+  profile?: string
+  profiles?: { id: string; label: string; description: string }[]
   clips: string[]
   fps: number
   attribution: string
@@ -95,6 +97,7 @@ export interface SiteConfigView {
 
 export interface Snapshot {
   type: 'snapshot'
+  profile?: string
   clock: Clock
   summary: Summary
   incidents: Incident[]

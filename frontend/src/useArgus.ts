@@ -68,11 +68,12 @@ export function useArgus() {
     }
     let cancelled = false
     let retry: ReturnType<typeof setTimeout>
+    let profile: string | undefined
 
     const loadConfig = () =>
       fetch(API + '/api/config')
         .then((r) => r.json())
-        .then((config) => !cancelled && dispatch({ kind: 'config', config }))
+        .then((config) => { profile = config.profile; if (!cancelled) dispatch({ kind: 'config', config }) })
         .catch(() => { if (!cancelled) retry = setTimeout(loadConfig, 2000) })
 
     const connect = () => {
@@ -81,7 +82,10 @@ export function useArgus() {
       ws.onopen = () => dispatch({ kind: 'connected', value: true })
       ws.onmessage = (m) => {
         const msg = JSON.parse(m.data)
-        if (msg.type === 'snapshot') dispatch({ kind: 'snapshot', snap: msg })
+        if (msg.type === 'snapshot') {
+          dispatch({ kind: 'snapshot', snap: msg })
+          if (msg.profile && profile && msg.profile !== profile) loadConfig()   // security profile switched: new thresholds
+        }
         else if (msg.type === 'tick') dispatch({ kind: 'tick', tick: msg })
       }
       ws.onclose = () => {

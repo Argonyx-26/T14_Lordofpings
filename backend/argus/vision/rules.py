@@ -20,7 +20,7 @@ from shapely.geometry import Point, Polygon
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from argus.schema import Entity, Event, Media  # noqa: E402
-from argus.vision import door_sensor  # noqa: E402
+from argus.vision import door_sensor, threats  # noqa: E402
 from argus.vision.common import EVENTS_DIR, FPS, TRACKS_DIR, camera_cfg, clip_info, frame_to_t  # noqa: E402
 
 PERSON = 0
@@ -183,6 +183,7 @@ class ClipRules:
     def __init__(self, track_path: pathlib.Path):
         clip = clip_info(track_path.stem)
         self.stem, self.cam = clip.stem, clip.camera
+        self.track_path = track_path
         cfg = self.cfg = camera_cfg(self.cam)
         self.zone, self.area = cfg["zone"], cfg["area"]
         self.polys = {k: Polygon(v) for k, v in (cfg.get("polygons") or {}).items()}
@@ -585,6 +586,7 @@ class ClipRules:
         self.vehicle_in_ped_zone()
         self.running()
         self.occupancy()
+        threats.apply(self, self.track_path)       # weapons, violence, person down (vision/threats.py)
         return self.events
 
 

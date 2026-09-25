@@ -93,6 +93,11 @@ export const EVENT_LABEL: Record<string, string> = {
   device_crowding: 'Phones gathering',
   device_exodus: 'Many phones leaving',
   device_dispersal: 'Area emptied suddenly',
+  weapon_visible: 'Weapon seen on a person',
+  violence: 'Fight or violent struggle',
+  person_down: 'Person on the ground',
+  hand_off: 'Hand-to-hand exchange',
+  dealing_pattern: 'Repeated hand-offs (possible dealing)',
 }
 
 export const eventLabel = (type: string) => EVENT_LABEL[type] ?? type.replaceAll('_', ' ').replace(/^./, (c) => c.toUpperCase())

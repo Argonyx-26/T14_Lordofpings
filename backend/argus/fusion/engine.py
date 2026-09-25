@@ -67,6 +67,7 @@ class FusionEngine:
         self.counts[f"source:{ev.source}"] += 1
         if ev.severity >= f["siloed_alert_severity"]:
             self.counts["siloed_alerts"] += 1       # what a per-stream threshold system would page on
+        ev = self._apply_profile(ev)
 
         if ev.severity < f["context_max_severity"]:
             self.counts["routine"] += 1
@@ -93,6 +94,22 @@ class FusionEngine:
         inc.composed = inc.composed or bool(ev.attrs.get("composed"))
         self._rescore(inc)
         return [inc]
+
+    def _apply_profile(self, ev: Event) -> Event:
+        """The security profile's view of a signal (profiles.yaml `signals`): its severity weighted, or demoted to
+        routine context when it lacks the profile's minimum evidence (e.g. a bag alone for less than 2 minutes in
+        a park). The raw event is untouched; the adjusted copy carries the weight it got."""
+        pol = self.cfg.signal_policy.get(ev.type)
+        if not pol:
+            return ev
+        sev = min(1.0, ev.severity * pol.get("weight", 1.0))
+        need = pol.get("min_unattended_s")
+        if need is not None and ev.attrs.get("unattended_s", need) < need:
+            sev = min(sev, self.cfg.fusion["context_max_severity"] * 0.99)
+        if sev == ev.severity:
+            return ev
+        return ev.model_copy(update={"severity": round(sev, 3),
+                                     "attrs": {**ev.attrs, "profile": self.cfg.profile, "raw_severity": ev.severity}})
 
     def _is_burst(self, ev: Event) -> bool:
         b = self.cfg.fusion["burst"]

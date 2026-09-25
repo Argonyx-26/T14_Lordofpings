@@ -7,6 +7,10 @@ actions:
   crowd_control:    "Send staff to manage the crowd and keep exits clear"
   notify_police:    "Escalate to local police with the evidence pack"
   monitor:          "Keep monitoring; no action yet"
+  armed_response:   "Alert armed response and police now; keep people away from the subject"
+  intervene:        "Send guards together to separate the people and call medical help"
+  medical:          "Send first aid to the person on the ground"
+  observe_exchange: "Watch the spot on camera and send a guard to observe discreetly"
 
 # Default action per signal type (used by the template brief and as a hint to the LLM)
 defaults:
@@ -20,10 +24,24 @@ defaults:
   device_dispersal:    review_footage
   door_surge:          review_footage
   occupancy_anomaly:   review_footage
+  weapon_visible:      armed_response
+  violence:            intervene
+  person_down:         medical
+  hand_off:            monitor
+  dealing_pattern:     observe_exchange
   default:             monitor
 
 # Evidence that tells a known story gets that story as the incident's title (all listed types present).
 stories:
+  - types: [weapon_visible, violence]
+    title: "Armed assault in progress"
+    action: armed_response
+  - types: [violence, person_down]
+    title: "Assault: person on the ground"
+    action: intervene
+  - types: [weapon_visible, person_down]
+    title: "Weapon seen and person on the ground"
+    action: armed_response
   - types: [abandoned_object, custody_change]
     title: "Possible theft: unattended object taken"
     action: track_subject
@@ -32,6 +50,8 @@ stories:
 # abandoned_object reaches 0.8 only when its owner has walked out of view (0.7 while they are merely away).
 decisive:
   abandoned_object: {min_severity: 0.8, min_confidence: 0.6}
+  weapon_visible:   {min_severity: 0.5, min_confidence: 0.5}
+  violence:         {min_severity: 0.6, min_confidence: 0.5}
 
 # Human-readable names for signal types
 titles:
@@ -45,3 +65,8 @@ titles:
   device_dispersal:    "Area emptied suddenly"
   door_surge:          "Unusual door traffic"
   occupancy_anomaly:   "Unusual occupancy"
+  weapon_visible:      "Weapon seen"
+  violence:            "Fight or violent struggle"
+  person_down:         "Person on the ground"
+  hand_off:            "Hand-to-hand exchange"
+  dealing_pattern:     "Repeated hand-offs (possible dealing)"

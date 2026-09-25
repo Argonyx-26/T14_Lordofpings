@@ -6,6 +6,7 @@ import asyncio
 import contextlib
 import json
 import logging
+import os
 from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
@@ -17,7 +18,7 @@ from pydantic import BaseModel
 from argus import settings
 from argus.audit import AuditLog
 from argus.brief.llm import MODEL, brief_for, template_brief
-from argus.config import site
+from argus.config import profiles, site
 from argus.fusion.engine import FusionEngine
 from argus.ingest import demo_window, load_all_events
 from argus.replay.clock import Replay
@@ -30,7 +31,8 @@ RECENT_MAX = 500
 
 class Runtime:
     def __init__(self):
-        self.cfg = site()
+        self.profile = os.environ.get("ARGUS_PROFILE") or profiles().get("default")
+        self.cfg = site().with_profile(self.profile)
         self.events = load_all_events(self.cfg)
         start, end = demo_window(self.cfg)
         self.engine = FusionEngine(self.cfg)
@@ -48,11 +50,25 @@ class Runtime:
     def snapshot(self) -> dict:
         return {
             "type": "snapshot",
+            "profile": self.profile,
             "clock": self.clock(),
             "summary": self.engine.summary(),
             "incidents": [i.model_dump() for i in self.engine.ranked(include_candidates=True)],
             "recent_events": [e.model_dump() for e in self.recent[-200:]],
         }
+
+    def set_profile(self, name: str) -> None:
+        """Re-score everything seen so far under another security profile (same events, same replay position)."""
+        at, playing, speed = self.replay.sim_t, self.replay.playing, self.replay.speed
+        self.profile = name
+        self.cfg = site().with_profile(name)
+        self.engine = FusionEngine(self.cfg)
+        start, end = demo_window(self.cfg)
+        self.replay = Replay(self.events, self.engine, start, end, speed=speed)
+        self.recent.clear()
+        new_events, _ = self.replay.seek(at)
+        self.remember(new_events)
+        self.replay.playing = playing
 
     def clock(self) -> dict:
         r = self.replay
@@ -161,6 +177,9 @@ async def config():
                                                    "context_max_severity")},
         "window": {"start_t": rt.replay.start_t, "end_t": rt.replay.end_t},
         "clips": clips, "fps": cfg.fps,
+        "profile": rt.profile,
+        "profiles": [{"id": k, "label": v["label"], "description": v.get("description", "")}
+                     for k, v in profiles()["profiles"].items()],
         "geometry": _area_geometry(),
         "attribution": "MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0. Incidents are staged by actors.",
     }
@@ -232,6 +251,23 @@ async def replay_control(body: ReplayIn):
     snap = rt.snapshot()
     await _broadcast(snap)
     return snap["clock"]
+
+
+class ProfileIn(BaseModel):
+    name: str
+
+
+@app.post("/api/profile")
+async def set_profile(body: ProfileIn):
+    """Switch the site's security profile (profiles.yaml) and re-score the replay so far."""
+    if body.name not in profiles()["profiles"]:
+        raise HTTPException(400, f"unknown profile {body.name}")
+    rt.set_profile(body.name)
+    for inc in rt.engine.incidents.values():
+        _ensure_brief(inc)
+    snap = rt.snapshot()
+    await _broadcast(snap)
+    return {"profile": rt.profile, "thresholds": {k: rt.cfg.fusion[k] for k in ("watch_threshold", "open_threshold")}}
 
 
 class AskIn(BaseModel):
