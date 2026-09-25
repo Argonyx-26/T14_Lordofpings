@@ -27,3 +27,16 @@ frontend/        React + Vite + Tailwind console
 scripts/         data download helpers
 docs/            team handoff and plans
 ```
+
+## Run the backend (macOS / Linux / Windows)
+
+```bash
+python -m venv .venv && .venv/bin/pip install -r backend/requirements.txt   # Windows: .venv\Scripts\pip
+scripts/get_meva_meta.sh                      # annotations + GPS (Windows: scripts/get_meva.ps1, includes video)
+cd backend
+../.venv/bin/python -m pytest -q              # 20 tests, real-data ones run when data/meva exists
+../.venv/bin/python -m argus.eval.evaluate    # metrics vs ground truth -> data/cache/metrics.json
+../.venv/bin/uvicorn argus.api.main:app --port 8000
+```
+
+The vision pipeline writes `data/events/cctv.jsonl` (one Event per line, schema in `backend/argus/schema.py`); the backend picks it up on restart. LLM briefs use the Claude API when `ANTHROPIC_API_KEY` is set in `.env` and fall back to a deterministic template otherwise (`ARGUS_LLM=off` forces the template).

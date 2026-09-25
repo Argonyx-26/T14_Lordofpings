@@ -1,0 +1,36 @@
+# The only actions a brief may recommend. The LLM picks one id; it cannot invent actions.
+actions:
+  dispatch_guard:   "Dispatch the nearest guard to the area"
+  review_footage:   "Review the linked camera footage before acting"
+  secure_object:    "Cordon off and inspect the unattended object"
+  track_subject:    "Follow the subject across adjacent cameras"
+  crowd_control:    "Send staff to manage the crowd and keep exits clear"
+  notify_police:    "Escalate to local police with the evidence pack"
+  monitor:          "Keep monitoring; no action yet"
+
+# Default action per signal type (used by the template brief and as a hint to the LLM)
+defaults:
+  abandoned_object:    secure_object
+  custody_change:      track_subject
+  vehicle_in_ped_zone: dispatch_guard
+  loitering:           review_footage
+  running:             review_footage
+  device_exodus:       review_footage
+  device_crowding:     crowd_control
+  device_dispersal:    review_footage
+  door_surge:          review_footage
+  occupancy_anomaly:   review_footage
+  default:             monitor
+
+# Human-readable names for signal types
+titles:
+  abandoned_object:    "Unattended object"
+  custody_change:      "Object changed hands"
+  vehicle_in_ped_zone: "Vehicle in pedestrian area"
+  loitering:           "Loitering"
+  running:             "Person running"
+  device_exodus:       "Many people leaving at once"
+  device_crowding:     "Unusual crowding"
+  device_dispersal:    "Area emptied suddenly"
+  door_surge:          "Unusual door traffic"
+  occupancy_anomaly:   "Unusual occupancy"

@@ -1,0 +1,14 @@
+{
+  "type": "FeatureCollection",
+  "_note": "PROVISIONAL. Rectangles placed from MEVA GPS fix density plus the MEVA site map (north = right on the map). Refine in geojson.io over satellite imagery. Coordinates are [lon, lat].",
+  "features": [
+    {"type": "Feature", "properties": {"area": "school"},
+     "geometry": {"type": "Polygon", "coordinates": [[[-85.5292, 39.0499], [-85.5280, 39.0499], [-85.5280, 39.0510], [-85.5292, 39.0510], [-85.5292, 39.0499]]]}},
+    {"type": "Feature", "properties": {"area": "plaza"},
+     "geometry": {"type": "Polygon", "coordinates": [[[-85.5300, 39.0499], [-85.5292, 39.0499], [-85.5292, 39.0510], [-85.5300, 39.0510], [-85.5300, 39.0499]]]}},
+    {"type": "Feature", "properties": {"area": "bus_station"},
+     "geometry": {"type": "Polygon", "coordinates": [[[-85.5302, 39.0486], [-85.5292, 39.0486], [-85.5292, 39.0496], [-85.5302, 39.0496], [-85.5302, 39.0486]]]}},
+    {"type": "Feature", "properties": {"area": "parking"},
+     "geometry": {"type": "Polygon", "coordinates": [[[-85.5292, 39.0492], [-85.5278, 39.0492], [-85.5278, 39.0499], [-85.5292, 39.0499], [-85.5292, 39.0492]]]}}
+  ]
+}

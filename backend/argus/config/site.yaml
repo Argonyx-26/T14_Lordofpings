@@ -1,0 +1,43 @@
+# MEVA Known Facility (Muscatatuck Urban Training Center), demo window 2018-03-15 14:50–15:20 local.
+site_name: "MUTC facility (MEVA)"
+utc_offset_hours: -4          # clip filenames are local time (EDT on 2018-03-15)
+fps: 30
+
+areas:                         # coarse areas used for fusion; GPS polygons live in areas.geojson
+  school:      {name: "School building",      criticality: 0.7}
+  plaza:       {name: "School plaza & road",  criticality: 0.5}
+  bus_station: {name: "Bus station",          criticality: 0.8}
+  parking:     {name: "Parking areas",        criticality: 0.4}
+
+cameras:                       # camera -> zone (fine) -> area (coarse)
+  G421: {zone: school_cafe,  area: school,      label: "School cafe"}
+  G419: {zone: school_doors, area: school,      label: "School doors A"}
+  G420: {zone: school_doors, area: school,      label: "School doors B"}
+  G638: {zone: plaza,        area: plaza,       label: "Plaza"}
+  G336: {zone: school_road,  area: plaza,       label: "School exterior / road"}
+  G474: {zone: school_road,  area: plaza,       label: "School exterior (IR)"}
+  G331: {zone: bus_platform, area: bus_station, label: "Bus station"}
+
+fusion:
+  window_s: 120                # signals in the same area within this window join one incident
+  context_max_severity: 0.2    # below this an event is routine context, never a signal
+  siloed_alert_severity: 0.25  # what a per-stream threshold system would alert on (baseline)
+  watch_threshold: 35
+  open_threshold: 55
+  corroboration_factors: [1.0, 1.25, 1.45]   # 1, 2, 3+ independent sources
+  burst: {window_s: 30, min_count: 6, damping: 0.6}
+  dismiss_penalty: 0.7         # multiplier on (area, type) after an operator dismissal
+  night: {start_hour: 20, end_hour: 6, factor: 1.3}
+
+rates:                         # rolling-baseline anomaly detection on event rates
+  bucket_s: 60
+  min_history: 5
+  z_threshold: 2.0
+
+# Demo navigation. Staged MEVA scenarios, positioned 45 s before they start.
+bookmarks:
+  - {label: "Start of window",               t_local: "2018-03-15 14:50:00"}
+  - {label: "School cafe (staged scenario)", t_local: "2018-03-15 14:52:50"}
+  - {label: "Bus station (staged scenario)", t_local: "2018-03-15 14:56:10"}
+  - {label: "Bus station (staged scenario)", t_local: "2018-03-15 15:12:45"}
+  - {label: "Bus station (staged scenario)", t_local: "2018-03-15 15:17:20"}

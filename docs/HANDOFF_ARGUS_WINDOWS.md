@@ -284,6 +284,7 @@ Converting time: `t = clip_start_local + frame/30`. The clip start comes from th
   "source": "cctv | door | device | auth",
   "sensor_id": "G421",
   "zone": "school_cafe",
+  "area": "",                      // optional: backend fills it from backend/argus/config/site.yaml
   "type": "abandoned_object | custody_change | door_activity | door_open | entry | exit | vehicle_in_ped_zone | loitering | running | occupancy | device_presence | device_flow",
   "severity": 0.0,
   "confidence": 0.0,
@@ -294,17 +295,21 @@ Converting time: `t = clip_start_local + frame/30`. The clip start comes from th
 }
 ```
 
-**Incident** (produced by the fusion engine):
+**Incident** (produced by the fusion engine; authoritative definition in `backend/argus/schema.py`):
 ```json
 {
-  "incident_id": "INC-0007", "zone": "bus_station", "status": "open | ack | escalated | dismissed",
-  "opened_at": 0.0, "updated_at": 0.0,
-  "score": 0, "score_breakdown": {"severity": 0, "confidence": 0, "criticality": 0, "corroboration": 0, "time_factor": 0},
-  "sources": ["cctv", "device"], "event_ids": ["..."], "title": "Unattended bag, owner left zone",
-  "brief": {"summary": "", "why": "", "action_id": "", "evidence_ids": []},
-  "composed": false
+  "incident_id": "INC-0007", "area": "bus_station", "zones": ["bus_platform"],
+  "status": "candidate | watch | open | ack | escalated | dismissed",
+  "first_signal_at": 0.0, "opened_at": 0.0, "updated_at": 0.0,
+  "score": 0, "peak_score": 0,
+  "score_breakdown": {"severity": 0, "confidence": 0, "criticality": 0, "corroboration": 0, "time_factor": 0, "feedback": 1, "score": 0},
+  "sources": ["cctv", "device"], "event_ids": ["..."], "signal_types": ["custody_change"],
+  "title": "Object changed hands — Bus station · 2 sources agree",
+  "brief": {"summary": "", "why": "", "action_id": "", "evidence_ids": [], "generated_by": "llm | template"},
+  "composed": false, "common_cause": false
 }
 ```
+**Severity guide for your CCTV events:** below 0.2 = routine context (never alerts), 0.25+ = a signal. Suggested: `occupancy` 0.05, `door_activity` 0.05, `loitering` 0.3, `running` 0.35, `vehicle_in_ped_zone` 0.45, `custody_change` 0.45, `abandoned_object` 0.7. Put your detector confidence in `confidence`.
 
 **Folder layout** (repo root = `C:\argus`):
 ```
