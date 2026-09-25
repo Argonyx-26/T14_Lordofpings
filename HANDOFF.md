@@ -115,3 +115,13 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
 - **Why the cafe hit didn't become an incident:** a single source at sev 0.45 scores **33**, just under watch (35). Breakdown: confidence 0.35, criticality 0.84, `time_factor` **1.3**.
 - **Bug-ish, for Tanush:** uploads are stamped `2000-01-01 00:00`, so they get the **night** factor (20:00–06:00). Probably unintended: either stamp uploads at midday, or skip the night factor for the `upload` area.
 - **For a venue clip on stage, film an abandonment** (a bag left behind while its owner walks out of frame for 15 s or more). That's sev 0.8 and opens an incident on its own. A bag hand-off alone (0.45) won't, unless it's followed by the carrier walking out of frame.
+
+## 10. §4 Website screenshot: done
+
+- `site/assets/console-preview.jpg` is now a real capture (1536×864) at 15:18:40 in the MEVA replay, taken with headless Chrome at `/?incident=INC-0007`:
+  - the bus-station incident is open, with its Gemini brief and score breakdown;
+  - all 3 incidents are listed;
+  - the G331 tile shows real footage with detection boxes.
+- The five school tiles read "No recording at this moment", which is true at 15:18: those clips end at 14:55.
+- The "sample-data mode" caption is replaced with a factual one.
+- Team roles for Utkarsh and Ojus are still "Team member"; waiting on Jack.
