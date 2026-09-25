@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 23:29 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 23:34 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -11,7 +11,7 @@ _Updated Fri 25 Sep 23:29 IST. Refreshed every 5 min and pushed only when someth
 ## Demo laptop
 
 - Backend + console: **up** at http://localhost:8000 · 1242 events · briefs by `gemini-flash-latest`
-- Live tile: **up** · 10 fps (rounded)
+- Live tile: **down**
 - AI briefs cached: 7
 - Metrics: 4/5 caught · 1242 → 20 → 3
 
