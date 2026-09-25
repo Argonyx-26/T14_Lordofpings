@@ -1,6 +1,7 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 17:00 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 17:01 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+
 ## Now
 
 - ✅ §2 laptop updated (setup 7/7, 25 tests, `-Prepare -Live`), §8 Gemini plain-language briefs, §3 upload test (results in HANDOFF.md §9).
@@ -16,8 +17,8 @@ _Updated Fri 25 Sep 17:00 IST. Refreshed every 5 min and pushed only when someth
 
 **Upload jobs (Analyse a video):**
 
-- `cdd2679896` original.avi: done, 9 events, 0 incidents
-- `6b04d15f2a` original.avi: done, 9 events, 1 incident
+- `cdd2679896` 2018-03-15.14-50-00.14-55-00.school.G421.avi (300.07 s): done, 9 events, 0 incidents
+- `6b04d15f2a` 2018-03-15.15-15-00.15-20-00.bus.G331.avi (300.3 s): done, 9 events, 1 incident
 
 ## Recent commits on main
 
