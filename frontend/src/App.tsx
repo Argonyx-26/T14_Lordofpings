@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { AskBar } from './components/AskBar'
 import { CameraWall } from './components/CameraWall'
 import { IncidentDetail } from './components/IncidentDetail'
 import { IncidentQueue } from './components/IncidentQueue'
@@ -60,6 +61,7 @@ export default function App() {
         </div>
 
         <div className="flex min-h-0 flex-col gap-3">
+          <AskBar incidents={state.incidents} onSelect={setSelected} onJump={jumpTo} />
           <IncidentQueue incidents={incidents} config={state.config} selected={selected} onSelect={setSelected} />
           <SiteMap config={state.config} incidents={incidents} />
         </div>

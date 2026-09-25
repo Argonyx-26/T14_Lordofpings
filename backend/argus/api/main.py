@@ -234,6 +234,21 @@ async def replay_control(body: ReplayIn):
     return snap["clock"]
 
 
+class AskIn(BaseModel):
+    question: str
+
+
+@app.post("/api/ask")
+async def ask_argus(body: AskIn):
+    """Ask ARGUS (argus/ask.py): answered only from what has been seen up to the replay clock."""
+    from argus.ask import ask
+    q = body.question.strip()[:300]
+    if not q:
+        raise HTTPException(400, "empty question")
+    incidents = list(rt.engine.incidents.values())
+    return await asyncio.to_thread(ask, q, rt.events, incidents, rt.replay.sim_t, rt.cfg)
+
+
 @app.get("/api/audit")
 async def audit():
     return {"verified": rt.audit.verify(), "entries": rt.audit.entries()}
