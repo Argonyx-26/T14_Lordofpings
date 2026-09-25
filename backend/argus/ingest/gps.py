@@ -4,7 +4,6 @@ On a real campus this stream would be Wi-Fi access-point associations. GPS logge
 to the people seen on camera, so fusion uses these events by area and time, never by identity.
 """
 import math
-import re
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
@@ -137,6 +136,3 @@ def _occupancy_anomalies(presence, cfg: SiteConfig, start_t, end_t) -> list[Even
         ))
     return out
 
-
-def gpx_slot_names(gps_dir: Path) -> list[str]:
-    return sorted(p.name for p in gps_dir.glob("*.gpx") if re.match(r"\d{4}-\d\d-\d\d\.\d\d-\d\d-\d\d\.gpx", p.name))

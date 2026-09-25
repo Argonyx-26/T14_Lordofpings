@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # macOS/Linux: fetch the small MEVA files the backend needs (annotations, GPS, site map). No video.
-# Video for the vision pipeline: see scripts/get_meva.ps1 (Windows) or docs/HANDOFF_ARGUS_WINDOWS.md.
+# Video for the vision pipeline: scripts/get_meva.ps1 (Windows).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)/data/meva"
 GL=https://gitlab.kitware.com/meva/meva-data-repo/-/raw/master

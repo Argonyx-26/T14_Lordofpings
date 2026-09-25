@@ -1,4 +1,4 @@
-"""Overlay cameras.yaml polygons on each camera's reference frame -> data/meva/zones_check/<cam>.jpg"""
+"""Overlay backend/argus/vision/zones.yaml polygons on each camera's reference frame -> data/meva/zones_check/<cam>.jpg"""
 import pathlib
 import sys
 

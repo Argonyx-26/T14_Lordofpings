@@ -16,7 +16,7 @@ The demo runs on **real footage and sensor data** from the [MEVA dataset](https:
 
 Theft and abandoned-package annotations are **ground truth for evaluation only**; they are never fed into ARGUS.
 
-Video, annotations and GPS are not stored in this repo. See `docs/HANDOFF_ARGUS_WINDOWS.md` and `scripts/`.
+Video, annotations and GPS are not stored in this repo: `scripts/get_meva.ps1` (Windows, with video) and `scripts/get_meva_meta.sh` (annotations and GPS only) fetch them. Running the demo: `docs/RUN_WINDOWS.md`.
 
 ## How the vision works
 
@@ -77,7 +77,7 @@ See **[docs/RUN_WINDOWS.md](docs/RUN_WINDOWS.md)**: `scripts\setup_windows.ps1` 
 python -m venv .venv && .venv/bin/pip install -r backend/requirements.txt   # Windows: .venv\Scripts\pip
 scripts/get_meva_meta.sh                      # annotations + GPS (Windows: scripts/get_meva.ps1, includes video)
 cd backend
-../.venv/bin/python -m pytest -q              # 20 tests, real-data ones run when data/meva exists
+../.venv/bin/python -m pytest -q              # backend tests; the real-data ones run when data/meva exists
 ../.venv/bin/python -m argus.eval.evaluate    # metrics vs ground truth -> data/cache/metrics.json
 ../.venv/bin/uvicorn argus.api.main:app --port 8000
 ```

@@ -14,5 +14,7 @@ npm run dev            # http://localhost:5173 — talks to the backend at http:
 
 Types in `src/types.ts` mirror `backend/argus/schema.py`.
 
-Next for the frontend owner: box overlays from `/api/tracks/<clip>` on the camera tiles, click-to-jump from
-evidence rows to the camera moment, polish (this is the Best UI/UX prize surface).
+Also in the console: detection boxes over each camera tile (from `/api/tracks/<clip>`), click an evidence row
+to replay that moment on the enlarged camera, the live inference view (`scripts\run_demo.ps1 -Live`), and
+**Analyse a video** (upload any clip; `UploadView.tsx`, backend `argus/uploads.py`). `?incident=INC-0007`
+preselects an incident.

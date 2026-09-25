@@ -1,3 +1,5 @@
+> **Historical (Fri 12:40 plan).** Superseded: run the demo with `docs/RUN_WINDOWS.md`; current state is in `HANDOFF.md`, `HANDOFF_TO_JACK.md` and `README.md`. Code paths and formats below may be out of date.
+
 # ARGUS: handoff for the Windows GPU laptop
 
 **From:** Tanush (team lead) · **Written:** Fri 25 Sep, ~12:40 IST · **Hackathon ends:** Sat 26 Sep, 14:30 IST

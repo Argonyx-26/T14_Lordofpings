@@ -39,7 +39,6 @@ ALLOWED_SUFFIXES = {".mp4", ".avi", ".mov", ".mkv", ".webm", ".m4v"}
 MAX_BYTES = 2 * 1024**3
 ID_RE = re.compile(r"^[0-9a-f]{10}$")
 
-RULES_FPS = 30                    # the vision rules' frame clock
 ANALYSIS_FPS = 15                 # frames analysed per second of footage
 CANVAS_W, CANVAS_H = 1920, 1072   # the vision rules' pixel space
 CLIP_DAY = "2000-01-01"           # uploaded clips get a synthetic clock on this day ...
@@ -173,7 +172,9 @@ class UploadManager:
 
         transcode = self._start_transcode(src, job.dir / "web.mp4")
         tracks = job.dir / f"{stem}.jsonl"
-        self._track(job, src, tracks, fps, width, height, frames, stride, share=0.6 if BAG_PASS else 1.0)
+        last = self._track(job, src, tracks, fps, width, height, frames, stride, share=0.6 if BAG_PASS else 1.0)
+        if not duration:                                # container had no frame count: use what was decoded
+            job.meta["duration_s"] = round((last + 1) / fps, 2)
         if BAG_PASS:
             job.message = "Looking closely for bags, laptops and phones"
             job.save()
@@ -191,7 +192,8 @@ class UploadManager:
         job.save()
 
     def _track(self, job: Job, src: Path, out: Path, fps: float, width: int, height: int, frames: int,
-               stride: int, share: float) -> None:
+               stride: int, share: float) -> int:
+        """Writes tracks and returns the last original frame index analysed."""
         import torch
         from ultralytics import YOLO
 
@@ -199,6 +201,7 @@ class UploadManager:
         sx, sy = CANVAS_W / width, CANVAS_H / height
         tmp = out.with_suffix(".part")
         last_save = 0.0
+        orig = 0
         with tmp.open("w", encoding="utf-8") as f:
             for i, r in enumerate(model.track(source=str(src), stream=True, persist=True, tracker="bytetrack.yaml",
                                               classes=TRACK_CLASSES, conf=0.25, imgsz=960,
@@ -218,6 +221,7 @@ class UploadManager:
                     job.save()
                     last_save = time.time()
         tmp.replace(out)
+        return orig
 
     def _valuables(self, job: Job, src: Path, out: Path, fps: float, width: int, height: int, frames: int,
                    stride: int) -> None:
@@ -280,8 +284,12 @@ class UploadManager:
                 [ffmpeg, "-y", "-loglevel", "error", "-i", str(src), "-vf", "scale='min(1280,iw)':-2",
                  "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p", "-an",
                  "-movflags", "+faststart", str(out)],
-                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-            return lambda: proc.wait()
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            def wait():
+                if proc.wait() != 0:                    # never serve a half-written file; the original is used
+                    out.unlink(missing_ok=True)
+            return wait
 
         def opencv_encode():
             import cv2
@@ -303,11 +311,14 @@ class UploadManager:
 
 
 _manager: UploadManager | None = None
+_manager_lock = threading.Lock()
 
 
 def manager() -> UploadManager:
+    """One manager (and one worker) per process, even when two requests arrive at once."""
     global _manager
-    if _manager is None:
-        _manager = UploadManager()
+    with _manager_lock:
+        if _manager is None:
+            _manager = UploadManager()
     return _manager
 

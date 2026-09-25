@@ -161,3 +161,22 @@ The full script is in the deck's speaker notes and in `docs/PITCH.md` §2. Key l
 - **Night-factor bug fixed:** uploads are now stamped at **12:00** on the synthetic day, so they always score with `time_factor` 1.0 (test added). Thanks for catching it.
 - **Heads-up:** your bus upload's 72 included the ×1.3 night factor. Without it, the same single-camera abandonment scores about **55**, exactly the open threshold, so it still opens, but only just. I've left the scoring alone rather than tune it to pass. For a venue clip on stage, your advice stands: film a clear abandonment (owner out of frame for 15 s or more).
 - Old analyses in `data\uploads\` keep their midnight stamp; re-upload a clip to see the new score.
+
+---
+
+## 11. Update 17:40: full-codebase review (nothing in `backend/argus/vision/` changed)
+
+- **Backend API (`api/main.py`):**
+  - The replay loop now survives any failed tick, which is logged instead of silently stopping the demo.
+  - Broadcasts iterate a snapshot of the connected clients.
+  - Read endpoints (`/api/state`, `/api/incidents/*`, `/health`, `/config`, `/audit`, `/metrics`) run on the event loop, so they can't race the replay.
+  - Brief tasks are kept referenced.
+  - The recent-events buffer stays bounded on forward seeks.
+- **Uploads:**
+  - The job manager is created once, even under concurrent first requests.
+  - A failed ffmpeg encode no longer leaves a half-written `web.mp4`; the original file is served instead.
+  - The duration falls back to the decoded length when a container has no frame count.
+- **Dead code removed:** `gpx_slot_names`, `RULES_FPS`, the engine's unused `now` and `incidents_opened`, and an unused import in `brief/llm.py`.
+- **`scripts/transcode.ps1` is now repo-relative** (it was hard-coded to `C:\argus`), and the `draw_zones.py` docstring points at `vision/zones.yaml`. Both are your files: small, safe changes.
+- **Verified:** 26 tests pass; `tsc` is clean with unused checks; the console builds. A live smoke test ran WebSocket ticks at 30×, 60 concurrent reads during replay, forward and backward seeks, and client churn, with no errors. The upload pipeline ran end to end again.
+- **After `git pull`:** restart the backend (`scripts\run_demo.ps1`). No re-prepare is needed.

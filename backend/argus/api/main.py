@@ -5,6 +5,7 @@ Run from backend/:  uvicorn argus.api.main:app --reload --port 8000
 import asyncio
 import contextlib
 import json
+import logging
 from typing import Literal
 
 from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
@@ -22,7 +23,9 @@ from argus.ingest import demo_window, load_all_events
 from argus.replay.clock import Replay
 from argus.schema import Event, Incident
 
+logger = logging.getLogger("argus")
 TICK_S = 0.25
+RECENT_MAX = 500
 
 
 class Runtime:
@@ -36,6 +39,11 @@ class Runtime:
         self.clients: set[WebSocket] = set()
         self.recent: list[Event] = []
         self._briefing: set[str] = set()
+        self._tasks: set[asyncio.Task] = set()     # strong refs, or the event loop may drop running tasks
+
+    def remember(self, events: list[Event]) -> None:
+        self.recent.extend(events)
+        del self.recent[:-RECENT_MAX]
 
     def snapshot(self) -> dict:
         return {
@@ -76,14 +84,16 @@ app.mount("/media", StaticFiles(directory=settings.WEB_VIDEO_DIR), name="media")
 async def _loop():
     while True:
         await asyncio.sleep(TICK_S)
-        new_events, changed = rt.replay.advance(TICK_S)
-        await _publish(new_events, changed)
+        try:
+            new_events, changed = rt.replay.advance(TICK_S)
+            await _publish(new_events, changed)
+        except Exception:                       # one bad tick must never stop the replay for the rest of the demo
+            logger.exception("replay tick failed")
 
 
 async def _publish(new_events: list[Event], changed: list[Incident]):
     if new_events:
-        rt.recent.extend(new_events)
-        del rt.recent[:-500]
+        rt.remember(new_events)
     for inc in changed:
         _ensure_brief(inc)
     await _broadcast({
@@ -100,7 +110,9 @@ def _ensure_brief(inc: Incident):
         inc.brief = template_brief(inc, rt.engine.evidence(inc.incident_id), rt.cfg)
     if inc.brief.generated_by == "template" and inc.incident_id not in rt._briefing:
         rt._briefing.add(inc.incident_id)
-        asyncio.create_task(_upgrade_brief(inc))
+        task = asyncio.create_task(_upgrade_brief(inc))
+        rt._tasks.add(task)
+        task.add_done_callback(rt._tasks.discard)
 
 
 async def _upgrade_brief(inc: Incident):
@@ -119,7 +131,7 @@ async def _broadcast(msg: dict):
         return
     data = json.dumps(msg)
     dead = []
-    for ws in rt.clients:
+    for ws in list(rt.clients):
         try:
             await ws.send_text(data)
         except Exception:
@@ -130,7 +142,7 @@ async def _broadcast(msg: dict):
 
 # ---- REST ---------------------------------------------------------------------------------
 @app.get("/api/health")
-def health():
+async def health():
     by_source = {}
     for e in rt.events:
         by_source[e.source] = by_source.get(e.source, 0) + 1
@@ -138,7 +150,7 @@ def health():
 
 
 @app.get("/api/config")
-def config():
+async def config():
     cfg = rt.cfg
     clips = sorted(p.stem for p in settings.WEB_VIDEO_DIR.glob("*.mp4"))
     return {
@@ -161,12 +173,12 @@ def _area_geometry() -> dict[str, list[list[float]]]:
 
 
 @app.get("/api/state")
-def state():
+async def state():
     return rt.snapshot()
 
 
 @app.get("/api/incidents/{incident_id}")
-def incident(incident_id: str):
+async def incident(incident_id: str):
     inc = rt.engine.incidents.get(incident_id)
     if inc is None:
         raise HTTPException(404, "unknown incident")
@@ -213,9 +225,8 @@ async def replay_control(body: ReplayIn):
         rewound = body.value < r.sim_t
         new_events, changed = r.seek(body.value)
         if rewound:
-            rt.recent = list(new_events)
-        else:
-            rt.recent.extend(new_events)
+            rt.recent.clear()
+        rt.remember(new_events)
         for inc in changed:
             _ensure_brief(inc)
     snap = rt.snapshot()
@@ -224,12 +235,12 @@ async def replay_control(body: ReplayIn):
 
 
 @app.get("/api/audit")
-def audit():
+async def audit():
     return {"verified": rt.audit.verify(), "entries": rt.audit.entries()}
 
 
 @app.get("/api/metrics")
-def metrics():
+async def metrics():
     path = settings.CACHE_DIR / "metrics.json"
     if not path.exists():
         return {"available": False}

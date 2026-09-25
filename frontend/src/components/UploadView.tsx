@@ -1,5 +1,5 @@
 import { ArrowLeft, FileVideo, LoaderCircle, TriangleAlert, Upload } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { API, scoreColor, severityLabel } from '../lib'
 import { CLASS_STYLE } from '../tracks'
 import type { ArgusEvent, Incident, SiteConfigView } from '../types'
@@ -197,7 +197,8 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
   const result = job.result!
   const start = job.meta.start_t ?? 0
   const duration = job.meta.duration_s || 1
-  const signals = result.events.filter((e) => e.type !== 'occupancy')
+  // stable across renders: the overlay's draw loop restarts whenever this changes
+  const signals = useMemo(() => result.events.filter((e) => e.type !== 'occupancy'), [result])
   const cfg = config ?? undefined
 
   useEffect(() => {

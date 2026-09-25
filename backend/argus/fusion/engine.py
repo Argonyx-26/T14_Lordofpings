@@ -28,14 +28,12 @@ class FusionEngine:
         self._bursts: dict[tuple, deque] = defaultdict(deque)
         self._feedback: dict[tuple[str, str], float] = defaultdict(lambda: 1.0)
         self._seq = 0
-        self.now = 0.0
         self.counts = Counter()                     # raw, by source, routine, siloed alerts, signals
         self.routine_by_area = Counter()
 
     # ---- ingestion -------------------------------------------------------------------------
     def ingest(self, ev: Event) -> list[Incident]:
         f = self.cfg.fusion
-        self.now = max(self.now, ev.t)
         self.counts["raw"] += 1
         self.counts[f"source:{ev.source}"] += 1
         if ev.severity >= f["siloed_alert_severity"]:
@@ -111,7 +109,6 @@ class FusionEngine:
             if inc.score >= f["open_threshold"]:
                 inc.status = "open"
                 inc.opened_at = inc.updated_at
-                self.counts["incidents_opened"] += 1
             elif inc.score >= f["watch_threshold"]:
                 inc.status = "watch"
 
