@@ -104,6 +104,7 @@ export interface Snapshot {
   recent_events: ArgusEvent[]
   evidence?: Record<string, ArgusEvent[]>
   forecasts?: Record<string, Forecast>
+  intel?: Intel
 }
 
 export interface Tick {
@@ -171,4 +172,92 @@ export interface Forecast {
   whatifs: WhatIf[]
   responses: ResponseOption[]
   context: { people_in_area: number | null; people_basis: string | null; assumptions: Record<string, unknown> }
+}
+
+// Mirrors backend/argus/intel.py (patterns.py + coverage.py): the read-only layer above incidents
+export interface PatternLink {
+  from: string
+  to: string
+  kind: 'repeat' | 'near_repeat' | 'concurrent'
+  script: string
+  script_name: string
+  from_area: string
+  to_area: string
+  gap_s: number
+  distance_m: number | null
+  walk_s: number | null
+  shared_stages: string[]
+  shared_types: string[]
+  similarity: number
+  why: string
+}
+
+export interface Series {
+  series_id: string
+  script: string
+  script_name: string
+  incidents: string[]
+  areas: string[]
+  start: number
+  end: number
+  span_s: number
+  title: string
+  concurrent: boolean
+  reading: string
+}
+
+export interface WatchArea {
+  area: string
+  walk_s: number
+  distance_m: number
+  criticality: number
+  weight: number
+  cameras: string[]
+  blind: boolean
+  why: string
+  rank: number
+  heightened: boolean
+}
+
+export interface NearRepeatWatch {
+  after: string
+  script: string
+  origin: string
+  since: number
+  until: number
+  remaining_s: number
+  areas: WatchArea[]
+  site_walk_s: number
+  basis: string
+}
+
+export interface AreaCoverage {
+  area: string
+  name: string
+  criticality: number
+  cameras: { id: string; label: string; recording: boolean | null }[]
+  streams: Record<'cctv' | 'door' | 'device', boolean>
+  installed: Record<'cctv' | 'door' | 'device', boolean>
+  sees: string[]
+  blind: string[]
+  ceiling: { sources: number; corroboration: number | null }
+  offline: string[]
+  note: string
+}
+
+export interface Coverage {
+  as_of: number
+  behaviours: { id: string; label: string }[]
+  areas: AreaCoverage[]
+  visibility: number | null
+  visibility_basis: string
+  seen_by: Record<string, string[]>
+}
+
+export interface Intel {
+  as_of: number
+  links: PatternLink[]
+  series: Series[]
+  watch: NearRepeatWatch | null
+  coverage: Coverage
 }

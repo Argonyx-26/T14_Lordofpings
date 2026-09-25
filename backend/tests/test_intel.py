@@ -55,6 +55,7 @@ def test_same_behaviour_at_the_same_time_in_two_places_is_concurrent(cfg):
                    ev(3, "custody_change", "school", T0 + 30))
     (link,) = intel["links"]
     assert link["kind"] == "concurrent" and intel["series"][0]["concurrent"]
+    assert intel["series"][0]["reading"].startswith("At least two people")
 
 
 def test_phone_counts_alone_never_make_a_series(cfg):

@@ -52,11 +52,13 @@ def signature(inc: Incident, evidence: list[Event], cfg: SiteConfig) -> dict | N
     if not script or script["id"] not in settings_of(cfg)["scripts"]:
         return None
     stages = [script["stages"][i]["id"] for i in script["reached"]]
+    acts = [e for e in evidence if e.type in types and any(e.type in st["types"] for st in script["stages"])]
     return {"script": script["id"], "script_name": script["name"], "stages": stages,
             "labels": {st["id"]: st["label"] for st in script["stages"]},
             "types": [t for t in types if any(t in st["types"] for st in script["stages"])],
-            "start": min((e.t for e in evidence), default=inc.first_signal_at),
-            "end": max((e.t for e in evidence), default=inc.updated_at)}
+            # the behaviour's own time span: when the camera saw the script's signals, not when phones joined in
+            "start": min((e.t for e in acts), default=inc.first_signal_at),
+            "end": max((e.t for e in acts), default=inc.updated_at)}
 
 
 def links(incidents: list[Incident], evidence_of, cfg: SiteConfig, now: float) -> tuple[list[dict], dict[str, dict]]:
@@ -103,7 +105,7 @@ def links(incidents: list[Incident], evidence_of, cfg: SiteConfig, now: float) -
 
 
 def _why(kind, a, b, gap, metres, walk, shared, cfg) -> str:
-    stage = shared[0].lower() if len(shared) == 1 else f"{len(shared)} stages"
+    stage = ", then ".join(st[0].lower() + st[1:] for st in shared)
     if kind == "concurrent":
         when = "at the same time" if gap <= 0 else f"{_mins(gap)} apart, too soon to walk the {metres} m ({_mins(walk)})"
         return (f"Same behaviour ({stage}) in {cfg.area_name(a.area)} and {cfg.area_name(b.area)} {when}: "
@@ -151,10 +153,20 @@ def series(link_list: list[dict], sigs: dict[str, dict], incidents: dict[str, In
             "incidents": members, "areas": areas, "start": start, "end": end, "span_s": round(end - start),
             "title": f"{len(members)} {noun} in {math.ceil((end - start) / 60)} min" + (f" across {where}" if len(areas) > 1 else f" in {where}"),
             "concurrent": any(ln["kind"] == "concurrent" for ln in own),
-            "reading": ("Same behaviour, and each gap could be walked: one offender or one crew is a working "
-                        "hypothesis, not a finding. ARGUS links behaviour, place and time; it never identifies people."),
+            "reading": _reading(own),
         })
     return sorted(out, key=lambda s: s["start"])
+
+
+def _reading(own: list[dict]) -> str:
+    """What the links allow one to conclude, and no more."""
+    fast = [ln for ln in own if ln["kind"] == "concurrent"]
+    tail = " ARGUS links behaviour, place and time; it never identifies people."
+    if fast:
+        pair = fast[0]
+        return (f"At least two people: {pair['from']} and {pair['to']} were too close in time for one person to do both. "
+                "A crew working the site is a working hypothesis, not a finding." + tail)
+    return "Every gap could be walked: one offender or one crew is a working hypothesis, not a finding." + tail
 
 
 def watch(sigs: dict[str, dict], incidents: dict[str, Incident], cfg: SiteConfig, now: float,

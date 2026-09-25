@@ -1,11 +1,13 @@
-import { ArrowUpRight, ChevronRight, Cpu, CornerDownRight, Eye, Link2, Radar, ShieldCheck, UserCheck } from 'lucide-react'
+import { ArrowUpRight, ChevronRight, Cpu, CornerDownRight, Eye, FileText, Link2, Radar, ShieldCheck, UserCheck } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { ForecastCard, ResponsePlanner } from './Forecast'
 import { BlurIn, Decode } from './Motion'
 import {
   API, LEVEL_COLOR, MOCK, PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, fmt, levelOf, localTime, modelName, post, severityLabel,
 } from '../lib'
-import type { ArgusEvent, Clock, Forecast, Incident, SiteConfigView, Summary } from '../types'
+import type { ArgusEvent, Clock, Forecast, Incident, Intel, SiteConfigView, Summary } from '../types'
+import { CaseReport } from './CaseReport'
+import { CoverageNote, PatternCard } from './Patterns'
 import { ResponseMenu, type Action } from './ResponseMenu'
 import { Still, hasStill } from './Still'
 import { SourceIcon, StatusSymbol } from './Symbols'
@@ -24,16 +26,21 @@ interface Props {
   forecastFor: (id: string) => Promise<Forecast | null>
   profile?: string
   eye?: ReactNode       // the full-size ARGUS eye for the all-clear state
+  intel?: Intel | null  // pattern links, near-repeat watch, coverage (argus/intel.py)
+  incidents?: Record<string, Incident>
+  onSelect?: (id: string) => void
 }
 
-interface AuditEntry { incident_id: string; action: Action; role: Role; note: string; sim_t: number; score: number; hash: string }
+export interface AuditEntry { incident_id: string; action: Action; role: Role; note: string; sim_t: number; score: number; hash: string }
 
-export function IncidentDetail({ incident, auto, config, clock, summary, role, evidence, onJump, replayingLeadUp, forecastFor, profile, eye }: Props) {
+export function IncidentDetail({ incident, auto, config, clock, summary, role, evidence, onJump, replayingLeadUp, forecastFor, profile, eye, intel = null, incidents = {}, onSelect = () => {} }: Props) {
   const cfg = config ?? undefined
   const log = useAudit(incident, clock)
   const fc = useForecast(incident, clock, forecastFor, profile)
   // ?plan=1 opens the response planner on load (links and screenshots)
   const [planning, setPlanning] = useState(() => new URLSearchParams(location.search).has('plan'))
+  // ?report=1 opens the case report on load (links and screenshots)
+  const [reporting, setReporting] = useState(() => new URLSearchParams(location.search).has('report'))
 
   if (!incident) return <HowItWorks config={config} summary={summary} eye={eye} />
 
@@ -114,6 +121,8 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
 
         {fc && !replayingLeadUp && <ForecastCard fc={fc} clock={clock} onPlan={() => setPlanning(true)} />}
 
+        {!replayingLeadUp && <PatternCard incident={incident} intel={intel} incidents={incidents} config={config} onSelect={onSelect} />}
+
         <div>
           <div className="eyebrow mb-2.5">Evidence · click to replay the moment</div>
           {keyFrame && (
@@ -172,6 +181,7 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
               </div>
             ))}
           </div>
+          <CoverageNote incident={incident} area={intel?.coverage.areas.find((a) => a.area === incident.area)} />
         </Section>
 
         <Section title="Decision log" hint={log.entries.length ? `${log.entries.length} decision${log.entries.length > 1 ? 's' : ''} · ${log.verified ? 'chain verified' : 'chain broken'}` : 'no decisions yet'}
@@ -205,6 +215,11 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
         </Section>
       </div>
 
+      {reporting && (
+        <CaseReport incident={incident} evidence={evidence} config={config} clock={clock} forecast={fc} intel={intel}
+          incidents={incidents} decisions={log.entries} verified={log.verified} onClose={() => setReporting(false)} />
+      )}
+
       {planning && fc && (
         <ResponsePlanner fc={fc} incident={incident} clock={clock} areaName={config?.areas[incident.area]?.name ?? incident.area}
           onClose={() => setPlanning(false)}
@@ -215,6 +230,11 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
       <footer className="flex shrink-0 items-center gap-3 px-4 py-3 hairline-t">
         <ResponseMenu incident={incident} config={config} onAct={act} role={role}
           disabled={MOCK || !!replayingLeadUp} disabledReason={MOCK ? 'Needs the backend' : 'Wait for the incident to re-form'} />
+        <button onClick={() => setReporting(true)} title="The case so far as a report: what, where, when, why, the pattern, what ARGUS could not see, and every decision"
+          className="ml-auto flex h-9 items-center gap-1.5 rounded-lg px-3 text-[12.5px] text-[var(--color-fg-2)] transition hover:bg-[var(--color-surface-2)] hover:text-[var(--color-fg)]"
+          style={{ boxShadow: 'inset 0 0 0 1px var(--color-hair-2)' }}>
+          <FileText size={14} strokeWidth={1.75} /> Case report
+        </button>
       </footer>
     </section>
   )

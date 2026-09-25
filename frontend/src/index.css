@@ -178,3 +178,27 @@ details[open] > summary .chev { transform: rotate(90deg); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; }
 }
+
+/* ---- case report: printed on paper, in ink ---------------------------------------------------------------- */
+@media print {
+  @page { margin: 14mm; }
+  body { background: #fff; }
+  #root { display: none !important; }
+  .case-report {
+    position: static !important; padding: 0 !important; background: none !important; backdrop-filter: none !important;
+    --color-surface: #fff; --color-surface-2: #f3f4f6; --color-surface-3: #e5e7eb; --color-bg: #fff;
+    --color-fg: #0b0d10; --color-fg-2: #2b3038; --color-fg-3: #4b5563; --color-fg-4: #6b7280;
+    --color-hair: #d9dde3; --color-hair-2: #c7ccd4; --color-accent: #1d4ed8; --color-watch: #92400e;
+  }
+  .case-sheet { max-height: none !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; animation: none !important; }
+  .case-body { overflow: visible !important; padding: 0 !important; }
+  .no-print { display: none !important; }
+  .break-inside-avoid { break-inside: avoid; }
+}
+
+/* intel overlays on the site map: the watch-next outline breathes, pattern links flow from the earlier incident */
+@keyframes watch-next { 50% { opacity: .35; } }
+.watch-next { animation: watch-next 2.4s ease-in-out infinite; }
+@keyframes link-flow { to { stroke-dashoffset: -10; } }
+.link-flow:not([stroke-dasharray]) { stroke-dasharray: 6 2; animation: link-flow 1.2s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .watch-next, .link-flow { animation: none !important; } }

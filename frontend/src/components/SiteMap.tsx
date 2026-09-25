@@ -1,5 +1,5 @@
-import { scoreColor } from '../lib'
-import type { Incident, SiteConfigView } from '../types'
+import { duration, scoreColor } from '../lib'
+import type { Incident, Intel, SiteConfigView } from '../types'
 
 const W = 320
 const H = 240
@@ -7,8 +7,9 @@ const PAD = 18
 const SHORT: Record<string, string> = { school: 'School', plaza: 'Plaza', parking: 'Parking', bus_station: 'Bus station' }
 
 /** Site plan drawn from the real fusion-area polygons (areas.geojson) and camera positions, north up, to scale. */
-export function SiteMap({ config, incidents, primary, onFocus }: {
+export function SiteMap({ config, incidents, primary, onFocus, intel, selected }: {
   config: SiteConfigView | null; incidents: Incident[]; primary: string | null; onFocus: (camera: string) => void
+  intel?: Intel | null; selected?: string | null
 }) {
   const geometry = config?.geometry ?? {}
   const cams = Object.entries(config?.cameras ?? {}).filter(([id, c]) => c.pos && id !== 'G474')
@@ -29,6 +30,14 @@ export function SiteMap({ config, incidents, primary, onFocus }: {
   const scaleM = 50
 
   const live = incidents.filter((i) => ['open', 'escalated', 'ack', 'watch'].includes(i.status))
+  // intel overlays: where no camera can see, where to look next (near-repeat watch), and incidents linked into a pattern
+  const centre: Record<string, [number, number]> = Object.fromEntries(Object.entries(geometry).map(([area, ring]) => {
+    const p = ring.map(([lon, lat]) => proj(lon, lat))
+    return [area, [p.reduce((a, q) => a + q[0], 0) / p.length, p.reduce((a, q) => a + q[1], 0) / p.length]]
+  }))
+  const blind = new Set(intel?.coverage.areas.filter((a) => !a.streams.cctv).map((a) => a.area) ?? [])
+  const watchNext = new Set(intel?.watch?.areas.filter((a) => a.heightened).map((a) => a.area) ?? [])
+  const arcs = (intel?.links ?? []).filter((l) => l.from_area !== l.to_area && centre[l.from_area] && centre[l.to_area])
   const top = (area: string) => Math.max(0, ...live.filter((i) => i.area === area).map((i) => i.score))
 
   return (
@@ -44,6 +53,12 @@ export function SiteMap({ config, incidents, primary, onFocus }: {
           <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
             <path d="M16 0H0V16" fill="none" stroke="var(--color-hair)" strokeWidth="0.5" />
           </pattern>
+          <pattern id="blind" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <path d="M0 0V5" stroke="var(--color-fg-4)" strokeWidth="0.8" opacity="0.55" />
+          </pattern>
+          <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M0 0L8 4L0 8Z" fill="context-stroke" />
+          </marker>
         </defs>
         <rect width={W} height={H} fill="url(#grid)" />
         {Object.entries(geometry).map(([area, ring]) => {
@@ -56,6 +71,13 @@ export function SiteMap({ config, incidents, primary, onFocus }: {
             <g key={area}>
               <path d={d} fill={color ? `color-mix(in srgb, ${color} 16%, transparent)` : 'var(--color-surface-2)'}
                 stroke={color ?? 'var(--color-hair-2)'} strokeWidth={color ? 1.25 : 0.75} />
+              {blind.has(area) && <path d={d} fill="url(#blind)" pointerEvents="none"><title>No camera sees this area: phone counts only</title></path>}
+              {watchNext.has(area) && (
+                <path d={d} fill="none" stroke="var(--color-accent)" strokeWidth="1.1" strokeDasharray="4 3" className="watch-next" pointerEvents="none" />
+              )}
+              {blind.has(area) && (
+                <text x={cx} y={cy + (score > 0 ? 24 : 9)} textAnchor="middle" fontSize="5.5" fill="var(--color-fg-3)" fontFamily="var(--font-sans)">no camera</text>
+              )}
               <text x={cx} y={cy} textAnchor="middle" fontSize="6.5" letterSpacing="0.9" fill={color ?? 'var(--color-fg-3)'}
                 fontFamily="var(--font-sans)" fontWeight="500">
                 {(SHORT[area] ?? area).toUpperCase()}
@@ -63,6 +85,25 @@ export function SiteMap({ config, incidents, primary, onFocus }: {
               {score > 0 && (
                 <text x={cx} y={cy + 13} textAnchor="middle" fontSize="12" fill={color!} fontFamily="var(--font-mono)">{score}</text>
               )}
+            </g>
+          )
+        })}
+        {/* incidents linked into a pattern (argus/patterns.py): an arc from the earlier area to the later one */}
+        {arcs.map((l) => {
+          const [x1, y1] = centre[l.from_area]
+          const [x2, y2] = centre[l.to_area]
+          const mine = !!selected && (l.from === selected || l.to === selected)
+          const mx = (x1 + x2) / 2 - (y2 - y1) * 0.25
+          const my = (y1 + y2) / 2 + (x2 - x1) * 0.25
+          const stroke = l.kind === 'concurrent' ? 'var(--color-watch)' : mine ? 'var(--color-accent)' : 'var(--color-fg-2)'
+          return (
+            <g key={l.from + l.to} pointerEvents="none">
+              <title>{`${l.from} → ${l.to}: ${l.why}`}</title>
+              <path d={`M${x1} ${y1 + 6}Q${mx} ${my} ${x2} ${y2 + 6}`} fill="none" stroke={stroke} strokeWidth={mine ? 1.6 : 1.1}
+                strokeDasharray={l.kind === 'concurrent' ? '3 2' : undefined} markerEnd="url(#arrow)" className="link-flow" />
+              <text x={mx} y={my} textAnchor="middle" fontSize="6" fill={stroke} fontFamily="var(--font-mono)">
+                {l.gap_s > 0 ? `+${duration(l.gap_s)}` : 'same time'}
+              </text>
             </g>
           )
         })}
@@ -117,6 +158,23 @@ export function SiteMap({ config, incidents, primary, onFocus }: {
           <text x={scaleM * s + 4} y="0" fontSize="7" fill="var(--color-fg-3)" stroke="none" fontFamily="var(--font-mono)">{scaleM} m</text>
         </g>
       </svg>
+      {intel && (
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10.5px] text-[var(--color-fg-3)]">
+          {intel.coverage.visibility !== null && (
+            <span title={`Visibility: ${intel.coverage.visibility_basis}`}>
+              visibility <span className="num text-[var(--color-fg-2)]">{intel.coverage.visibility}%</span>
+            </span>
+          )}
+          {blind.size > 0 && <span className="flex items-center gap-1"><svg width="10" height="8"><rect width="10" height="8" fill="url(#blind)" stroke="var(--color-fg-4)" strokeWidth="0.5" /></svg> no camera</span>}
+          {watchNext.size > 0 && intel.watch && (
+            <span className="flex items-center gap-1" title={intel.watch.basis}>
+              <svg width="12" height="8"><path d="M0 4H12" stroke="var(--color-accent)" strokeDasharray="3 2" /></svg>
+              watch next · <span className="num">{duration(intel.watch.remaining_s)}</span> left
+            </span>
+          )}
+          {arcs.length > 0 && <span className="flex items-center gap-1"><svg width="12" height="8"><path d="M0 4H12" stroke="var(--color-fg-2)" /></svg> linked incidents</span>}
+        </div>
+      )}
     </section>
   )
 }

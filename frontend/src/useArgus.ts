@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { API, MOCK, WS_URL } from './lib'
-import type { ArgusEvent, Clock, Forecast, Incident, SiteConfigView, Snapshot, Summary, Tick } from './types'
+import type { ArgusEvent, Clock, Forecast, Incident, Intel, SiteConfigView, Snapshot, Summary, Tick } from './types'
 
 export interface ArgusState {
   config: SiteConfigView | null
@@ -12,6 +12,7 @@ export interface ArgusState {
   mock: boolean
   mockEvidence: Record<string, ArgusEvent[]>
   mockForecasts: Record<string, Forecast>
+  mockIntel: Intel | null
 }
 
 type Action =
@@ -37,6 +38,7 @@ export function reducer(s: ArgusState, a: Action): ArgusState {
         events: a.snap.recent_events.slice(-MAX_EVENTS),
         mockEvidence: a.snap.evidence ?? s.mockEvidence,
         mockForecasts: a.snap.forecasts ?? s.mockForecasts,
+        mockIntel: a.snap.intel ?? s.mockIntel,
       }
     case 'tick': {
       // keep the same object when nothing changed, so views memoised on it don't recompute four times a second
@@ -52,7 +54,7 @@ export function reducer(s: ArgusState, a: Action): ArgusState {
 }
 
 export const initial: ArgusState = {
-  config: null, clock: null, summary: null, incidents: {}, events: [], connected: false, mock: MOCK, mockEvidence: {}, mockForecasts: {},
+  config: null, clock: null, summary: null, incidents: {}, events: [], connected: false, mock: MOCK, mockEvidence: {}, mockForecasts: {}, mockIntel: null,
 }
 
 export function useArgus() {
@@ -124,4 +126,23 @@ export function useArgus() {
   )
 
   return { state, evidenceFor, forecastFor }
+}
+
+/**
+ * The intel layer above incidents (backend/argus/intel.py): pattern links, series, near-repeat watch, coverage.
+ * Refetched when the incidents change (a new one, a status, new evidence) and every 15 s of replay time; in mock
+ * mode, the intel exported with the snapshot. Null until the first answer, and on any error (the console never
+ * depends on it).
+ */
+export function useIntel(state: ArgusState): Intel | null {
+  const [intel, setIntel] = useState<Intel | null>(null)
+  const key = Object.values(state.incidents).map((i) => `${i.incident_id}:${i.status}:${i.event_ids.length}`).sort().join(',')
+  const bucket = state.clock ? Math.floor(state.clock.sim_t / 15) : 0
+  useEffect(() => {
+    if (MOCK || !state.connected) return
+    let stale = false
+    fetch(`${API}/api/intel`).then((r) => (r.ok ? r.json() : null)).then((d) => { if (!stale) setIntel(d) }).catch(() => {})
+    return () => { stale = true }
+  }, [key, bucket, state.connected])
+  return MOCK ? state.mockIntel : intel
 }

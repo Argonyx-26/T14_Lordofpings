@@ -1,6 +1,7 @@
+import { Waypoints } from 'lucide-react'
 import { m } from 'motion/react'
 import { LEVEL_COLOR, STATUS_LABEL, duration, levelOf, rankIncidents, severityLabel } from '../lib'
-import type { Clock, Incident, SiteConfigView } from '../types'
+import type { Clock, Incident, Intel, SiteConfigView } from '../types'
 import { Decode } from './Motion'
 import { SourceIcon, StatusSymbol } from './Symbols'
 
@@ -10,10 +11,11 @@ interface Props {
   clock: Clock | null
   selected: string | null
   onSelect: (id: string) => void
+  intel?: Intel | null
 }
 
 /** Incidents a person should see: undecided first, then handled, then on watch; by risk within each. */
-export function IncidentQueue({ incidents, config, clock, selected, onSelect }: Props) {
+export function IncidentQueue({ incidents, config, clock, selected, onSelect, intel }: Props) {
   const shown = rankIncidents(incidents)
   const cfg = config ?? undefined
   const undecided = shown.filter((i) => i.status === 'open').length
@@ -59,6 +61,16 @@ export function IncidentQueue({ incidents, config, clock, selected, onSelect }: 
                 </span>
                 <span className="mt-1.5 flex items-center gap-2">
                   <span className={`text-[11px] ${i.status === 'open' ? 'text-[var(--color-fg)]' : 'text-[var(--color-fg-3)]'}`}>{STATUS_LABEL[i.status]}</span>
+                  {(() => {
+                    const ser = intel?.series.find((x) => x.incidents.includes(i.incident_id))
+                    if (!ser) return null
+                    return (
+                      <span className="chip h-[18px] px-1.5 text-[10.5px]" title={`${ser.title}: linked by behaviour, place and time`}
+                        style={{ color: 'var(--color-accent)', background: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}>
+                        <Waypoints size={10} strokeWidth={2} /> pattern <span className="num">{ser.incidents.indexOf(i.incident_id) + 1}/{ser.incidents.length}</span>
+                      </span>
+                    )
+                  })()}
                   <span className="ml-auto flex items-center gap-1.5">
                     {i.sources.map((s) => <SourceIcon key={s} source={s} size={11} />)}
                   </span>
