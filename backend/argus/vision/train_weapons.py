@@ -18,12 +18,16 @@ Usage (from the repo root):
   python backend/argus/vision/train_weapons.py alerts    # alert level: weapon on 3 of 6 consecutive frames (2 fps)
   python backend/argus/vision/train_weapons.py prepare_v2 && ... train_v2   # + 2,500 synthetic frames (Unity split,
                                                                             # same authors; guns only) in training
+  python backend/argus/vision/train_weapons.py prepare_v3 && ... train_v3   # + hard negatives: ordinary CCTV frames
+                                                                            # (half the fight-dataset recordings)
 """
 import json
 import shutil
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 ROOT = Path(__file__).resolve().parents[3]
 RAW = ROOT / "data" / "train" / "weapons_raw" / "Images"
@@ -200,6 +204,60 @@ def train_v2(epochs: int = 30) -> None:
     print(f"-> {WEIGHTS_V2}")
 
 
+NEG = ROOT / "data" / "train" / "weapons_neg"
+WEIGHTS_V3 = ROOT / "models" / "weapons_yolo11s_v3.pt"
+FIGHTS = ROOT / "data" / "train" / "fights"
+
+
+def neg_split() -> tuple[list[Path], list[Path]]:
+    """The 300 fight-dataset clips (ordinary CCTV, no weapons) split by SOURCE RECORDING, alternating over the sorted
+    recordings: half give hard-negative training frames, the other half measure false alarms. No recording is in both."""
+    from argus.vision.violence import _groups
+    groups = _groups()
+    recs = sorted(set(groups.values()))
+    train_recs = set(recs[::2])
+    clips = sorted(FIGHTS.glob("*/*.mp4"))
+    train = [c for c in clips if groups.get(c.stem) in train_recs]
+    test = [c for c in clips if groups.get(c.stem) not in train_recs]
+    return train, test
+
+
+def prepare_v3(per_clip: int = 4) -> None:
+    """v2's training data plus background frames (empty labels) from the training half of the fight clips:
+    phones, bottles, raised hands and fists in bars, shops and streets, which v1/v2 mistook for guns."""
+    import cv2
+    train, test = neg_split()
+    (NEG / "images" / "train").mkdir(parents=True, exist_ok=True)
+    (NEG / "labels" / "train").mkdir(parents=True, exist_ok=True)
+    n = 0
+    for clip in train:
+        cap = cv2.VideoCapture(str(clip))
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 60
+        for k in range(per_clip):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int((k + 0.5) * total / per_clip))
+            ok, img = cap.read()
+            if not ok:
+                continue
+            name = f"neg_{clip.parent.name}_{clip.stem}_{k}"
+            cv2.imwrite(str(NEG / "images" / "train" / f"{name}.jpg"), img)
+            (NEG / "labels" / "train" / f"{name}.txt").write_text("", encoding="utf-8")
+            n += 1
+        cap.release()
+    (NEG / "data.yaml").write_text(
+        f"path: {NEG.as_posix()}\ntrain:\n  - {(OUT_V2 / 'images/train').as_posix()}\n  - {(NEG / 'images/train').as_posix()}\n"
+        f"val: {(OUT / 'images/test').as_posix()}\nnames: {dict(enumerate(CLASSES))}\n", encoding="utf-8")
+    print(f"v3: {n} hard-negative frames from {len(train)} clips ({len(test)} clips held out for the false-alarm test)")
+
+
+def train_v3(epochs: int = 30) -> None:
+    from ultralytics import YOLO
+    model = YOLO(str(ROOT / "models" / "yolo11s.pt"))
+    model.train(data=str(NEG / "data.yaml"), epochs=epochs, imgsz=IMGSZ, batch=8, workers=4, val=False,
+                project=str(RUNS), name="weapons_v3", exist_ok=True, plots=False, seed=0, verbose=False)
+    shutil.copyfile(RUNS / "weapons_v3" / "weights" / "last.pt", WEIGHTS_V3)
+    print(f"-> {WEIGHTS_V3}")
+
+
 if __name__ == "__main__":
     {"prepare": prepare, "train": train, "test": test, "alerts": alerts, "prepare_v2": prepare_v2,
-     "train_v2": train_v2}[sys.argv[1]]()
+     "train_v2": train_v2, "prepare_v3": prepare_v3, "train_v3": train_v3}[sys.argv[1]]()

@@ -141,6 +141,15 @@ def run(video: pathlib.Path, pose: pathlib.Path, out: pathlib.Path, frame_scale:
             out_rows.append({"frame": canvas_frame, "p": round(prob(frames), 3)})
         i += 1
     cap.release()
+    if not out_rows and len(buf) >= 4:                   # shorter than one window: score the whole clip once
+        centre = 2 * round(i / 2 * frame_scale / 2)
+        box = _people_box(rows, centre, w * sx, h * sy) if rows else None
+        if rows and box is not None:
+            l, t, side = int(box[0] / sx), int(box[1] / sy), int(box[2] / max(sx, sy))
+            frames = [f[t:t + side, l:l + side] for _, f in buf]
+        else:
+            frames = [f for _, f in buf]
+        out_rows.append({"frame": centre, "p": round(prob(frames), 3)})
     tmp = out.with_suffix(".part")
     tmp.write_text("\n".join(json.dumps(r) for r in out_rows) + ("\n" if out_rows else ""), encoding="utf-8")
     tmp.replace(out)

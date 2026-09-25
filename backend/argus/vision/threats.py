@@ -34,7 +34,11 @@ WEAPON_SEVERITY = {"handgun": 0.95, "rifle": 0.95, "knife": 0.85}
 VIOLENCE_WIN_S, VIOLENCE_STEP_S, VIOLENCE_P = 2.5, 1.0, 0.7
 VIOLENCE_REFRACTORY_S = 15.0
 DOWN_S, DOWN_TILT = 3.0, 60.0
+DOWN_UPRIGHT, DOWN_FROM_S = 1.5, 10.0   # a fall is a transition: upright (box 1.5x taller than wide) in the 10 s
+                                        # before going down. A high camera makes a seated person look tilted and wide
 HANDOFF_DIST, HANDOFF_MIN_S, HANDOFF_GAP_S = 0.25, 0.4, 5.0
+HANDOFF_MOVE, HANDOFF_MOVE_S = 0.5, 3.0     # a MEETING: one of the two moved >= 0.5 body-heights in the 3 s before
+                                            # or after (people sharing a table never do); only meetings feed dealing
 DEAL_MIN_HANDOFFS, DEAL_MIN_PARTNERS, DEAL_WINDOW_S, DEAL_STAY = 3, 2, 600.0, 1.5
 
 _model = None
@@ -122,6 +126,9 @@ def violence(rules, rows: list[dict], vmae: list[dict] | None = None) -> None:
     start, end = frames[0], frames[-1]
     win, step = int(VIOLENCE_WIN_S * FPS), int(VIOLENCE_STEP_S * FPS)
     prev_hot, last_emit = False, -1e9
+    short = end - start < win + step            # a clip shorter than two windows: judged once, as a whole (the
+    if short:                                   # classifier was trained and scored on whole ~2 s clips)
+        win, prev_hot = end - start + 2, True
     for a in range(start, max(start + 1, end - win + 1), step):
         window = [r for r in rows if a <= r["frame"] < a + win]
         if len({r["tid"] for r in window}) < 2:
@@ -169,15 +176,19 @@ def person_down(rules, rows: list[dict]) -> None:
         by_tid[r["tid"]].append(r)
     for tid, seq in by_tid.items():
         seq.sort(key=lambda r: r["frame"])
-        since = None
+        since = upright_at = None
         for r in seq:
             b, kp = r["xyxy"], np.array(r["kp"])
             s, h = vio._mid(kp, vio.SHOULDERS), vio._mid(kp, vio.HIPS)
             tilt = float(np.degrees(np.arctan2(abs((s - h)[0]), abs((s - h)[1]) + 1e-6))) if s is not None and h is not None else 0.0
             down = (b[2] - b[0]) > 1.1 * (b[3] - b[1]) and tilt >= DOWN_TILT
+            if (b[3] - b[1]) > DOWN_UPRIGHT * (b[2] - b[0]):
+                upright_at = r["frame"]
             if not down:
                 since = None
                 continue
+            if since is None and (upright_at is None or r["frame"] - upright_at > DOWN_FROM_S * FPS):
+                continue                       # never seen standing just before: seated or lying all along, not a fall
             since = r["frame"] if since is None else since
             if r["frame"] - since >= DOWN_S * FPS:
                 rules.emit("person_down", r["frame"], 0.75, min(0.95, r["conf"] + 0.1), tid, b,
@@ -189,8 +200,21 @@ def hand_off(rules, rows: list[dict]) -> list[dict]:
     """Hands meeting between two people: any wrist of one within HANDOFF_DIST mean body-heights of any wrist of
     the other, on consecutive analysed frames for at least HANDOFF_MIN_S. Returns the hand-offs it emitted."""
     by_frame = defaultdict(list)
+    paths = defaultdict(list)
     for r in rows:
         by_frame[r["frame"]].append(r)
+        paths[r["tid"]].append((r["frame"], vio._center(r), vio._height(r)))
+
+    def moved(tid, lo, hi) -> float:
+        pts = [(c, h) for f, c, h in paths[tid] if lo <= f <= hi]
+        if len(pts) < 2:
+            return 0.0
+        h = float(np.median([p[1] for p in pts])) or 1.0
+        return float(np.hypot(*(np.asarray(pts[0][0]) - np.asarray(pts[-1][0])))) / h
+
+    def meeting(key, start, end) -> bool:
+        w = int(HANDOFF_MOVE_S * FPS)
+        return any(max(moved(t, start - w, start), moved(t, end, end + w)) >= HANDOFF_MOVE for t in key)
     streak: dict[tuple, list] = {}
     done: list[dict] = []
     last: dict[tuple, int] = {}
@@ -219,14 +243,17 @@ def hand_off(rules, rows: list[dict]) -> list[dict]:
                 rules.emit("hand_off", start, 0.3, 0.6, key[0], box,
                            people=[f"{rules.cam}:t{t}" for t in key], duration_s=round((f - start) / FPS, 1))
                 centre = {t: vio._center(p) for t, p in ((a["tid"], a), (b["tid"], b))}
-                done.append({"frame": start, "tids": key, "centre": centre, "h": vio._height(a), "box": box})
+                done.append({"frame": start, "tids": key, "centre": centre, "h": vio._height(a), "box": box,
+                             "meeting": meeting(key, start, f)})
     return done
 
 
 def dealing_pattern(rules, handoffs: list[dict]) -> None:
     """One person, several hand-offs with different people, staying put (within DEAL_STAY body-heights)."""
     by_person = defaultdict(list)
-    for ho in handoffs:
+    # only meetings count: on unseen MEVA clips, contact-only hand-offs gave 51 dealing patterns in 65 camera-minutes
+    # of ordinary footage (people sharing a table touch hands all the time and never move); meetings gave 7
+    for ho in (h for h in handoffs if h.get("meeting", True)):
         for t in ho["tids"]:
             by_person[t].append(ho)
     for tid, hs in by_person.items():

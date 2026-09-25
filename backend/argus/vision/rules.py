@@ -179,6 +179,18 @@ def chain_bags(tracks: dict[int, Track]) -> list[Track]:
     return out
 
 
+def _plain(v):
+    """Event attrs as plain JSON values: rules compute with numpy, and a numpy array or scalar in an event breaks
+    every writer downstream (events file, upload result, API)."""
+    if isinstance(v, dict):
+        return {k: _plain(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_plain(x) for x in v]
+    if hasattr(v, "tolist"):                     # numpy arrays and numpy scalars
+        return _plain(v.tolist())
+    return v
+
+
 class ClipRules:
     def __init__(self, track_path: pathlib.Path):
         clip = clip_info(track_path.stem)
@@ -213,7 +225,7 @@ class ClipRules:
             entity=Entity(kind=kind, id=f"{self.cam}:t{entity_id}" if kind == "track" else str(entity_id)),
             provenance="computed",
             media=Media(clip=self.stem, frame=int(frame), bbox=[round(float(v), 1) for v in (bbox if bbox is not None else [0, 0, 0, 0])]),
-            attrs=attrs))
+            attrs=_plain(attrs)))
 
     def nearest_person(self, frame: int, pt, exclude=()):
         best = (None, 1e9, None)
