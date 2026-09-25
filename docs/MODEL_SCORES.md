@@ -11,7 +11,8 @@ Every number below is measured, with its test set, its size and how it was split
 | Signal reduction | 1,242 raw events → 20 siloed alerts → **3 incidents** (99.8 % fewer than raw) | same 30 min, 6 cameras + door sensors + GPS | `metrics.json` |
 | Security profiles | Airport 4/5 (+6 on watch), Campus 4/5, Park 2/5; **0 false incidents in all three** | same 30 min | `profiles_eval.json` |
 | Video door sensor, demo window | indoor precision **0.54**, recall **0.75**; all cameras P 0.21 / R 0.52 (the bus-station camera over-fires: 64 detections, 1 door opening) | 42 annotated door openings, ±2 s | `metrics.json` |
-| Video door sensor, unseen clips | G419 **5/8** found (precision 5/6); G420 0/4 (running: 10 of 20 clips so far) | MEVA clips outside every tuning window, ±2 s | `data_scale/results.json` (`argus.eval.scale`) |
+| Video door sensor, unseen clips | precision **0.26**, recall **0.37** (73 door openings); best camera G419 5/8 found, precision 5/6 | 20 MEVA clips, 1.67 camera-hours on 4 cameras, 7 days, outside every tuning window, ±2 s | `docs/SCALE_RESULTS.md` (`argus.eval.scale`) |
+| False threat alerts on ordinary footage (unseen clips) | violence **0**, person down **0**, dealing pattern **18** (130 before the meeting rule), weapons 26 before the verifier | same 1.67 camera-hours (MEVA has no weapons, fights or dealing) | `docs/SCALE_RESULTS.md` |
 
 ## Threat detectors (public datasets, tested on data the model never trained on)
 
