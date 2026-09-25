@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 19:10 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 19:15 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -11,7 +11,7 @@ _Updated Fri 25 Sep 19:10 IST. Refreshed every 5 min and pushed only when someth
 ## Demo laptop
 
 - Backend + console: **up** at http://localhost:8000 · 1242 events · briefs by `gemini-flash-latest`
-- Live tile: **up** · 30 fps (rounded)
+- Live tile: **up** · 25 fps (rounded)
 - AI briefs cached: 7
 - Metrics: 4/5 caught · 1242 → 20 → 3
 
@@ -23,6 +23,7 @@ _Updated Fri 25 Sep 19:10 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+aabfae6 Ask ARGUS: plain-language questions answered only from the log so far, with clickable citations
 0124cff Evidence stills in the incident panel; held-out set A treats re-aimed cameras as new
 c510a7b Held-out evaluation (python -m argus.eval.holdout): unchanged pipeline on unseen MEVA footage (5 Mar with one staged theft; 15 Mar 15:30-15:40, all cameras + GPS), writes docs/HOLDOUT_RESULTS.md; door-sensor experiment and overfitting / sample-size / door answers in the pitch; handoff Â§12 for Jack
 1a7685b Story titles (unattended object then carried off = possible theft), decisive signals open on their own, quick-scan uploads, false-incident metric and indoor door split in a shared evaluator, vision-rule regression tests, headline-number guard, frontend unit tests (vitest)
@@ -30,5 +31,4 @@ e209fdf Review fixes: resilient replay loop, safe broadcasts, read endpoints on 
 79ffd6d Site: team is Tanush and Mohit (Utkarsh and Ojus did not attend), 2-column team grid; HANDOFF: two-speaker split for the pitch
 4d234ed Site: real console screenshot (bus-station incident at 15:18:40, Gemini brief), caption no longer says sample data; HANDOFF Â§10
 35f922c Uploads stamped at noon so unknown time of day never gets the night factor (per Jack's GPU test); test; note in HANDOFF_TO_JACK
-c1f7f0d HANDOFF: GPU results of Analyse a video (bus 318 s, abandonment found, incident 72; cafe 298 s, 1 of 2 thefts, below watch); upload night-factor note
 ```
