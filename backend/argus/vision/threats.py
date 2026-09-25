@@ -151,23 +151,41 @@ def violence(rules, rows: list[dict], vmae: list[dict] | None = None) -> None:
 
 
 def _hottest_pair(window: list[dict]):
-    """Union box of the two closest people in the window's middle frame."""
-    frames = sorted({r["frame"] for r in window})
-    mid = [r for r in window if r["frame"] == frames[len(frames) // 2]] or window
-    best = (None, 1e9)
-    for i in range(len(mid)):
-        for j in range(i + 1, len(mid)):
-            a, b = mid[i]["xyxy"], mid[j]["xyxy"]
-            d = np.hypot((a[0] + a[2] - b[0] - b[2]) / 2, (a[1] + a[3] - b[1] - b[3]) / 2)
-            if d < best[1]:
-                best = ((mid[i], mid[j]), d)
-    if best[0] is None:
-        r = mid[0]
+    """Where the violence is: the person whose limbs move fastest (keypoint speed in body-heights per second, on
+    consecutive frames) and the nearest person to them, as one box. Closeness alone picks bystanders in a crowd."""
+    by_tid = defaultdict(list)
+    for r in window:
+        by_tid[r["tid"]].append(r)
+    energy = {}
+    for tid, seq in by_tid.items():
+        seq.sort(key=lambda r: r["frame"])
+        speeds = []
+        for a, b in zip(seq, seq[1:]):
+            dt = (b["frame"] - a["frame"]) / FPS
+            if dt <= 0 or dt > 0.5:
+                continue
+            ka, kb = np.array(a["kp"]), np.array(b["kp"])
+            ok = (ka[:, 2] >= vio.KP_CONF) & (kb[:, 2] >= vio.KP_CONF)
+            if ok.sum() >= 4:
+                h = max((vio._height(a) + vio._height(b)) / 2, 1.0)
+                speeds.append(float(np.percentile(np.hypot(*((kb[ok, :2] - ka[ok, :2]).T)), 90)) / h / dt)
+        if speeds:
+            energy[tid] = float(np.mean(speeds)) * min(1.0, len(speeds) / 4)
+    if not energy:
+        r = window[len(window) // 2]
         return r["xyxy"], [r["tid"]]
-    a, b = best[0]
-    box = [min(a["xyxy"][0], b["xyxy"][0]), min(a["xyxy"][1], b["xyxy"][1]),
-           max(a["xyxy"][2], b["xyxy"][2]), max(a["xyxy"][3], b["xyxy"][3])]
-    return box, [a["tid"], b["tid"]]
+    hot = max(energy, key=energy.get)
+    last = {tid: seq[-1] for tid, seq in by_tid.items()}
+    me = by_tid[hot][len(by_tid[hot]) // 2]
+    others = [r for tid, r in last.items() if tid != hot]
+    if not others:
+        return me["xyxy"], [hot]
+    c = vio._center(me)
+    mate = min(others, key=lambda r: float(np.hypot(*(vio._center(r) - c))) / max(vio._height(me), 1.0))
+    if float(np.hypot(*(vio._center(mate) - c))) > 1.5 * max(vio._height(me), 1.0):
+        return me["xyxy"], [hot]                  # nobody within reach: box the one who is moving
+    a, b = me["xyxy"], mate["xyxy"]
+    return [min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3])], [hot, mate["tid"]]
 
 
 def person_down(rules, rows: list[dict]) -> None:
