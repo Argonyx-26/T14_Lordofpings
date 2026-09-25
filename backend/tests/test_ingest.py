@@ -44,7 +44,10 @@ def test_door_events_come_only_from_door_annotations(cfg):
 @needs_data
 def test_ground_truth_never_leaks_into_inputs(cfg):
     events = load_all_events(cfg)
-    assert not any("steal" in e.type or "abandon" in e.type for e in events)
+    gt_labels = {"person_steals_object", "person_abandons_package", "theft", "abandoned_package"}
+    assert not any(e.type in gt_labels for e in events)
+    # CCTV may legitimately report abandoned_object / custody_change; the annotation-derived stream may not
+    assert all(e.type in ("door_open", "entry", "exit", "door_surge") for e in events if e.source == "door")
     gt = load_ground_truth(settings.ANNOTATION_DIR, cfg)
     assert [g.kind for g in gt].count("theft") == 4
     assert [g.kind for g in gt].count("abandoned_package") == 1

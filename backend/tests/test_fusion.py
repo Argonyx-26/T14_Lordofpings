@@ -64,7 +64,7 @@ def test_dismissal_damps_future_scores(cfg):
 
 @needs_data
 def test_real_window_is_deterministic_and_quiet_without_video(cfg):
-    events = load_all_events(cfg)
+    events = [e for e in load_all_events(cfg) if e.source != "cctv"]
     start, end = demo_window(cfg)
     runs = []
     for _ in range(2):
