@@ -1,6 +1,7 @@
 import type { SiteConfigView } from './types'
 
-export const API = import.meta.env.VITE_ARGUS_API ?? 'http://localhost:8000'
+// Served by the backend (demo): same origin. Vite dev server on :5173: talk to the backend on :8000.
+export const API = import.meta.env.VITE_ARGUS_API ?? (location.port === '5173' ? 'http://localhost:8000' : location.origin)
 export const WS_URL = API.replace(/^http/, 'ws') + '/ws'
 export const MOCK = new URLSearchParams(location.search).has('mock')
 

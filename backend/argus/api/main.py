@@ -250,3 +250,11 @@ async def ws(websocket: WebSocket):
         pass
     finally:
         rt.clients.discard(websocket)
+
+
+# ---- Console (built frontend) -------------------------------------------------------------
+# `npm run build` in frontend/ produces frontend/dist; serving it here makes the whole demo one process
+# at http://localhost:8000. Mounted last so every /api, /media and /ws route above wins.
+_CONSOLE = settings.REPO_ROOT / "frontend" / "dist"
+if _CONSOLE.is_dir():
+    app.mount("/", StaticFiles(directory=_CONSOLE, html=True), name="console")

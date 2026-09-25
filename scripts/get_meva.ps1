@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$root = "C:\argus\data\meva"
+$root = Join-Path (Split-Path -Parent $PSScriptRoot) "data\meva"   # repo-relative, works from any clone path
 $vid  = "$root\video"; $ann = "$root\ann"; $gps = "$root\gps"
 New-Item -ItemType Directory -Force -Path $vid,$ann,$gps | Out-Null
 $S3  = "https://mevadata-public-01.s3.amazonaws.com/drops-123-r13/2018-03-15"
