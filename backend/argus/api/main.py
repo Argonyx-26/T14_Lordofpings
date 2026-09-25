@@ -359,8 +359,15 @@ async def ask_argus(body: AskIn):
     q = body.question.strip()[:300]
     if not q:
         raise HTTPException(400, "empty question")
+    from argus.intel import build_intel
     incidents = list(rt.engine.incidents.values())
-    return await asyncio.to_thread(ask, q, rt.events, incidents, rt.replay.sim_t, rt.cfg)
+    now = rt.replay.sim_t
+    try:
+        intel = build_intel(incidents, rt.engine.evidence, rt.cfg, now, [e for e in rt.events if e.t <= now])
+    except Exception:                          # the intel layer is context; a failure there must not break Ask
+        logger.exception("intel for ask failed")
+        intel = None
+    return await asyncio.to_thread(ask, q, rt.events, incidents, now, rt.cfg, intel)
 
 
 class InvestigateIn(BaseModel):

@@ -96,3 +96,14 @@ def test_coverage_names_blind_spots_and_the_corroboration_ceiling(cfg):
     assert "Bags left or taken" in by["parking"]["blind"]
     assert "live" not in by and "upload" not in by
     assert 0 < cov["visibility"] < 100
+
+
+def test_ask_about_connections_answers_from_the_pattern_links_offline(cfg):
+    from argus.ask import ask
+    cafe = [ev(1, "abandoned_object", "school", T0), ev(2, "custody_change", "school", T0 + 20)]
+    bus = [ev(3, "custody_change", "bus_station", T0 + 260)]
+    eng, intel = run(cfg, *cafe, *bus)
+    out = ask("Are these thefts connected?", cafe + bus, list(eng.incidents.values()), T0 + 300, cfg, patterns=intel)
+    assert out["generated_by"] == "template"                        # conftest: ARGUS_LLM=off
+    assert out["answer"].startswith("2 bag thefts in") and "hypothesis" in out["answer"]
+    assert set(out["cited_incidents"]) == set(intel["series"][0]["incidents"])

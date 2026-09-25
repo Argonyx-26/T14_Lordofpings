@@ -30,7 +30,9 @@ SYSTEM = (
     "in the log. Write two to four short sentences in calm, plain language for a guard: say what happened, where "
     "and when (local times as HH:MM), and how sure the sensors are. Describe device-location evidence as people's "
     "phones, a custody change as a bag changing hands, and never use internal type names. Mention incidents by "
-    "their title, not their id. cited_ids: the incident ids and event ids you relied on, most important first."
+    "their title, not their id. cited_ids: the incident ids and event ids you relied on, most important first. "
+    "The log's `patterns` links incidents by behaviour, place and walking time, never by identity: when asked "
+    "whether incidents are connected, use it, give its reason, and call it a working hypothesis, not a finding."
 )
 
 
@@ -120,8 +122,22 @@ def _gemini(question: str, ctx: dict) -> _Answer | None:
         return None
 
 
-def fallback(ctx: dict) -> _Answer:
-    """No model: say what is open, strongest first. Honest and always available."""
+PATTERN_Q = re.compile(r"\b(connect|connected|related|relate|link|linked|pattern|series|same (person|people|thief|offender)|together)\b", re.I)
+
+
+def fallback(ctx: dict, question: str = "") -> _Answer:
+    """No model: say what is open, strongest first (or, asked about connections, the pattern links). Honest and always
+    available."""
+    pats = ctx.get("patterns") or {}
+    if PATTERN_Q.search(question):
+        if not pats.get("series"):
+            return _Answer(answer=f"As of {ctx['now'][11:16]}, ARGUS has not linked any incidents: none share an "
+                                  "offender's behaviour inside the near-repeat window. (Automatic answer: the language model is offline.)",
+                           cited_ids=[])
+        ser = pats["series"][0]
+        why = "; ".join(f"{ln['from']} to {ln['to']}: {ln['why'].lower()}" for ln in pats["links"] if ln["from"] in ser["incidents"])
+        return _Answer(answer=f"{ser['title']}. {why}. {ser['reading']} (Automatic answer: the language model is offline.)",
+                       cited_ids=list(ser["incidents"]))
     live = sorted((i for i in ctx["incidents"] if i["status"] != "dismissed"), key=lambda i: -i["peak_score"])
     if not live:
         return _Answer(answer=f"Nothing has been raised so far (as of {ctx['now'][11:16]}). "
@@ -134,8 +150,15 @@ def fallback(ctx: dict) -> _Answer:
                    cited_ids=[i["id"] for i in live[:4]])
 
 
-def ask(question: str, events: list[Event], incidents: list[Incident], sim_t: float, cfg: SiteConfig) -> dict:
+def ask(question: str, events: list[Event], incidents: list[Incident], sim_t: float, cfg: SiteConfig,
+        patterns: dict | None = None) -> dict:
     ctx = context(events, incidents, sim_t, cfg)
+    if patterns:
+        ctx["patterns"] = {                      # the intel layer (argus/patterns.py), compact
+            "series": [{k: s[k] for k in ("title", "incidents", "reading")} for s in patterns.get("series", [])],
+            "links": [{k: ln[k] for k in ("from", "to", "kind", "why")} for ln in patterns.get("links", [])],
+            "watch_next": [a["area"] for a in (patterns.get("watch") or {}).get("areas", []) if a["heightened"]],
+        }
     key = _cache_key(question, ctx)
     cached = _cached(key)
     if cached:
@@ -143,7 +166,7 @@ def ask(question: str, events: list[Event], incidents: list[Incident], sim_t: fl
     use_llm = os.environ.get("ARGUS_LLM", "on").lower() != "off" and GEMINI_KEY
     answer = (_gemini(question, ctx) if use_llm else None)
     generated_by = "llm" if answer else "template"
-    answer = answer or fallback(ctx)
+    answer = answer or fallback(ctx, question)
     known_incidents = {i["id"] for i in ctx["incidents"]}
     known_events = {s["id"] for s in ctx["signals"]} | {e for i in ctx["incidents"] for e in i["evidence_ids"]}
     cited = list(dict.fromkeys(c for c in answer.cited_ids if c in known_incidents | known_events))
@@ -170,7 +193,10 @@ def warm(question: str, at_local: str) -> dict:
     engine = FusionEngine(cfg)
     replay = Replay(events, engine, *demo_window(cfg))
     replay.seek(cfg.local_to_epoch(at_local))
-    return ask(question, events, list(engine.incidents.values()), replay.sim_t, cfg)
+    from argus.intel import build_intel
+    intel = build_intel(list(engine.incidents.values()), engine.evidence, cfg, replay.sim_t,
+                        [e for e in events if e.t <= replay.sim_t])
+    return ask(question, events, list(engine.incidents.values()), replay.sim_t, cfg, patterns=intel)
 
 
 if __name__ == "__main__":
