@@ -64,7 +64,7 @@
     requestAnimationFrame(tick)
   }
   if (reduce || !('IntersectionObserver' in window)) return
-  const targets = document.querySelectorAll('section h2.display, section .lead, .funnel > div, .results > div, section table, section figure, .steps > *, .features > *, .team > *, .member')
+  const targets = document.querySelectorAll('section h2.display, section .lead:not([data-scrub]), .funnel > div, .results > div, section table, section figure, .steps > *, .features > *, .team > *, .member')
   targets.forEach((el) => el.setAttribute('data-reveal', ''))
   const io = new IntersectionObserver((entries) => {
     for (const en of entries) {

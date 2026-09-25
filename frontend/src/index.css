@@ -156,6 +156,12 @@ details[open] > summary .chev { transform: rotate(90deg); }
     var(--color-bg);
 }
 
+/* dithered field behind the boot eye (DitherField): blended so the engineering grid shows through, fading out at the edges */
+.dither-field {
+  z-index: -1; image-rendering: pixelated; mix-blend-mode: screen; animation: fade-in 1.2s ease-out both;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 75%); mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 75%);
+}
+
 /* ---- motion: only to say something changed ---------------------------------------------------------------- */
 
 @keyframes breathe { 0%, 100% { opacity: 1 } 50% { opacity: .35 } }

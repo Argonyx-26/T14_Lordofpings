@@ -185,6 +185,7 @@
       [data-reveal] { opacity: 1; filter: none; transform: none; transition: none; }
     }
   </style>
+  <link rel="stylesheet" href="fx.css" />
 </head>
 <body>
   <nav>
@@ -210,6 +211,29 @@
       </div>
     </div>
   </header>
+
+  <!-- Real signals from the replay snapshot (frontend/src/mock/snapshot.json), 15 March 2018, local time -->
+  <div class="ticker" aria-label="Signals from the MEVA replay, 15 March 2018">
+    <div class="ticker-label"><span class="live"></span><span class="txt">Replay · 15 Mar 2018</span></div>
+    <div class="ticker-view"><ul class="ticker-track">
+      <li><span class="t">15:13:16</span><i style="--c:#26a88a"></i>Phone leaves · school</li>
+      <li><span class="t">15:13:31</span><i style="--c:#5b8def"></i>Object changes hands · bus station</li>
+      <li class="inc"><span class="t">15:13:31</span>▲ Incident opened · crowding at the bus station · 2 sources agree · score 67</li>
+      <li><span class="t">15:13:44</span><i style="--c:#26a88a"></i>Phone arrives · bus station</li>
+      <li><span class="t">15:14:00</span><i style="--c:#26a88a"></i>Many phones leave at once · bus station</li>
+      <li><span class="t">15:14:00</span><i style="--c:#26a88a"></i>Phones crowd together · bus station</li>
+      <li><span class="t">15:14:20</span><i style="--c:#26a88a"></i>Phone leaves fast · parking</li>
+      <li><span class="t">15:15:01</span><i style="--c:#26a88a"></i>Phone leaves fast · plaza</li>
+      <li><span class="t">15:15:49</span><i style="--c:#26a88a"></i>Phone arrives · school</li>
+      <li><span class="t">15:16:45</span><i style="--c:#d9669f"></i>Door opens, exit · bus station</li>
+      <li><span class="t">15:17:18</span><i style="--c:#d9669f"></i>Door opens, entry · bus station</li>
+      <li><span class="t">15:18:28</span><i style="--c:#26a88a"></i>Phone leaves · plaza</li>
+      <li><span class="t">15:18:30</span><i style="--c:#5b8def"></i>Object left behind · bus station</li>
+      <li class="inc"><span class="t">15:18:30</span>▲ Incident opened · unattended object · bus station · score 55</li>
+      <li><span class="t">15:19:22</span><i style="--c:#d9669f"></i>Door opens, exit · bus station</li>
+      <li><span class="t">15:19:50</span><i style="--c:#d9669f"></i>Door opens, entry · bus station</li>
+    </ul></div>
+  </div>
 
   <!-- What Argus sees: real footage through the eye; scrolling opens the aperture until the frame fills the screen -->
   <section class="aperture" id="see" aria-label="What Argus sees">
@@ -243,7 +267,7 @@
     <div class="wrap">
       <div class="eyebrow">The problem</div>
       <h2 class="display">Control rooms are drowning in alerts</h2>
-      <p class="lead">Security teams are not short of cameras or sensors. They are short of attention. Every system raises its own alarms on its own screen, and the real threat gets buried.</p>
+      <p class="lead" data-scrub>Security teams are not short of cameras or sensors. They are short of attention. Every system raises its own alarms on its own screen, and the real threat gets buried.</p>
       <div class="stats">
         <div><div class="n">4,484</div><p>alerts reach the average security operations team every day</p></div>
         <div><div class="n" style="color:var(--accent)">67%</div><p>of them are ignored, buried by the rest</p></div>
@@ -257,7 +281,7 @@
     <div class="wrap">
       <div class="eyebrow">The insight</div>
       <h2 class="display">The threat lives between the screens</h2>
-      <p class="lead">Each signal on its own is noise. The same place and the same minute, confirmed by independent sources, is an incident.</p>
+      <p class="lead" data-scrub>Each signal on its own is noise. The same place and the same minute, confirmed by independent sources, is an incident.</p>
       <div class="signals">
         <div class="signal"><div class="k">Camera</div><div class="t">An object changes hands</div><div class="s">Alone: noise</div></div>
         <div class="signal"><div class="k">Phones</div><div class="t">A crowd forms in the same minute</div><div class="s">Alone: noise</div></div>
@@ -375,18 +399,21 @@
     </div>
   </section>
 
-  <footer>
+  <footer class="has-mark">
     <div class="wrap">
       <div>Argus · ARGONYX '26 · RV University, Bengaluru<br />Data: MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0. Incidents are staged by actors.</div>
       <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <span class="watching"><span class="dot"></span>Watching · <span data-clock>IST</span></span>
         <a href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
       </div>
     </div>
+    <div class="bigmark-wrap" aria-hidden="true"><div class="bigmark">Argus</div></div>
   </footer>
   <script>
     // Published: the offline demo sits at ./console/. On the demo laptop the backend serves the console at its root.
     if (location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) document.querySelectorAll('[data-live-demo]').forEach((a) => { a.href = location.protocol === 'file:' ? 'http://localhost:8000/' : '/' })
   </script>
   <script src="motion.js" defer></script>
+  <script src="fx.js" defer></script>
 </body>
 </html>

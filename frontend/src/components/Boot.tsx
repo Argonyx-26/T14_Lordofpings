@@ -2,6 +2,7 @@ import { AnimatePresence, m } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import type { ArgusEvent, Clock } from '../types'
 import { ArgusEye, type EyeCamera } from './ArgusEye'
+import { DitherField } from './DitherField'
 import { Decode } from './Motion'
 
 const STEPS = ['Opening the eye', 'Linking six cameras', 'Door sensors', 'Phone locations', 'Fusion engine', 'Watching']
@@ -65,6 +66,7 @@ export function Boot({ ready, linked, clock, events, cameras, onLeave, onDone }:
       {!leaving && (
         <m.div key="boot" className="boot fixed inset-0 z-[70] flex flex-col items-center justify-center"
           initial={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.45, ease: [0.4, 0, 1, 1] } }}>
+          <DitherField />
           <span className="num absolute right-6 top-5 text-[13px] tracking-[0.2em] text-[var(--color-fg-3)]">
             {String(pct).padStart(3, '0')}<span className="text-[var(--color-fg-4)]">%</span>
           </span>
