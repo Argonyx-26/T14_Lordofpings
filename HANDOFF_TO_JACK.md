@@ -116,7 +116,7 @@ The full script (prep, shot list, voice-over, editing steps) is in **`docs/DEMO_
 - Charger in, power mode **Best performance**, **Energy Saver off**, sleep **Never**. Close Roblox, Steam and the Discord overlay.
 - `.env` holds `GEMINI_API_KEY` (never commit it). The briefs are cached, so no internet is needed.
 - Run-sheet notes:
-  - The bus incident is titled "Unattended object". On stage, say **"an unattended object, then it changes hands"**.
+  - The bus incident is now titled **"Possible theft: unattended object taken"** (see §12); no stage workaround needed.
   - Stay at **10×**; at 20× it reaches only about 18× and jumps to catch up.
 - If anything breaks on stage, say "let me show you the recording" and play the backup video. Never debug live.
 - `scripts\stop_demo.ps1` stops everything.
@@ -180,3 +180,66 @@ The full script is in the deck's speaker notes and in `docs/PITCH.md` §2. Key l
 - **`scripts/transcode.ps1` is now repo-relative** (it was hard-coded to `C:\argus`), and the `draw_zones.py` docstring points at `vision/zones.yaml`. Both are your files: small, safe changes.
 - **Verified:** 26 tests pass; `tsc` is clean with unused checks; the console builds. A live smoke test ran WebSocket ticks at 30×, 60 concurrent reads during replay, forward and backward seeks, and client churn, with no errors. The upload pipeline ran end to end again.
 - **After `git pull`:** restart the backend (`scripts\run_demo.ps1`). No re-prepare is needed.
+
+---
+
+## 12. Update 18:40: winning-polish round (please read, then run §12.3 tonight)
+
+### 12.1 What changed (nothing in `backend/argus/vision/` was edited)
+- **Story titles:** when an incident holds both `abandoned_object` and `custody_change`, its title is
+  **"Possible theft: unattended object taken"** (playbook `stories`). The template brief matches it. Single-signal
+  titles are unchanged.
+- **Decisive signals:** an `abandoned_object` at severity ≥ 0.8 and confidence ≥ 0.6 (owner walked out of view) opens an
+  incident on its own, whatever the score (playbook `decisive`, incident field `decisive`, explained in the console).
+  This fixes uploads sitting exactly on 55. On the demo replay it should change nothing: the abandonment incident was
+  already open, and your two stray alerts are `custody_change`. **Please confirm with the test below.**
+- **Quick scan for uploads:** an optional tick-box skips the valuables pass (about 2× faster) for short Q&A clips.
+- **Evaluation:** `score_window()` is shared by the tuning-window and held-out evaluations. It now reports
+  `false_incidents` (opened incidents with no staged event nearby) and the door metric split into indoor vs all cameras.
+  Decisive openings count as "alerted".
+- **Tests (now 35 backend + 8 frontend):**
+  - `tests/test_vision_rules.py` pins your rules on synthetic tracks: owner walks out → `abandoned_object` at 0.8;
+    a stranger carries the bag off → `custody_change`; a seated owner → nothing; walking vs sprinting.
+  - `tests/test_headline.py` runs only on your laptop: it asserts ≥ 4/5 caught, 0 false incidents and ≤ 5 incidents
+    on the real events.
+  - Frontend tests: `npm --prefix frontend test`.
+
+### 12.2 After `git pull`
+```powershell
+.venv\Scripts\python -m pip install -r backend\requirements.txt
+cd backend; ..\.venv\Scripts\python -m pytest -q; ..\.venv\Scripts\python -m argus.eval.evaluate; cd ..
+powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Live
+```
+`test_headline.py` must pass on your laptop. If it doesn't, tell me the failure before changing anything.
+
+### 12.3 The held-out run (the answer to "isn't it overfitted?"), about 2 h on the GPU
+```powershell
+cd backend; ..\.venv\Scripts\python -m argus.eval.holdout --set A; cd ..    # ~55 min: a different day, has 1 staged theft
+cd backend; ..\.venv\Scripts\python -m argus.eval.holdout --set B; cd ..    # ~60 min: later window, all 6 cameras + GPS
+```
+- The unchanged pipeline (your exact `run_tracks.run`, `run_bags.run`, door sensor and `ClipRules`) runs on footage
+  never used for tuning.
+- Everything goes under `data_holdout/`, so the demo data is untouched. Clips already done are skipped, so it can be
+  stopped and resumed.
+- It writes **`docs/HOLDOUT_RESULTS.md`**. Commit and push that file; I'll put the numbers on the results slide and
+  the site.
+- Run A first (it contains the one staged theft outside our window). Don't run it while recording the video: the GPU
+  is shared with the live tile.
+
+### 12.4 Door sensor: what I tried (no action needed)
+The all-camera door precision (0.21) comes almost entirely from the exteriors. I ran the door sensor offline on the
+bus (G331) and plaza (G638) clips from the tuning window:
+
+| Camera | Rule | Detected | Correct | Truth | Precision | Recall |
+|---|---|---|---|---|---|---|
+| G331 bus | current | 23 (door_b 13, door 7, door_r 3) | 1 | 1 | 0.04 | 1.00 |
+| G331 bus | "pass-through" (person must cross the door line) | 9 | 0 | 1 | 0.00 | 0.00 |
+| G638 plaza | current | 14 | 6 | 11 | 0.43 | 0.55 |
+| G638 plaza | "pass-through" | 12 | 4 | 11 | 0.33 | 0.36 |
+
+- At the bus station, most false openings are `door_b`: the ATM queue stands in front of it.
+- The stricter rule was worse on both cameras, so I didn't ship it.
+- On stage, quote the indoor number (0.54 / 0.75) and say the exteriors are a motion heuristic (PITCH §5 has the answer).
+- If you want to try one thing: narrow the `door_b` polygon for G331 in `backend/argus/vision/zones.yaml` so it covers only the door leaf, not the
+  queue. That file is yours, so it's your call.
+

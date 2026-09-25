@@ -90,7 +90,7 @@ if the venue network is shaky. Backup video on the desktop and on a USB stick.
 | 1:10 | Point at the funnel band | "Events pour in from every stream; the per-stream alerts pile up; incidents stay near zero." |
 | 1:20 | Toggle **Siloed alerts** in the event stream | "This is what each system would page on its own. This is what operators ignore." |
 | 1:35 | Click the **Bus station** diamond on the timeline | "Let's go to the bus station." |
-| 1:45 | An incident rises to the top of the queue; click it | "Two independent sources agree: the camera saw an object change hands, and phones show a crowd forming in the same minute." |
+| 1:45 | The incident "Possible theft: unattended object taken" rises to the top; click it | "A bag was left unattended, then someone else carried it off, and phones show a crowd forming in the same minute: independent sources agree." |
 | 2:05 | Point at **Why this score** | "No black box: severity, confidence, how critical the place is, and the corroboration bonus." |
 | 2:20 | Click the **camera evidence** row | "One click replays the moment." (the camera enlarges, red box on the object) |
 | 2:35 | C: one sentence | "That box comes from YOLO11 tracking, running on this laptop, no training." |
@@ -130,12 +130,15 @@ Export as MP4 ≤ 2:00. Keep one copy on the demo laptop desktop and one on a US
 
 | Likely question | Answer |
 |---|---|
+| Isn't it tuned on the data you tested on? | "We tuned on one 30-minute window, then ran the unchanged pipeline on footage it never saw: a different day and a later window. Those held-out numbers are on the results slide [fill from docs/HOLDOUT_RESULTS.md]." |
+| Five incidents is a tiny sample. | "It is, and we say so. MEVA only stages six thefts and abandonments in the whole public set; five are in our window and the sixth is in our held-out day. That's why we also count false incidents over every hour of unseen footage." |
 | Isn't the data staged? | "The incidents are staged by actors, but among real passers-by, on real multi-camera footage and real GPS from one facility (the MEVA dataset). We score against its human ground truth, including the miss." |
 | Why not just use Splunk, Genetec or Ambient? | "They're enterprise products and each covers one silo. Argus fuses streams from different vendors, runs on one GPU box, and explains every score: built for a two-person campus control room." |
 | What about the one you missed? | "A black purse on a black bench: the detector can't see it. We added an experimental static-change detector for exactly that case; it's the next thing we'd harden." |
 | Does the LLM hallucinate threats? | "It can't: detection and scoring are deterministic; Gemini only writes the explanation, we reject anything not backed by the evidence, and there's a template fallback if it's offline." |
 | Corroboration assumes independent sensors. What if a power cut trips everything? | "Bursts of the same alert are treated as one likely common cause and damped, and each source counts once, however noisy it is." |
 | Where does the door stream come from on a real campus? | "The access-control system. In the demo it's derived from MEVA's human door annotations as a stand-in, and separately our video door sensor (door-leaf motion) detects the same openings on its own: precision [DOOR_P] against those annotations." |
+| Your door sensor is 0.21 precision across all cameras. | "Indoors, where a camera faces the door, it's 0.54 precision at 0.75 recall. Outdoors it's a motion heuristic: at the bus station most false openings come from the queue in front of the ATM back door. We tried a stricter pass-through rule and it lost more real openings than it removed false ones, so we kept the simpler rule and report both numbers. On a real site the access-control system gives the exact signal." |
 | GPS on a campus? | "On a real campus that stream is Wi-Fi access-point associations: where devices are, not who they are. We fuse by place and time, never identity." |
 | Privacy / DPDP? | "No face recognition, no identity inference; people are track numbers; every operator action is logged in a tamper-evident audit trail." |
 | Does it scale to 1,000 cameras? | "Detection is per camera on edge GPUs; fusion only sees small events, so it's cheap: thousands of events per second on one CPU." |

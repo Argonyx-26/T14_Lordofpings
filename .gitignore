@@ -1,5 +1,6 @@
 # Data, media and model weights never go in git (MEVA is fetched by scripts/)
 data/
+data_holdout/
 *.avi
 *.mp4
 *.pt

@@ -46,9 +46,9 @@ clips land in `Videos\Captures`. OBS works too. Then assemble them in **Clipcham
 | 1:42–1:50 | **H. Any footage** | Header: **Analyse a video** → open the finished bus-station analysis; play 3 seconds with boxes on. | "Any clip can be uploaded and analysed the same way." |
 | 1:50–2:00 | **Results card** | "4 of 5 staged incidents caught · 0 false incidents · 1,242 events → 3 incidents · 30 fps live" · small line: "MEVA dataset, Kitware / IARPA. Incidents staged by actors." | "On real footage, Argus caught four of five staged incidents with zero false incidents. We don't watch more. We notice sooner." |
 
-**Check before recording shot C:** the bus-station incident's title and sources on screen. It reads "Unattended
-object" with a camera signal and phone crowding. If the evidence differs (for example, no custody-change event), adjust
-the shot C line to describe only what the evidence shows.
+**Check before recording shot C:** the bus-station incident is now titled **"Possible theft: unattended object taken"**
+(its evidence holds both the unattended bag and the bag changing hands, plus phones showing a crowd). If the evidence on
+screen differs, adjust the shot C line to describe only what the evidence shows.
 
 ## 4. Honesty rules (the video is judged too)
 
