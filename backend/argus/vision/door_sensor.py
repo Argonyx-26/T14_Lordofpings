@@ -77,8 +77,9 @@ if __name__ == "__main__":
     clips = [pathlib.Path(p) for p in sys.argv[1:]] or sorted((MEVA_DIR / "video").glob("*.avi"))
     for clip in clips:
         leaves = camera_cfg(clip_info(clip.stem).camera).get("door_leaf") or {}
-        if not leaves:
+        out = TRACKS_DIR / f"{clip.stem}.doors.npz"
+        if not leaves or out.exists():
             continue
         frames, sig = signals(clip, leaves)
-        np.savez(TRACKS_DIR / f"{clip.stem}.doors.npz", frames=frames, **sig)
+        np.savez(out, frames=frames, **sig)
         print(f"{clip.stem}: {len(door_events(frames, sig))} door-leaf events from {list(leaves)}", flush=True)

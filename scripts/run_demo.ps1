@@ -27,6 +27,10 @@ if ($Prepare) {
     & $Py -m backend.argus.vision.run_bags
     if ($LASTEXITCODE -ne 0) { Write-Host "valuables pass failed" -ForegroundColor Red; exit 1 }
 
+    Step "Door sensor (door-leaf motion per camera; skips clips already done)"
+    & $Py backendrgusision\door_sensor.py
+    if ($LASTEXITCODE -ne 0) { Write-Host "door sensor failed" -ForegroundColor Red; exit 1 }
+
     Step "Rules: tracks -> data\events\cctv.jsonl"
     & $Py backend\argus\vision\rules.py
     if ($LASTEXITCODE -ne 0) { Write-Host "rules failed" -ForegroundColor Red; exit 1 }
