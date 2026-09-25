@@ -101,7 +101,7 @@ The console image on the site is currently from sample-data mode, and its captio
 
 ## 5. Record the 2-minute demo video (deliverable + stage backup), by 07:00
 
-The shot list and voice-over are in `docs/PITCH.md` §4.
+The full script (prep, shot list, voice-over, editing steps) is in **`docs/DEMO_VIDEO_SCRIPT.md`**.
 
 - **Recording:** Xbox Game Bar (`Win + Alt + R`) with the console full-screen (F11), at **10×**.
 - **Editing:** trim in Clipchamp. Add auto-captions; judges may watch it muted.

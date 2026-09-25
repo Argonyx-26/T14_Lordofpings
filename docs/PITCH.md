@@ -105,6 +105,8 @@ Never debug on stage.
 
 ## 4. The 2-minute demo video (deliverable + stage backup)
 
+> The full, record-ready version (prep checklist, shot list, editing steps) is **[DEMO_VIDEO_SCRIPT.md](DEMO_VIDEO_SCRIPT.md)**. Use that one; the table below is the summary.
+
 Record on the Windows laptop with **Xbox Game Bar** (`Win + Alt + R` starts/stops; saves to
 `Videos\Captures`) or OBS. Trim in **Clipchamp** (built into Windows 11). 1920×1080, console full-screen (F11),
 voice-over recorded separately and laid over, or recorded live with a headset mic. Add burned-in captions (Clipchamp
