@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 19:52 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 20:07 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -23,6 +23,7 @@ _Updated Fri 25 Sep 19:52 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+958d9de Evidence stills for uploaded videos: the worker renders them from the original clip (rules canvas mapped back to the clip's frames and pixels; never fails a job), GET /api/uploads/{job}/thumbs/{event}.jpg, a key frame on each upload incident and a still on each event; Still is a shared component
 7ed1a3b HANDOFF Â§11 update: set A result and why it missed, set C, merged report, timing, Ask offline warm-up
 4f77271 Ask ARGUS: python -m argus.ask "<local time>" "<question>" pre-answers a rehearsed question at that replay moment, so it is served from the cache on stage without Wi-Fi
 19cebd3 Held-out set C (12 Mar 10:00-10:15, all six cameras with the tuned views + GPS, nothing staged); --set takes several sets and the report merges earlier runs instead of overwriting them; vision/bench.py for GPU throughput (cameras per GPU)
@@ -30,5 +31,4 @@ d30850d HANDOFF Â§11: held-out fixes (re-aimed cameras, missing theft annotati
 aabfae6 Ask ARGUS: plain-language questions answered only from the log so far, with clickable citations
 0124cff Evidence stills in the incident panel; held-out set A treats re-aimed cameras as new
 c510a7b Held-out evaluation (python -m argus.eval.holdout): unchanged pipeline on unseen MEVA footage (5 Mar with one staged theft; 15 Mar 15:30-15:40, all cameras + GPS), writes docs/HOLDOUT_RESULTS.md; door-sensor experiment and overfitting / sample-size / door answers in the pitch; handoff Â§12 for Jack
-1a7685b Story titles (unattended object then carried off = possible theft), decisive signals open on their own, quick-scan uploads, false-incident metric and indoor door split in a shared evaluator, vision-rule regression tests, headline-number guard, frontend unit tests (vitest)
 ```
