@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Sat 26 Sep 00:31 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Sat 26 Sep 00:47 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -10,15 +10,10 @@ _Updated Sat 26 Sep 00:31 IST. Refreshed every 5 min and pushed only when someth
 
 ## Demo laptop
 
-- Backend + console: **up** at http://localhost:8000 · 1242 events · briefs by `gemini-flash-latest`
+- Backend + console: **down**
 - Live tile: **down**
 - AI briefs cached: 7
 - Metrics: 4/5 caught · 1242 → 20 → 3
-
-**Upload jobs (Analyse a video):**
-
-- `cdd2679896` 2018-03-15.14-50-00.14-55-00.school.G421.avi (300.07 s): done, 9 events, 0 incidents
-- `6b04d15f2a` 2018-03-15.15-15-00.15-20-00.bus.G331.avi (300.3 s): done, 9 events, 1 incident
 
 ## Recent commits on main
 
