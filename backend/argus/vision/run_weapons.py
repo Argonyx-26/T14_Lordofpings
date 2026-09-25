@@ -12,7 +12,10 @@ import time
 from ultralytics import YOLO
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
-WEIGHTS = ROOT / "models" / "weapons_yolo11s.pt"
+# v2 (real + 2,500 synthetic frames) is the better alarm on the unseen camera: 46/84 weapon appearances alerted with
+# 7 false alerts in 29 min, against v1's 42/84 with 14 (v1 has the better box mAP50, 0.376 vs 0.311). v1 if v2 is absent.
+WEIGHTS = next((p for p in (ROOT / "models" / "weapons_yolo11s_v2.pt", ROOT / "models" / "weapons_yolo11s.pt")
+                if p.exists()), ROOT / "models" / "weapons_yolo11s.pt")
 TRACK_DIR = ROOT / "data" / "tracks"
 CONF, IMGSZ = 0.25, 960
 
