@@ -1,0 +1,2756 @@
+[
+{
+"stem": "2018-03-05.14-05-01.14-10-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.13-20-01.13-25-01.school.G419",
+"set": "kitware",
+"date": "2018-03-05",
+"hour": "13",
+"cam": "G419",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.14-00-01.14-05-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.14-10-01.14-15-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.16-50-00.16-55-00.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "16",
+"cam": "G419",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-00-00.17-05-00.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-35-01.17-40-01.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.11-05-01.11-10-01.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.11-00-01.11-05-01.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.10-55-01.11-00-01.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.16-55-00.17-00-00.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.11-10-01.11-15-01.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-20-01.17-25-00.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G419",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-25-00.17-30-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-05-00.17-10-00.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-30-01.17-35-01.school.G419",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G419",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-30-00.10-35-00.school.G419",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-25-00.10-30-00.school.G419",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-40-00.10-45-00.school.G419",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G419",
+"doors": 16,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-20-00.10-25-00.school.G419",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-10-00.10-15-00.school.G419",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G419",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-35-00.10-40-00.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G419",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-15-00.10-20-00.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G419",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-20-01.17-25-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G419",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.13-50-01.13-55-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "13",
+"cam": "G419",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-15-00.11-20-00.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G419",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-10-01.14-15-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-20-01.16-25-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G419",
+"doors": 10,
+"transfers": 2
+},
+{
+"stem": "2018-03-11.16-15-01.16-20-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-10-01.17-15-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G419",
+"doors": 10,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-25-01.17-30-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G419",
+"doors": 6,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-40-00.11-45-00.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-05-01.14-10-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-30-00.11-35-00.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G419",
+"doors": 11,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-55-00.12-00-00.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "12",
+"cam": "G419",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-20-00.11-25-00.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G419",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-50-00.11-55-00.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G419",
+"doors": 16,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-25-00.11-30-00.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G419",
+"doors": 11,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.13-55-01.14-00-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-25-01.16-30-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-40-01.16-45-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-20-01.14-25-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-45-00.11-50-00.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G419",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-15-01.17-20-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G419",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-35-01.16-40-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G419",
+"doors": 16,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-15-01.14-20-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G419",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-35-00.11-40-00.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G419",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-00-01.14-05-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-30-01.16-35-01.school.G419",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-00-01.11-05-00.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-20-01.10-25-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-45-01.10-50-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G419",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-10-01.11-15-00.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-05-00.11-10-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G419",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-50-01.10-55-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G419",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-55-01.11-00-00.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-25-01.10-30-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G419",
+"doors": 6,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-30-01.10-35-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-40-01.10-45-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G419",
+"doors": 6,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-05-01.17-10-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G419",
+"doors": 12,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-05-01.16-10-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-00-01.16-05-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-15-01.17-20-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-30-01.17-35-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-40-01.17-45-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-35-01.17-40-01.school.G419",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G419",
+"doors": 6,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-10-01.16-15-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-25-01.17-30-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-20-01.17-25-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G419",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-25-01.16-30-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G419",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.15-50-01.15-55-01.school.G419",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "15",
+"cam": "G419",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-30-01.16-35-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G419",
+"doors": 10,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-15-01.16-20-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-20-01.16-25-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-10-01.17-15-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.15-55-01.16-00-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G419",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-50-01.15-55-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-45-01.15-50-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G419",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-40-01.15-45-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G419",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-55-01.16-00-01.school.G419",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "16",
+"cam": "G419",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.14-05-00.14-10-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.13-20-01.13-25-01.school.G420",
+"set": "kitware",
+"date": "2018-03-05",
+"hour": "13",
+"cam": "G420",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.14-00-00.14-05-00.school.G420",
+"set": "kitware",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.14-10-00.14-15-00.school.G420",
+"set": "kitware",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-25-01.17-30-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.11-00-00.11-05-00.school.G420",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-00-01.17-05-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-20-01.17-25-01.school.G420",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G420",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-35-01.17-40-01.school.G420",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.11-10-00.11-15-00.school.G420",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G420",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.16-55-01.17-00-01.school.G420",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.10-55-00.11-00-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.16-50-01.16-55-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "16",
+"cam": "G420",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-30-01.17-35-01.school.G420",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G420",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-05-01.17-10-01.school.G420",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.11-05-00.11-10-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-15-01.10-20-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G420",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-25-01.10-30-01.school.G420",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-10-01.10-15-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G420",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-40-01.10-45-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G420",
+"doors": 24,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-20-01.10-25-01.school.G420",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-30-01.10-35-01.school.G420",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-35-01.10-40-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G420",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-10-00.14-15-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.13-50-00.13-55-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "13",
+"cam": "G420",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-00-00.14-05-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G420",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-20-01.16-25-01.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G420",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-15-00.14-20-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G420",
+"doors": 11,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-15-01.17-20-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G420",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.13-55-00.14-00-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G420",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-25-01.16-30-01.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G420",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-50-00.11-55-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G420",
+"doors": 21,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-25-00.11-30-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G420",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-05-00.14-10-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G420",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-20-00.11-25-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G420",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-40-00.11-45-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G420",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-15-00.11-20-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G420",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-15-01.16-20-01.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G420",
+"doors": 3,
+"transfers": 2
+},
+{
+"stem": "2018-03-11.11-45-00.11-50-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G420",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-25-01.17-30-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G420",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-30-00.11-35-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G420",
+"doors": 11,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-40-01.16-45-01.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G420",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.12-00-00.12-05-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "12",
+"cam": "G420",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-35-01.16-40-01.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G420",
+"doors": 16,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-20-00.14-25-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G420",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-20-01.17-25-01.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G420",
+"doors": 6,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-10-01.17-15-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G420",
+"doors": 14,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-30-01.16-35-01.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G420",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-35-00.11-40-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-55-00.12-00-00.school.G420",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "12",
+"cam": "G420",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-50-00.10-55-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G420",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-30-00.10-35-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G420",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-00-00.11-04-59.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-05-00.11-10-01.school.G420",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G420",
+"doors": 16,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-25-00.10-30-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G420",
+"doors": 12,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-55-01.10-59-59.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-40-00.10-45-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G420",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-20-00.10-25-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-45-00.10-49-59.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G420",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-10-01.11-15-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G420",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-25-00.17-30-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-35-00.17-40-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G420",
+"doors": 6,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-20-01.16-25-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G420",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-05-01.16-10-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-25-01.16-30-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G420",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-40-00.17-45-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G420",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.15-55-01.16-00-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-10-01.16-15-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-05-00.17-10-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G420",
+"doors": 12,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-30-00.17-35-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-10-00.17-15-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-30-01.16-35-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G420",
+"doors": 11,
+"transfers": 1
+},
+{
+"stem": "2018-03-13.15-50-01.15-55-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "15",
+"cam": "G420",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-15-00.17-20-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-00-01.16-05-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-15-01.16-20-01.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G420",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-20-00.17-25-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G420",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-45-01.15-50-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G420",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-40-01.15-45-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G420",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-50-00.15-55-00.school.G420",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G420",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.14-00-00.14-05-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G421",
+"doors": 0,
+"transfers": 5
+},
+{
+"stem": "2018-03-05.13-20-00.13-25-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-05",
+"hour": "13",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-05.14-10-00.14-15-00.school.G421",
+"set": "kitware",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G421",
+"doors": 0,
+"transfers": 5
+},
+{
+"stem": "2018-03-05.14-05-00.14-10-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-05",
+"hour": "14",
+"cam": "G421",
+"doors": 5,
+"transfers": 2
+},
+{
+"stem": "2018-03-07.17-30-00.17-35-00.school.G421",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G421",
+"doors": 8,
+"transfers": 4
+},
+{
+"stem": "2018-03-07.17-35-00.17-40-00.school.G421",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G421",
+"doors": 6,
+"transfers": 3
+},
+{
+"stem": "2018-03-07.17-25-00.17-30-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G421",
+"doors": 6,
+"transfers": 6
+},
+{
+"stem": "2018-03-07.11-05-01.11-10-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G421",
+"doors": 8,
+"transfers": 8
+},
+{
+"stem": "2018-03-07.10-55-01.11-00-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G421",
+"doors": 8,
+"transfers": 15
+},
+{
+"stem": "2018-03-07.16-55-00.17-00-00.school.G421",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G421",
+"doors": 11,
+"transfers": 3
+},
+{
+"stem": "2018-03-07.11-10-01.11-15-01.school.G421",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G421",
+"doors": 8,
+"transfers": 1
+},
+{
+"stem": "2018-03-07.17-05-00.17-10-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G421",
+"doors": 7,
+"transfers": 2
+},
+{
+"stem": "2018-03-07.17-20-00.17-25-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G421",
+"doors": 8,
+"transfers": 11
+},
+{
+"stem": "2018-03-07.11-00-01.11-05-01.school.G421",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "11",
+"cam": "G421",
+"doors": 7,
+"transfers": 11
+},
+{
+"stem": "2018-03-07.17-00-00.17-05-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G421",
+"doors": 6,
+"transfers": 13
+},
+{
+"stem": "2018-03-07.16-50-00.16-55-00.school.G421",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "16",
+"cam": "G421",
+"doors": 10,
+"transfers": 10
+},
+{
+"stem": "2018-03-09.10-30-00.10-35-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-20-00.10-25-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G421",
+"doors": 4,
+"transfers": 2
+},
+{
+"stem": "2018-03-09.10-35-00.10-40-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G421",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-10-00.10-15-00.school.G421",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G421",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-25-00.10-30-00.school.G421",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G421",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-40-00.10-45-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G421",
+"doors": 10,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-15-00.10-20-00.school.G421",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G421",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-50-01.11-55-01.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G421",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-45-00.16-50-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-25-00.11-30-01.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G421",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-15-00.16-20-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.13-55-01.14-00-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G421",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-35-00.16-40-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-15-00.17-20-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-45-01.11-50-01.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G421",
+"doors": 4,
+"transfers": 4
+},
+{
+"stem": "2018-03-11.17-10-00.17-15-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G421",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-05-01.14-10-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-00-01.14-05-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G421",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-20-00.11-25-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-55-01.12-00-01.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "12",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-25-00.16-30-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-15-01.14-20-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-40-01.11-45-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-10-01.14-15-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G421",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-20-00.17-25-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G421",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-30-01.11-35-01.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.13-50-01.13-55-01.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "13",
+"cam": "G421",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-20-00.16-25-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G421",
+"doors": 2,
+"transfers": 2
+},
+{
+"stem": "2018-03-11.11-15-00.11-20-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G421",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-30-00.16-35-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-20-01.14-25-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G421",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-40-00.16-45-00.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-25-00.17-30-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G421",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-35-01.11-40-01.school.G421",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G421",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-10-00.11-15-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-55-00.11-00-00.school.G421",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G421",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-05-00.11-10-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G421",
+"doors": 3,
+"transfers": 1
+},
+{
+"stem": "2018-03-12.10-50-00.10-55-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G421",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-30-00.10-35-00.school.G421",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-40-00.10-45-00.school.G421",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G421",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-45-00.10-50-00.school.G421",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G421",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-20-00.10-25-01.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-25-01.10-30-00.school.G421",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G421",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-00-00.11-05-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-05-00.17-10-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G421",
+"doors": 6,
+"transfers": 18
+},
+{
+"stem": "2018-03-13.17-35-00.17-40-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G421",
+"doors": 4,
+"transfers": 1
+},
+{
+"stem": "2018-03-13.16-10-00.16-15-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G421",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.15-50-00.15-55-00.school.G421",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "15",
+"cam": "G421",
+"doors": 11,
+"transfers": 12
+},
+{
+"stem": "2018-03-13.16-20-00.16-25-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G421",
+"doors": 4,
+"transfers": 1
+},
+{
+"stem": "2018-03-13.17-25-00.17-29-46.school.G421",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G421",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.15-55-00.16-00-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G421",
+"doors": 18,
+"transfers": 15
+},
+{
+"stem": "2018-03-13.17-10-00.17-15-00.school.G421",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G421",
+"doors": 21,
+"transfers": 1
+},
+{
+"stem": "2018-03-13.16-05-00.16-10-00.school.G421",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G421",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-30-00.17-35-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G421",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-50-00.15-54-59.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G421",
+"doors": 7,
+"transfers": 2
+},
+{
+"stem": "2018-03-15.15-45-00.15-50-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G421",
+"doors": 5,
+"transfers": 8
+},
+{
+"stem": "2018-03-15.15-55-00.16-00-00.school.G421",
+"set": "kitware",
+"date": "2018-03-15",
+"hour": "16",
+"cam": "G421",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-40-00.15-45-00.school.G421",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G421",
+"doors": 17,
+"transfers": 10
+},
+{
+"stem": "2018-03-07.16-55-00.17-00-00.school.G638",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G638",
+"doors": 14,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-05-00.17-10-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G638",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-35-00.17-40-00.school.G638",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G638",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-00-00.17-05-00.school.G638",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G638",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-25-00.17-30-00.school.G638",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G638",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-20-00.17-25-00.school.G638",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G638",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.17-30-00.17-35-00.school.G638",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "17",
+"cam": "G638",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-07.16-50-00.16-55-00.school.G638",
+"set": "kitware",
+"date": "2018-03-07",
+"hour": "16",
+"cam": "G638",
+"doors": 10,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-25-01.10-30-01.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G638",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-30-01.10-35-01.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-15-01.10-20-01.school.G638",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G638",
+"doors": 10,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-10-01.10-15-01.school.G638",
+"set": "kitware",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G638",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-20-01.10-25-01.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-40-01.10-45-01.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G638",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-09.10-35-01.10-40-01.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-09",
+"hour": "10",
+"cam": "G638",
+"doors": 3,
+"transfers": 2
+},
+{
+"stem": "2018-03-11.13-55-00.14-00-00.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G638",
+"doors": 10,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-25-01.17-30-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G638",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-55-01.12-00-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "12",
+"cam": "G638",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-25-01.11-30-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G638",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-50-01.11-55-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G638",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-05-00.14-10-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G638",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-20-00.16-25-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G638",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-40-01.11-45-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G638",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-15-01.11-20-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G638",
+"doors": 9,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-00-00.14-05-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-30-01.11-35-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G638",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-15-01.17-20-01.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G638",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-10-00.14-15-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-35-01.16-40-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-10-01.17-15-01.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G638",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-20-00.14-25-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G638",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-15-00.16-19-59.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.13-50-00.13-55-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "13",
+"cam": "G638",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-20-01.11-25-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G638",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.17-20-01.17-25-01.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-11",
+"hour": "17",
+"cam": "G638",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-25-02.16-30-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-35-01.11-40-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G638",
+"doors": 10,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.11-45-01.11-50-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "11",
+"cam": "G638",
+"doors": 4,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-40-01.16-45-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.14-15-00.14-20-00.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "14",
+"cam": "G638",
+"doors": 5,
+"transfers": 0
+},
+{
+"stem": "2018-03-11.16-30-02.16-35-01.school.G638",
+"set": "kitware",
+"date": "2018-03-11",
+"hour": "16",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-00-00.11-05-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-55-00.11-00-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G638",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-20-01.10-25-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-50-00.10-55-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-45-00.10-50-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G638",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-25-00.10-30-00.school.G638",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-30-00.10-35-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G638",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.11-10-00.11-15-00.school.G638",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G638",
+"doors": 1,
+"transfers": 2
+},
+{
+"stem": "2018-03-12.11-05-00.11-10-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-12",
+"hour": "11",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-12.10-40-00.10-45-00.school.G638",
+"set": "kitware",
+"date": "2018-03-12",
+"hour": "10",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-15-00.17-20-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G638",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.15-50-00.15-55-00.school.G638",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "15",
+"cam": "G638",
+"doors": 14,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-35-00.17-40-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G638",
+"doors": 8,
+"transfers": 1
+},
+{
+"stem": "2018-03-13.17-20-00.17-25-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-40-00.17-45-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-15-00.16-20-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G638",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-25-00.16-30-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G638",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.15-55-00.16-00-00.school.G638",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G638",
+"doors": 13,
+"transfers": 1
+},
+{
+"stem": "2018-03-13.16-05-00.16-10-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G638",
+"doors": 1,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-10-00.16-15-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G638",
+"doors": 3,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-30-00.16-35-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-30-00.17-35-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G638",
+"doors": 6,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-10-00.17-15-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G638",
+"doors": 10,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-05-00.17-10-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G638",
+"doors": 7,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.16-20-00.16-25-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G638",
+"doors": 4,
+"transfers": 1
+},
+{
+"stem": "2018-03-13.16-00-00.16-05-00.school.G638",
+"set": "kitware",
+"date": "2018-03-13",
+"hour": "16",
+"cam": "G638",
+"doors": 0,
+"transfers": 0
+},
+{
+"stem": "2018-03-13.17-25-00.17-30-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-13",
+"hour": "17",
+"cam": "G638",
+"doors": 8,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-45-00.15-50-00.school.G638",
+"set": "kitware",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G638",
+"doors": 3,
+"transfers": 1
+},
+{
+"stem": "2018-03-15.15-55-00.16-00-00.school.G638",
+"set": "kitware",
+"date": "2018-03-15",
+"hour": "16",
+"cam": "G638",
+"doors": 2,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-40-00.15-45-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G638",
+"doors": 14,
+"transfers": 0
+},
+{
+"stem": "2018-03-15.15-50-00.15-55-00.school.G638",
+"set": "kitware-meva-training",
+"date": "2018-03-15",
+"hour": "15",
+"cam": "G638",
+"doors": 7,
+"transfers": 0
+}
+]

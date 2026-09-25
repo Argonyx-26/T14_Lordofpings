@@ -32,3 +32,4 @@ models/
 
 # Local tooling
 .claude/
+data_scale/
