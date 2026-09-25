@@ -70,3 +70,70 @@ titles:
   person_down:         "Person on the ground"
   hand_off:            "Hand-to-hand exchange"
   dealing_pattern:     "Repeated hand-offs (possible dealing)"
+
+# ---- Forecast and response planning (argus/forecast.py) ---------------------------------------------------------
+# Crime scripts (situational crime prevention: precursor -> commission -> departure). Each stage lists the signal
+# types that show it and the action that disrupts it at that stage (its intervention point). A forecast finds the
+# script an incident is following, how far along it is, and re-scores the stages still ahead with the real scorer.
+scripts:
+  theft:
+    name: "Theft of an unattended bag"
+    stages:
+      - {id: left,    label: "Bag left unattended",       types: [abandoned_object],                          action: secure_object}
+      - {id: taken,   label: "Someone else takes it",     types: [custody_change],                            action: track_subject}
+      - {id: leaving, label: "The taker leaves",          types: [running, device_fast_exit, door_surge],     action: dispatch_guard}
+  assault:
+    name: "Assault"
+    stages:
+      - {id: tension, label: "People gathering, tension", types: [device_crowding, occupancy_anomaly, loitering], action: crowd_control}
+      - {id: fight,   label: "Fight breaks out",          types: [violence],                                  action: intervene}
+      - {id: armed,   label: "A weapon is involved",      types: [weapon_visible],                            action: armed_response}
+      - {id: injury,  label: "Someone is on the ground",  types: [person_down],                               action: medical}
+  dealing:
+    name: "Street dealing"
+    stages:
+      - {id: exchange, label: "Hand-to-hand exchange",    types: [hand_off],                                  action: observe_exchange}
+      - {id: pattern,  label: "Repeated with different people", types: [dealing_pattern],                    action: observe_exchange}
+      - {id: leaving,  label: "The dealer moves on",      types: [running, device_fast_exit],                 action: track_subject}
+  crowd:
+    name: "Crowd building up"
+    stages:
+      - {id: gathering, label: "Crowd gathering",         types: [device_crowding, occupancy_anomaly],        action: crowd_control}
+      - {id: surge,     label: "Surge at the doors",      types: [door_surge, running],                       action: crowd_control}
+      - {id: exodus,    label: "People leaving in a rush", types: [device_exodus, device_dispersal],          action: dispatch_guard}
+
+# What a signal usually looks like when it fires, taken from the rules' emit() calls (vision/rules.py,
+# vision/threats.py, ingest/doors.py, ingest/gps.py). A forecast prefers the median of what it has actually seen
+# today (when it has seen at least 3) and falls back to these.
+typical:
+  abandoned_object:    {severity: 0.8,  confidence: 0.65}
+  custody_change:      {severity: 0.6,  confidence: 0.8}
+  running:             {severity: 0.35, confidence: 0.5}
+  loitering:           {severity: 0.3,  confidence: 0.6}
+  vehicle_in_ped_zone: {severity: 0.45, confidence: 0.6}
+  weapon_visible:      {severity: 0.95, confidence: 0.55}
+  violence:            {severity: 0.88, confidence: 0.7}
+  person_down:         {severity: 0.75, confidence: 0.8}
+  hand_off:            {severity: 0.3,  confidence: 0.6}
+  dealing_pattern:     {severity: 0.6,  confidence: 0.55}
+  door_surge:          {severity: 0.3,  confidence: 0.7}
+  device_crowding:     {severity: 0.35, confidence: 0.6}
+  device_exodus:       {severity: 0.35, confidence: 0.6}
+  device_dispersal:    {severity: 0.3,  confidence: 0.6}
+  device_fast_exit:    {severity: 0.08, confidence: 0.6}
+  occupancy_anomaly:   {severity: 0.35, confidence: 0.6}
+
+# Who carries out each action, how disruptive it is (0 none .. 3 closes an area or brings in police), and which
+# operator decision it records (ack / escalate). Response times come from site.yaml `response`.
+action_meta:
+  monitor:          {responder: camera,  disruption: 0, records: ack}
+  review_footage:   {responder: camera,  disruption: 0, records: ack}
+  track_subject:    {responder: camera,  disruption: 0, records: ack}
+  observe_exchange: {responder: guard,   disruption: 1, records: ack}
+  dispatch_guard:   {responder: guard,   disruption: 1, records: ack}
+  medical:          {responder: medical, disruption: 1, records: escalate}
+  secure_object:    {responder: guard,   disruption: 2, records: ack}
+  crowd_control:    {responder: staff,   disruption: 2, records: ack}
+  intervene:        {responder: guard,   disruption: 2, records: escalate}
+  notify_police:    {responder: police,  disruption: 3, records: escalate}
+  armed_response:   {responder: police,  disruption: 3, records: escalate}

@@ -260,27 +260,12 @@ class UploadManager:
     def _analyse(self, job: Job, tracks: Path) -> dict:
         from argus.vision.rules import ClipRules
 
-        cfg = site()
         raw = ClipRules(tracks).run()
         events: list[Event] = []
         for n, e in enumerate(sorted(raw, key=lambda e: e["t"]), 1):
             e = {**e, "zone": UPLOAD_AREA, "area": UPLOAD_AREA}
             events.append(Event(event_id=f"up-{job.id}-{n:05d}", **e))
-        engine = FusionEngine(cfg)
-        for ev in events:
-            engine.ingest(ev)
-        incidents = engine.ranked(include_candidates=False)
-        evidence = {}
-        for inc in incidents:
-            ev = engine.evidence(inc.incident_id)
-            inc.brief = template_brief(inc, ev, cfg)
-            evidence[inc.incident_id] = [e.model_dump() for e in ev]
-        return {
-            "events": [e.model_dump() for e in events],
-            "incidents": [i.model_dump() for i in incidents],
-            "evidence": evidence,
-            "summary": engine.summary(),
-        }
+        return {"events": [e.model_dump() for e in events], **assess(events, None)}
 
     @staticmethod
     def _threat_passes(job: Job, src: Path, tracks: Path, fps: float, width: int, height: int, stride: int) -> None:
@@ -357,6 +342,48 @@ class UploadManager:
 
 _manager: UploadManager | None = None
 _manager_lock = threading.Lock()
+
+
+def assess(events: list[Event], profile: str | None) -> dict:
+    """Fuse an uploaded clip's events under a security profile (None = the site as tuned) into a threat assessment:
+    ranked incidents with evidence, briefs and forecasts, the risk score over the clip, and one verdict line."""
+    from argus.config import profiles
+    from argus.forecast import forecast, level, risk_timeline
+
+    cfg = site().with_profile(profile)
+    engine = FusionEngine(cfg)
+    for ev in events:
+        engine.ingest(ev)
+    incidents = engine.ranked(include_candidates=False)
+    end = max((e.t for e in events), default=0.0)
+    evidence, forecasts = {}, {}
+    for inc in incidents:
+        ev = engine.evidence(inc.incident_id)
+        inc.brief = template_brief(inc, ev, cfg)
+        evidence[inc.incident_id] = [e.model_dump() for e in ev]
+        forecasts[inc.incident_id] = forecast(inc, ev, cfg, max(end, inc.updated_at), log=events)
+    signals = [e for e in events if e.severity >= cfg.fusion["context_max_severity"]]
+    titles = cfg.playbook["titles"]
+    kinds: dict[str, int] = {}
+    for e in signals:
+        name = titles.get(e.type, e.type.replace("_", " ").capitalize())
+        kinds[name] = kinds.get(name, 0) + 1
+    top = max(incidents, key=lambda i: i.score, default=None)
+    lvl = level(top.score, cfg) if top else ("watch" if signals else "clear")
+    verdict = (f"{top.title.split(' — ')[0]}: risk {top.score}" if top else
+               f"{len(signals)} signal{'s' if len(signals) != 1 else ''} noticed, none rose to an incident" if signals else
+               "No threat found in this clip")
+    return {
+        "profile": profile, "profile_label": profiles()["profiles"][profile]["label"] if profile else "As tuned",
+        "thresholds": {"watch": cfg.fusion["watch_threshold"], "open": cfg.fusion["open_threshold"]},
+        "verdict": {"level": lvl, "headline": verdict, "incidents": len(incidents), "signals": len(signals),
+                    "kinds": dict(sorted(kinds.items(), key=lambda kv: -kv[1]))},
+        "timeline": risk_timeline(events, cfg),
+        "incidents": [i.model_dump() for i in incidents],
+        "evidence": evidence,
+        "forecasts": forecasts,
+        "summary": engine.summary(),
+    }
 
 
 def manager() -> UploadManager:

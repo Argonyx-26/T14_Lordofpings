@@ -204,6 +204,20 @@ async def incident(incident_id: str):
     return {"incident": inc.model_dump(), "evidence": [e.model_dump() for e in rt.engine.evidence(incident_id)]}
 
 
+@app.get("/api/incidents/{incident_id}/forecast")
+async def incident_forecast(incident_id: str):
+    """Where the incident is heading and what each response would do (argus/forecast.py). Uses only what has been
+    seen up to the replay clock."""
+    from argus.forecast import forecast
+    inc = rt.engine.incidents.get(incident_id)
+    if inc is None:
+        raise HTTPException(404, "unknown incident")
+    now = rt.replay.sim_t
+    log = [e for e in rt.events if e.t <= now]
+    feedback = min((rt.engine._feedback[(inc.area, t)] for t in inc.signal_types), default=1.0)
+    return await asyncio.to_thread(forecast, inc, rt.engine.evidence(incident_id), rt.cfg, now, log=log, feedback=feedback)
+
+
 class ActionIn(BaseModel):
     action: Literal["ack", "escalate", "dismiss"]
     role: Literal["duty_officer", "supervisor"] = "duty_officer"
@@ -336,6 +350,20 @@ def get_upload(job_id: str):
     from argus.uploads import manager
     job = _job_or_404(job_id)
     return {**job.__dict__, "result": manager().result(job) if job.status == "done" else None}
+
+
+@app.get("/api/uploads/{job_id}/assess")
+def assess_upload(job_id: str, profile: str | None = None):
+    """Threat assessment of an analysed clip under a security profile: verdict, risk over time, incidents with their
+    evidence and forecasts. Re-fuses the clip's stored events, so switching profile is instant."""
+    from argus.uploads import assess, manager
+    job = _job_or_404(job_id)
+    result = manager().result(job) if job.status == "done" else None
+    if result is None:
+        raise HTTPException(409, "analysis not finished")
+    if profile is not None and profile not in profiles()["profiles"]:
+        raise HTTPException(400, f"unknown profile {profile}")
+    return assess([Event(**e) for e in result["events"]], profile or rt.profile)
 
 
 @app.get("/api/uploads/{job_id}/video")

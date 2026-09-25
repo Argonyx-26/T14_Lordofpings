@@ -31,6 +31,20 @@ fusion:
   dismiss_penalty: 0.7         # multiplier on (area, type) after an operator dismissal
   night: {start_hour: 20, end_hour: 6, factor: 1.3}
 
+# Response planning (argus/forecast.py). Guard posts and service times are ASSUMPTIONS for this demo site, shown
+# as such in the console: MEVA publishes no guard positions. A guard walks from the nearest post along a path 1.3x
+# the straight line; police and medical times are typical urban priority responses.
+response:
+  guard_posts:
+    - {name: "Security desk, school entrance", pos: [39.05057, -85.52841]}
+    - {name: "Bus shelter patrol point",       pos: [39.04925, -85.52925]}
+  dispatch_s: 30               # radio call and acknowledgement before anyone moves
+  walk_mps: 1.4                # brisk walk
+  path_factor: 1.3
+  police_eta_s: 600
+  medical_eta_s: 480
+  staff_eta_s: 90
+
 rates:                         # rolling-baseline anomaly detection on event rates
   bucket_s: 60
   min_history: 5
