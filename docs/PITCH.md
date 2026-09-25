@@ -34,7 +34,7 @@ one idea per slide, numbers big.
 | 5 | **How it works** | Left to right: *Real streams* (MEVA CCTV · door sensor · device location) → *Detect* (YOLO11 + ByteTrack, rules, causal baselines; no training, no labels) → *Fuse* (same area within 120 s, strongest signal per source, corroboration, common-cause damping) → *Score* (transparent 0–100) → *Explain* (Claude writes the brief; it can't create, hide or re-rank incidents; every sentence checked against evidence) → *Human decides* (acknowledge / escalate / dismiss, hash-chained audit). | C · 3:15–3:40 |
 | 6 | **Measured on real footage** | **[CAUGHT] staged incidents caught** · **[FALSE] false incidents** in 30 min across 6 cameras · **[RAW] → [INC]** · door detection P `[DOOR_P]` R `[DOOR_R]` · `[LAT]` s to an explained incident · `[FPS]` fps live on one laptop GPU. Footnote: *MEVA dataset (Kitware/IARPA), staged incidents among real passers-by; door stream derived from annotations (stands in for access control); video door sensor scored against them; the miss was a black purse on a black bench.* | C · 3:40–3:55 |
 | 7 | **Why us, who pays** | 2×2: *camera-only vs multi-stream* × *enterprise-priced vs campus-priced*. Genetec / Milestone PSIM (physical, enterprise) · Splunk / Sentinel (cyber, enterprise) · Ambient.ai (camera-first, US enterprise) · **Argus: multi-stream, software-only, explainable, runs on one GPU**. Beachhead: Indian university and hospital campuses with 2–5-person control rooms. Model: per-site SaaS by stream count + on-prem licence (assumption to state: ₹[X] per site per month). PSIM market ≈ $4.3B by 2029 (MarketsandMarkets). | D · 3:55–4:40 |
-| 8 | **Next** | Pilot on the RV University campus: its cameras + access control + Wi-Fi logs (the Wi-Fi association stream replaces our GPS stand-in). Then connectors (Milestone/Genetec VMS, Wazuh/Splunk), edge box, DPDP-ready audit. Ask: a pilot site and mentors. Close line. | A · 4:40–5:00 |
+| 8 | **What comes next** | Any footage: upload a clip and Argus analyses it on the spot. Connectors (Milestone/Genetec video, access control, Wi-Fi and security logs). One GPU box per site with a DPDP-ready audit trail. Close line. | A · 4:40–5:00 |
 
 Slide 5 and 6 are the technical-implementation marks; slide 7 is the business marks; slides 2–3 plus the demo
 carry storytelling. Do not add a slide for the tech stack list or "future features".
@@ -72,8 +72,9 @@ Aim for ~650 spoken words. Rehearse with a timer; cut words, not the demo.
 > India's DPDP rules."
 
 **A: Close (4:40–5:00)**
-> "Our next step is a pilot here, on the RV University campus, with its own cameras, access control and Wi-Fi logs.
-> Argus: we don't watch more, we notice sooner. Thank you."
+> "What comes next: first, any footage. Hand us a clip and Argus analyses it on the spot with the same detectors
+> and fusion. Then connectors for the video, access-control and network systems campuses already run, and one GPU box
+> per site with an audit trail ready for India's DPDP rules. Argus: we don't watch more, we notice sooner. Thank you."
 
 ---
 
@@ -117,7 +118,7 @@ auto-captions), because judges may watch it muted.
 | 0:50–1:10 | Zoom on Why this score and the brief | "The score is transparent. Claude writes the brief, but it cannot create or hide incidents, and every sentence is checked against the evidence." |
 | 1:10–1:30 | Click the evidence: camera enlarges with the red box; then the live inference view | "One click replays the moment. Detection is YOLO11 with tracking, running live on a single laptop GPU, with no training." |
 | 1:30–1:45 | Supervisor escalates; audit log | "A human makes every call, and every call is recorded in a tamper-evident log." |
-| 1:45–2:00 | Results card: [CAUGHT] caught · [FALSE] false alarms · [RAW] → [INC] | "On real footage we caught [CAUGHT] staged incidents with [FALSE] false alarms. Next: a pilot on the RV University campus." |
+| 1:45–2:00 | Results card: [CAUGHT] caught · [FALSE] false alarms · [RAW] → [INC] | "On real footage we caught [CAUGHT] staged incidents with [FALSE] false alarms. And you can hand Argus any clip to analyse on the spot." |
 
 Export as MP4 ≤ 2:00. Keep one copy on the demo laptop desktop and one on a USB stick.
 
@@ -136,7 +137,7 @@ Export as MP4 ≤ 2:00. Keep one copy on the demo laptop desktop and one on a US
 | GPS on a campus? | "On a real campus that stream is Wi-Fi access-point associations: where devices are, not who they are. We fuse by place and time, never identity." |
 | Privacy / DPDP? | "No face recognition, no identity inference; people are track numbers; every operator action is logged in a tamper-evident audit trail." |
 | Does it scale to 1,000 cameras? | "Detection is per camera on edge GPUs; fusion only sees small events, so it's cheap: thousands of events per second on one CPU." |
-| How would you make money? | "Per site, priced by number of streams, plus an on-prem licence; pilot first with RV University." |
+| How would you make money? | "Per site, priced by number of streams, plus an on-prem licence for sites that can't use the cloud." |
 | What did you build during the hackathon? | "All of it: the repo history is public and timestamped from 11:00 on Friday." |
 
 ---
