@@ -6,14 +6,14 @@ Presentation & Storytelling, Business Impact & Market Potential.
 
 **Fill in before 07:00** from `python -m argus.eval.evaluate` on the demo laptop (numbers marked `[…]`):
 
-| Placeholder | Where it comes from | Current (Fri 14:00) |
+| Placeholder | Where it comes from | Measured (Fri, vision README) |
 |---|---|---|
-| `[CAUGHT]` staged incidents caught | `ground_truth_alerted / ground_truth_total` | 4/5 |
-| `[FALSE]` false incidents in the 30-min window | incidents with no ground truth nearby | 0 false incidents (2 stray camera bag alerts: one joined a true incident, one stayed a sub-watch candidate) |
-| `[RAW] → [SILO] → [INC]` | `reduction` block | 1,070+ → … → … |
-| `[DOOR_P] / [DOOR_R]` door detection precision / recall | `door_detection` | Indoor door-leaf sensor (G419/G420/G421): P 0.54 R 0.75. All 6 cameras: P 0.21 R 0.52. Quote both; 0.50 excluded G331 and isn't a defensible number |
-| `[LAT]` median seconds from first signal to incident | `latency_s` | … |
-| `[FPS]` live inference fps on the RTX 5060 | live tile stats | 30 fps (clip's real-time cap), 13–23 ms/frame; needs Energy Saver off |
+| `[CAUGHT]` staged incidents caught | `ground_truth_alerted / ground_truth_total` | **4/5** (2 cafe thefts, bus theft + abandonment; miss: black purse on black bench) |
+| `[FALSE]` false incidents in the 30-min window | incidents with no ground truth nearby | **0** (2 camera-level bag alerts, absorbed by fusion) |
+| `[RAW] → [SILO] → [INC]` | `reduction` block | **1,242 → 20 → 3** (99.8% never reach an operator) |
+| `[DOOR_P] / [DOOR_R]` door detection precision / recall | `door_detection` | **0.54 / 0.75** indoor (0.21 / 0.52 all cameras) |
+| `[LAT]` median seconds from first signal to incident | `latency_s` | not on the slides |
+| `[FPS]` live inference fps on the RTX 5060 | live tile stats | **30 fps** (13–23 ms per frame) |
 
 **Speakers:** A = Tanush (lead: opens and closes) · B = demo driver · C = vision/technical (the teammate who built
 the pipeline) · D = business. Swap names as you like; every member must speak.
