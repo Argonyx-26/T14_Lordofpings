@@ -82,7 +82,7 @@ export function IncidentDetail({ incident, config, role, evidence, onJump, repla
 
         {incident.brief && (
           <div>
-            <div className="eyebrow mb-2">{incident.brief.generated_by === 'llm' ? 'Brief · written by Claude, checked against evidence' : 'Brief'}</div>
+            <div className="eyebrow mb-2">{incident.brief.generated_by === 'llm' ? `Brief · written by ${incident.brief.model?.startsWith('gemini') ? 'Gemini' : 'Claude'}, checked against evidence` : 'Brief'}</div>
             <p className="text-[14px] leading-relaxed text-[var(--color-fg)]">{incident.brief.summary}</p>
             <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--color-fg-2)]">{incident.brief.why}</p>
             {action && (

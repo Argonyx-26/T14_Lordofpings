@@ -35,6 +35,7 @@ export interface Brief {
   action_id: string
   evidence_ids: string[]
   generated_by: 'llm' | 'template'
+  model?: string | null
 }
 
 export interface Incident {

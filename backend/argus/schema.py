@@ -54,6 +54,7 @@ class Brief(BaseModel):
     action_id: str
     evidence_ids: list[str]
     generated_by: Literal["llm", "template"]
+    model: str | None = None   # which LLM wrote it (None for the template)
 
 
 class Incident(BaseModel):

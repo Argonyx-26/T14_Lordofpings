@@ -16,7 +16,12 @@ from argus import settings
 from argus.config import SiteConfig
 from argus.schema import Brief, Event, Incident
 
-MODEL = os.environ.get("ARGUS_LLM_MODEL", "claude-opus-5")
+CLAUDE_MODEL = os.environ.get("ARGUS_LLM_MODEL", "claude-opus-5")
+GEMINI_MODEL = os.environ.get("ARGUS_GEMINI_MODEL", "gemini-flash-latest")
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+# Claude when its key is set, else Gemini when its key is set, else template only.
+PROVIDER = "claude" if os.environ.get("ANTHROPIC_API_KEY") else "gemini" if GEMINI_KEY else None
+MODEL = GEMINI_MODEL if PROVIDER == "gemini" else CLAUDE_MODEL
 TIMEOUT_S = float(os.environ.get("ARGUS_LLM_TIMEOUT", "12"))
 CACHE_FILE = settings.CACHE_DIR / "briefs.json"
 
@@ -95,16 +100,12 @@ def validate(candidate: _LLMBrief, inc: Incident, cfg: SiteConfig) -> Brief | No
     if any(name in text for name in other_areas):
         return None                     # mentions a place that is not in the evidence
     return Brief(summary=candidate.summary.strip(), why=candidate.why.strip(), action_id=candidate.action_id,
-                 evidence_ids=ids, generated_by="llm")
+                 evidence_ids=ids, generated_by="llm", model=MODEL)
 
 
 def llm_brief(inc: Incident, evidence: list[Event], cfg: SiteConfig) -> Brief | None:
     """Returns None on any failure; callers fall back to the template."""
-    try:
-        import anthropic
-    except ImportError:
-        return None
-    if os.environ.get("ARGUS_LLM", "on").lower() == "off":
+    if os.environ.get("ARGUS_LLM", "on").lower() == "off" or PROVIDER is None:
         return None
     payload = {
         "incident": {"id": inc.incident_id, "area": cfg.area_name(inc.area), "score": inc.score,
@@ -113,6 +114,12 @@ def llm_brief(inc: Incident, evidence: list[Event], cfg: SiteConfig) -> Brief | 
         "evidence": _evidence_lines(evidence[:12], cfg),
         "playbook": cfg.playbook["actions"],
     }
+    if PROVIDER == "gemini":
+        return _gemini_brief(payload, inc, cfg)
+    try:
+        import anthropic
+    except ImportError:
+        return None
     try:
         client = anthropic.Anthropic(timeout=TIMEOUT_S, max_retries=1)
         response = client.beta.messages.parse(
@@ -136,6 +143,41 @@ def llm_brief(inc: Incident, evidence: list[Event], cfg: SiteConfig) -> Brief | 
     if response.stop_reason == "refusal" or response.parsed_output is None:
         return None
     return validate(response.parsed_output, inc, cfg)
+
+
+_GEMINI_SCHEMA = {  # _LLMBrief in Gemini's response-schema format
+    "type": "OBJECT",
+    "properties": {"summary": {"type": "STRING"}, "why": {"type": "STRING"}, "action_id": {"type": "STRING"},
+                   "evidence_ids": {"type": "ARRAY", "items": {"type": "STRING"}}},
+    "required": ["summary", "why", "action_id", "evidence_ids"],
+}
+
+
+def _gemini_brief(payload: dict, inc: Incident, cfg: SiteConfig) -> Brief | None:
+    """Gemini REST generateContent with a JSON response schema (plain httpx, no SDK). Same validation."""
+    import httpx
+
+    body = {
+        "systemInstruction": {"parts": [{"text": SYSTEM}]},
+        "contents": [{"role": "user", "parts": [{"text": json.dumps(payload)}]}],
+        "generationConfig": {"responseMimeType": "application/json", "responseSchema": _GEMINI_SCHEMA,
+                             "temperature": 0.2},
+    }
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+    try:
+        r = httpx.post(url, json=body, headers={"x-goog-api-key": GEMINI_KEY}, timeout=TIMEOUT_S)
+    except httpx.TransportError:
+        return None                     # offline venue Wi-Fi: template takes over
+    if r.status_code != 200:
+        print(f"[brief] Gemini error {r.status_code}: {r.text[:200]}")
+        return None
+    try:
+        text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+        candidate = _LLMBrief.model_validate_json(text)
+    except Exception as exc:            # blocked, empty or malformed output
+        print(f"[brief] Gemini output rejected: {type(exc).__name__}")
+        return None
+    return validate(candidate, inc, cfg)
 
 
 def brief_for(inc: Incident, evidence: list[Event], cfg: SiteConfig, allow_llm: bool = True) -> Brief:

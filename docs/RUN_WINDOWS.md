@@ -14,10 +14,10 @@ CUDA 13 (required for the RTX 50-series) only if CUDA isn't already working, ins
 requirements, downloads `models\yolo11s.pt`, fetches any missing MEVA data, builds the console, creates `.env`,
 and runs the backend tests. It stops at the first problem and says how to fix it. Re-running is safe.
 
-Then put the Claude API key in `.env` (repo root):
+Then put the Gemini API key in `.env` (repo root). Claude also works via `ANTHROPIC_API_KEY`, and it wins if both are set:
 
 ```
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=...
 ```
 
 ## 2. Prepare the demo data (after any change to vision rules, zones or thresholds)

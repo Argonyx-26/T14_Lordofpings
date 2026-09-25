@@ -81,4 +81,4 @@ cd backend
 ../.venv/bin/uvicorn argus.api.main:app --port 8000
 ```
 
-The vision pipeline writes `data/events/cctv.jsonl` (one Event per line, schema in `backend/argus/schema.py`); the backend picks it up on restart. LLM briefs use the Claude API when `ANTHROPIC_API_KEY` is set in `.env` and fall back to a deterministic template otherwise (`ARGUS_LLM=off` forces the template).
+The vision pipeline writes `data/events/cctv.jsonl` (one Event per line, schema in `backend/argus/schema.py`); the backend picks it up on restart. LLM briefs use Gemini when `GEMINI_API_KEY` is set in `.env` (or Claude when `ANTHROPIC_API_KEY` is), and fall back to a deterministic template otherwise (`ARGUS_LLM=off` forces the template).
