@@ -1,0 +1,27 @@
+# Data, media and model weights never go in git (MEVA is fetched by scripts/)
+data/
+*.avi
+*.mp4
+*.pt
+*.onnx
+*.engine
+
+# Secrets
+.env
+.env.*
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
