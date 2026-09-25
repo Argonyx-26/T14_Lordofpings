@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { LazyMotion, MotionConfig } from 'motion/react'
 import { AskBar } from './components/AskBar'
+import { ArgusEye, type EyeCamera } from './components/ArgusEye'
+import { Boot } from './components/Boot'
 import { CameraWall } from './components/CameraWall'
 import { IncidentDetail } from './components/IncidentDetail'
 import { IncidentQueue } from './components/IncidentQueue'
@@ -9,9 +12,11 @@ import { SituationBand } from './components/SituationBand'
 import { StreamPanel } from './components/StreamPanel'
 import { TopBar, type Role } from './components/TopBar'
 import { UploadView } from './components/UploadView'
-import { MOCK, WALL, camerasFor, clipAt, isActive, pickPrimary, post, rankIncidents } from './lib'
+import { MOCK, WALL, camerasFor, clipAt, isActive, levelOf, pickPrimary, post, rankIncidents, shouldBoot, situation } from './lib'
 import type { ArgusEvent, Incident } from './types'
 import { useArgus } from './useArgus'
+
+const loadMotion = () => import('./motionFeatures').then((m) => m.default)
 
 export default function App() {
   const { state, evidenceFor, forecastFor } = useArgus()
@@ -63,14 +68,34 @@ export default function App() {
   const primary = cfg ? pickPrimary(wall, focus, camerasFor(current, evidence, cfg, wall),
     (c) => !!state.clock && !!clipAt(cfg, c, state.clock.sim_t)).camera : null
 
+  // what the eye shows per camera: footage now, and the level of any live incident in its area
+  const eyeCameras: EyeCamera[] = useMemo(() => wall.map((id) => {
+    const area = cfg?.cameras[id]?.area
+    const hot = incidents.filter((i) => isActive(i.status) && i.area === area).sort((a, b) => b.score - a.score)[0]
+    return { id, footage: !!cfg && !!state.clock && !!clipAt(cfg, id, state.clock.sim_t), level: hot ? levelOf(hot.score, cfg ?? undefined) : null }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [cfg, incidents, state.clock ? Math.floor(state.clock.sim_t / 5) : 0])
+
+  // boot sequence (once per session): the eye opens full screen, then hands over to the top band
+  const [boot, setBoot] = useState(shouldBoot)
+  const [eyeHome, setEyeHome] = useState(() => !boot)
+
   return (
+    <LazyMotion features={loadMotion} strict>
+    <MotionConfig reducedMotion="user">
+    {boot && (
+      <Boot ready={!!state.config} linked={!!state.clock} clock={state.clock} events={state.events} cameras={eyeCameras}
+        onLeave={() => setEyeHome(true)}
+        onDone={() => { setBoot(false); try { sessionStorage.setItem('argus-booted', '1') } catch { /* private mode */ } }} />
+    )}
     <div className="app">
       <TopBar config={state.config} summary={state.summary} connected={state.connected} mock={state.mock} role={role} onRole={setRole}
         onAnalyse={() => setView(view === 'upload' ? 'console' : 'upload')} analysing={view === 'upload'}
         ask={<AskBar incidents={state.incidents} onSelect={select} onJump={jumpTo} />} />
       {view === 'upload' ? <UploadView config={state.config} /> : <>
         <ReplayBar clock={state.clock} config={state.config} incidents={incidents} mock={state.mock} onSelect={select} />
-        <SituationBand summary={state.summary} incidents={incidents} config={state.config} clock={state.clock} onSelect={select} />
+        <SituationBand summary={state.summary} incidents={incidents} config={state.config} clock={state.clock} onSelect={select}
+          events={state.events} cameras={eyeCameras} eye={eyeHome} />
 
         <main className="console">
           <div className="area-feed">
@@ -88,7 +113,9 @@ export default function App() {
           <div className="area-detail">
             <IncidentDetail incident={current} auto={!selected && !!current} config={state.config} clock={state.clock} summary={state.summary}
               role={role} evidence={evidence} onJump={jumpTo} replayingLeadUp={replayingLeadUp}
-              forecastFor={forecastFor} profile={state.config?.profile} />
+              forecastFor={forecastFor} profile={state.config?.profile}
+              eye={<ArgusEye size={188} level={situation(incidents, state.config ?? undefined).level} score={null} events={state.events} clock={state.clock} cameras={eyeCameras}
+                contextMax={state.config?.thresholds.context_max_severity} />} />
           </div>
         </main>
       </>}
@@ -98,5 +125,7 @@ export default function App() {
         <span className="ml-auto">Camera analytics computed by Argus · door events derived from annotations · phone locations are recorded GPS</span>
       </footer>
     </div>
+    </MotionConfig>
+    </LazyMotion>
   )
 }

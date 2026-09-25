@@ -1,5 +1,7 @@
+import { m } from 'motion/react'
 import { LEVEL_COLOR, STATUS_LABEL, duration, levelOf, rankIncidents, severityLabel } from '../lib'
 import type { Clock, Incident, SiteConfigView } from '../types'
+import { Decode } from './Motion'
 import { SourceIcon, StatusSymbol } from './Symbols'
 
 interface Props {
@@ -40,7 +42,8 @@ export function IncidentQueue({ incidents, config, clock, selected, onSelect }: 
           const handled = i.status === 'ack' || i.status === 'escalated'
           const since = clock ? clock.sim_t - (i.opened_at ?? i.first_signal_at) : 0
           return (
-            <button key={i.incident_id} onClick={() => onSelect(i.incident_id)} role="option" aria-selected={active}
+            <m.button layout="position" transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+              key={i.incident_id} onClick={() => onSelect(i.incident_id)} role="option" aria-selected={active}
               className={`arrive relative flex w-full items-start gap-3 px-3.5 py-3 text-left transition hairline-b ${active ? 'bg-[var(--color-surface-3)]' : 'hover:bg-[var(--color-surface-2)]'}`}>
               <span className="absolute inset-y-0 left-0 w-[3px] transition-opacity" style={{ background: color, opacity: active ? 1 : i.status === 'open' ? 0.8 : 0.3 }} />
               <span className="flex w-9 shrink-0 flex-col items-start gap-1.5 pt-0.5">
@@ -50,7 +53,7 @@ export function IncidentQueue({ incidents, config, clock, selected, onSelect }: 
                 </span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className={`block text-[13px] leading-snug ${handled ? 'text-[var(--color-fg-2)]' : 'text-[var(--color-fg)]'}`}>{i.title.split(' — ')[0]}</span>
+                <Decode text={i.title.split(' — ')[0]} className={`block text-[13px] leading-snug ${handled ? 'text-[var(--color-fg-2)]' : 'text-[var(--color-fg)]'}`} />
                 <span className="mt-0.5 block truncate text-[11.5px] text-[var(--color-fg-3)]">
                   {config?.areas[i.area]?.name ?? i.area} · <span className="num">{duration(since)}</span> {i.opened_at ? 'open' : 'building'}
                 </span>
@@ -61,7 +64,7 @@ export function IncidentQueue({ incidents, config, clock, selected, onSelect }: 
                   </span>
                 </span>
               </span>
-            </button>
+            </m.button>
           )
         })}
       </div>

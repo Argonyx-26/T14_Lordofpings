@@ -236,7 +236,9 @@
 
   <footer class="hair-t"><div class="wrap"><p class="kicker">MEVA dataset: Kitware Inc. / IARPA, CC-BY-4.0. Incidents in MEVA are staged by actors among ordinary passers-by.</p></div></footer>
   <script>
-    if (!/github\.io$/.test(location.hostname)) document.querySelectorAll('[data-live-demo]').forEach((a) => { a.href = location.protocol === 'file:' ? 'http://localhost:8000/' : '/' })
+    // Published: the offline demo sits at ./console/. On the demo laptop the backend serves the console at its root.
+    if (location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) document.querySelectorAll('[data-live-demo]').forEach((a) => { a.href = location.protocol === 'file:' ? 'http://localhost:8000/' : '/' })
   </script>
+  <script src="motion.js" defer></script>
 </body>
 </html>

@@ -4,8 +4,8 @@
 
 <p align="center">
   <a href="https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml/badge.svg" /></a>
-  <a href="https://argonyx-26.github.io/T14_Lordofpings/console/"><img alt="Live demo" src="https://img.shields.io/badge/live%20demo-open%20the%20console-f0843f?style=flat" /></a>
-  <a href="https://argonyx-26.github.io/T14_Lordofpings/judges.html"><img alt="For judges" src="https://img.shields.io/badge/for%20judges-90--second%20tour-e8ebf0?style=flat" /></a>
+  <a href="https://argus-lordofpings.vercel.app/console/"><img alt="Live demo" src="https://img.shields.io/badge/live%20demo-open%20the%20console-f0843f?style=flat" /></a>
+  <a href="https://argus-lordofpings.vercel.app/judges.html"><img alt="For judges" src="https://img.shields.io/badge/for%20judges-90--second%20tour-e8ebf0?style=flat" /></a>
   <img alt="Data" src="https://img.shields.io/badge/data-real%20MEVA%20footage%20%2B%20GPS-5b8def?style=flat" />
   <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776ab?style=flat&logo=python&logoColor=white" />
   <img alt="React" src="https://img.shields.io/badge/react-19-149eca?style=flat&logo=react&logoColor=white" />
@@ -13,9 +13,9 @@
 </p>
 
 <p align="center">
-  <a href="https://argonyx-26.github.io/T14_Lordofpings/console/"><b>Live demo</b></a> ·
-  <a href="https://argonyx-26.github.io/T14_Lordofpings/judges.html"><b>For judges</b></a> ·
-  <a href="https://argonyx-26.github.io/T14_Lordofpings/">Website</a> ·
+  <a href="https://argus-lordofpings.vercel.app/console/"><b>Live demo</b></a> ·
+  <a href="https://argus-lordofpings.vercel.app/judges.html"><b>For judges</b></a> ·
+  <a href="https://argus-lordofpings.vercel.app/">Website</a> ·
   <a href="#-results">Results</a> ·
   <a href="#-how-it-works">How it works</a> ·
   <a href="#-run-it">Run it</a>
@@ -73,7 +73,7 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 ## ▶ The 90-second tour
 
 > [!TIP]
-> Open the **[live demo](https://argonyx-26.github.io/T14_Lordofpings/console/)**. It is a real snapshot of the replay at 15:20, bundled with the page, so it works without a backend.
+> Open the **[live demo](https://argus-lordofpings.vercel.app/console/)**. It is a real snapshot of the replay at 15:20, bundled with the page, so it works without a backend.
 
 1. **Read the top band**: what needs a decision now, the funnel from every signal to a human decision, and the score against ground truth (click it for each staged incident).
 2. **Open the top incident.** The main camera follows it. Click an evidence row to replay that moment on the camera that saw it.
@@ -192,6 +192,24 @@ Measured on the MEVA recording of 15 March 2018, 14:50–15:20: six cameras, one
 | Decisions | Append-only, hash-chained audit log with role and time. |
 | Footage | Stays on the site's own machine: the whole demo runs offline on one laptop. |
 
+## ◉ The design: one eye that watches everything
+
+The console is built around a single living instrument, the **ARGUS eye** (Argus Panoptes was the hundred-eyed watcher of Greek myth). Every part of it is data, nothing is decoration:
+
+| Part | What it shows |
+|---|---|
+| Outer ticks | the watch, turning while the replay plays |
+| Six arc segments | the six cameras: lit when they have footage, coloured when their area has an incident |
+| Three rotating rings | camera analytics, door sensors and phone locations, each pulsing with its live signal rate |
+| Particles flowing inward | every real signal. Routine events fade halfway (absorbed); only signals reach the pupil: the 1,242 → 3 funnel, live |
+| Iris and pupil | the most urgent state on screen: the pupil dilates and the iris changes colour from calm to critical |
+
+It opens full screen while the console links up (the percentage is real readiness), then flies into its place in the top band. Around it, motion only ever says that something changed: new incident titles **decode** out of scrambled glyphs, briefs **come into focus** when they are written, the incident list **re-ranks on springs**, counts **roll**. Glass appears only where UI floats over footage. Everything respects `prefers-reduced-motion`, runs on one animation loop that stops when the tab is hidden, and adds no long tasks at 30× replay.
+
+On the website the same eye becomes the hero: real footage from the bus-station camera seen through its aperture, which opens as you scroll until the frame fills the screen.
+
+<sub>Inspired by the radial instruments of anime.js, Podium's logo-as-mask reveal, Bklit's decoding type, Kokonut's blur reveals, Motion's springs and Lenis's scroll; status colours follow the Astro UXDS status system.</sub>
+
 ## 🛠 Engineering
 
 - **50 backend tests and 14 frontend tests** on every push ([CI](https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml)). Tests that need MEVA video skip themselves; the rest run anywhere.
@@ -203,13 +221,15 @@ Measured on the MEVA recording of 15 March 2018, 14:50–15:20: six cameras, one
 <details>
 <summary><b>Stack</b></summary>
 
-Python 3.12 · FastAPI · Pydantic · Shapely · Ultralytics YOLO11 · ByteTrack · scikit-learn · OpenCV · React 19 · TypeScript · Vite · Tailwind CSS 4 · lucide · Gemini (briefs, Ask ARGUS) with a deterministic template fallback · GitHub Actions · GitHub Pages
+Python 3.12 · FastAPI · Pydantic · Shapely · Ultralytics YOLO11 · ByteTrack · scikit-learn · OpenCV · React 19 · TypeScript · Vite · Tailwind CSS 4 · lucide · Gemini (briefs, Ask ARGUS) with a deterministic template fallback · GitHub Actions · Vercel (website) · Raah analytics
 
 </details>
 
 ## ▶ Run it
 
-**The live demo** needs nothing: [argonyx-26.github.io/T14_Lordofpings/console](https://argonyx-26.github.io/T14_Lordofpings/console/).
+**Publish the website** (site + offline console demo, with Raah analytics) from any machine: `scripts/deploy_site.sh` (Vercel; see the script's header).
+
+**The live demo** needs nothing: [argus-lordofpings.vercel.app/console](https://argus-lordofpings.vercel.app/console/).
 
 **The full demo on the Windows laptop**: see [docs/RUN_WINDOWS.md](docs/RUN_WINDOWS.md). Run `scripts\setup_windows.ps1` once, then `scripts\run_demo.ps1 -Prepare`. Everything is one process at http://localhost:8000.
 
@@ -236,7 +256,7 @@ backend/argus/vision/ tracking, bag pass, door sensor, rules, threat detectors, 
 backend/argus/config/ site.yaml, playbook.yaml (actions, stories, scripts), profiles.yaml, areas.geojson
 backend/tests/        pytest suite
 frontend/             React + Vite + Tailwind console (and the offline demo build)
-site/                 project website and the judges' page (GitHub Pages; also served at :8000/site/)
+site/                 project website and the judges' page (served at :8000/site/; published with scripts/deploy_site.sh)
 scripts/              data download, Windows setup / run / stop
 docs/                 run guide, pitch, demo video script, held-out results
 ```

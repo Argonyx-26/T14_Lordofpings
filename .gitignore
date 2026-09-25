@@ -33,3 +33,6 @@ models/
 # Local tooling
 .claude/
 data_scale/
+
+# Built website for deploy_site.sh
+.deploy/

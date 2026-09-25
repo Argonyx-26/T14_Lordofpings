@@ -6,7 +6,7 @@
    travels with a shape and a word). Geist for UI and numbers; Instrument Serif only for the wordmark.
    Fonts are bundled (offline demo). */
 
-@theme {
+@theme static {
   --color-bg: #080a0d;
   --color-surface: #0e1115;
   --color-surface-2: #13171c;
@@ -139,6 +139,22 @@ details[open] > summary .chev { transform: rotate(90deg); }
 /* camera wall: the main view takes what height is left, the filmstrip keeps its 16:9 thumbnails */
 .feed-grid { display: grid; grid-template-rows: minmax(0, 1fr) auto; }
 .tile-primary { grid-row: 1; min-height: 0; }
+
+/* glass: only where UI floats over footage, so the picture stays visible through it */
+.glass {
+  background: linear-gradient(180deg, rgb(20 24 30 / .55), rgb(8 10 13 / .45));
+  -webkit-backdrop-filter: blur(12px) saturate(150%); backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .10), inset 0 1px 0 rgb(255 255 255 / .08), 0 8px 24px rgb(0 0 0 / .35);
+}
+
+/* boot: an engineering grid with a faint glow where the eye opens */
+.boot {
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--color-accent) 9%, transparent), transparent 42%),
+    linear-gradient(var(--color-hair) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(90deg, var(--color-hair) 1px, transparent 1px) 0 0 / 48px 48px,
+    var(--color-bg);
+}
 
 /* ---- motion: only to say something changed ---------------------------------------------------------------- */
 

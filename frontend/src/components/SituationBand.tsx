@@ -1,7 +1,10 @@
 import { ChevronRight, CircleCheck, CircleX, ShieldCheck } from 'lucide-react'
+import { m } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
-import { API, LEVEL_COLOR, MOCK, duration, fmt, isActive, levelOf, rankIncidents, type Level } from '../lib'
-import type { Clock, Incident, SiteConfigView, Summary } from '../types'
+import { API, LEVEL_COLOR, MOCK, duration, isActive, levelOf, rankIncidents, type Level } from '../lib'
+import type { ArgusEvent, Clock, Incident, SiteConfigView, Summary } from '../types'
+import { ArgusEye, type EyeCamera } from './ArgusEye'
+import { Decode, Roll } from './Motion'
 import { StatusSymbol } from './Symbols'
 
 interface GroundTruth { kind: string; camera: string; area: string; time: string; result: string; latency_s: number | null; peak_score: number }
@@ -19,13 +22,16 @@ interface Props {
   config: SiteConfigView | null
   clock: Clock | null
   onSelect: (id: string) => void
+  events: ArgusEvent[]
+  cameras: EyeCamera[]
+  eye: boolean            // false while the boot sequence still holds the eye
 }
 
 /**
  * The first three seconds: what is happening and how serious it is (left), what ARGUS is doing about the noise
  * (middle), and whether to trust it (right). Every number here is live or measured, none are decorative.
  */
-export function SituationBand({ summary, incidents, config, clock, onSelect }: Props) {
+export function SituationBand({ summary, incidents, config, clock, onSelect, events, cameras, eye }: Props) {
   const cfg = config ?? undefined
   const ranked = rankIncidents(incidents)
   const active = ranked.filter((i) => isActive(i.status))
@@ -52,6 +58,14 @@ export function SituationBand({ summary, incidents, config, clock, onSelect }: P
         className="relative flex min-w-0 items-center gap-4 overflow-hidden px-5 py-3 text-left transition enabled:hover:brightness-110"
         style={{ background: `linear-gradient(90deg, color-mix(in srgb, ${color} ${level === 'clear' ? 6 : 13}%, var(--color-bg)), var(--color-bg) 70%)` }}>
         <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: color }} />
+        <div className="-my-1 shrink-0" style={{ width: 76, height: 76 }}>
+          {eye && (
+            <m.div layoutId="argus-eye" style={{ width: 76, height: 76 }} transition={{ type: 'spring', stiffness: 120, damping: 20 }}>
+              <ArgusEye size={76} level={level} score={top?.score ?? null} events={events} clock={clock} cameras={cameras} detail="compact"
+                contextMax={config?.thresholds.context_max_severity} />
+            </m.div>
+          )}
+        </div>
         <div key={`${level}:${top?.incident_id}`} className="arrive min-w-0 flex-1">
           <div className="flex items-center gap-2">
             {level === 'clear' ? <CircleCheck size={13} strokeWidth={2} style={{ color }} /> : <StatusSymbol level={level} size={11} pulse={undecided.length > 0} />}
@@ -61,7 +75,7 @@ export function SituationBand({ summary, incidents, config, clock, onSelect }: P
             )}
           </div>
           <div className="mt-1 truncate text-[19px] font-semibold tracking-[-0.01em] text-[var(--color-fg)]">
-            {top ? top.title.split(' — ')[0] : 'Nothing needs a person right now'}
+            <Decode text={top ? top.title.split(' — ')[0] : 'Nothing needs a person right now'} />
           </div>
           <div className="mt-0.5 truncate text-[12px] text-[var(--color-fg-2)]">
             {top ? (
@@ -87,13 +101,13 @@ export function SituationBand({ summary, incidents, config, clock, onSelect }: P
           )}
         </div>
         <div className="mt-2 grid grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] items-end gap-1.5">
-          <Stage value={fmt(raw)} label="signals" hint="Every event from every stream so far" />
+          <Stage value={raw} label="signals" hint="Every event from every stream so far" />
           <Arrow />
-          <Stage value={fmt(summary?.siloed_alerts)} label="stream alerts" hint="What separate camera, door and GPS systems would each have paged" />
+          <Stage value={summary?.siloed_alerts ?? 0} label="stream alerts" hint="What separate camera, door and GPS systems would each have paged" />
           <Arrow />
-          <Stage value={fmt(surfaced)} label="incidents" hint="Signals ARGUS fused by place and time and scored high enough for a person" strong />
+          <Stage value={surfaced} label="incidents" hint="Signals ARGUS fused by place and time and scored high enough for a person" strong />
           <Arrow />
-          <Stage value={fmt(decided)} label="decided" hint="Incidents a person has acknowledged, escalated or dismissed" strong />
+          <Stage value={decided} label="decided" hint="Incidents a person has acknowledged, escalated or dismissed" strong />
         </div>
       </div>
 
@@ -103,10 +117,10 @@ export function SituationBand({ summary, incidents, config, clock, onSelect }: P
   )
 }
 
-function Stage({ value, label, hint, strong }: { value: string; label: string; hint: string; strong?: boolean }) {
+function Stage({ value, label, hint, strong }: { value: number; label: string; hint: string; strong?: boolean }) {
   return (
     <div className="min-w-0" title={hint}>
-      <div key={value} className={`figure text-[22px] ${strong ? 'text-[var(--color-fg)]' : 'text-[var(--color-fg-2)]'}`}>{value}</div>
+      <Roll value={value} className={`figure block text-[22px] ${strong ? 'text-[var(--color-fg)]' : 'text-[var(--color-fg-2)]'}`} />
       <div className="mt-1 truncate text-[11px] text-[var(--color-fg-3)]">{label}</div>
     </div>
   )

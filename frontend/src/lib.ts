@@ -183,3 +183,21 @@ export function pickPrimary(
 /** "gemini-flash-latest" -> "Gemini", "claude-…" -> "Claude" */
 export const modelName = (model?: string | null) =>
   model?.startsWith('gemini') ? 'Gemini' : model?.startsWith('claude') ? 'Claude' : model ?? 'the model'
+
+/** The single most urgent state on screen (Astro rule: roll many statuses up into the highest) and the incident behind it. */
+export function situation<T extends { status: string; score: number }>(incidents: T[], cfg?: SiteConfigView): { level: Level; top: T | null } {
+  const ranked = rankIncidents(incidents)
+  const active = ranked.filter((i) => isActive(i.status))
+  if (active.length) return { level: levelOf(Math.max(...active.map((i) => i.score)), cfg), top: active[0] }
+  const watching = ranked.filter((i) => i.status === 'watch')
+  return watching.length ? { level: 'watch', top: watching[0] } : { level: 'clear', top: null }
+}
+
+/** Show the boot sequence: once per session, not for deep links (?plan, ?upload, ?noboot), never under reduced motion. */
+export function shouldBoot(): boolean {
+  if (typeof window === 'undefined') return false
+  const q = new URLSearchParams(location.search)
+  if (q.has('noboot') || q.has('plan') || q.has('upload')) return false
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+  try { return !sessionStorage.getItem('argus-booted') } catch { return true }
+}

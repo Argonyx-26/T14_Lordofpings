@@ -1,6 +1,7 @@
 import { ArrowUpRight, ChevronRight, Cpu, CornerDownRight, Eye, Link2, Radar, ShieldCheck, UserCheck } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { ForecastCard, ResponsePlanner } from './Forecast'
+import { BlurIn, Decode } from './Motion'
 import {
   API, LEVEL_COLOR, MOCK, PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, fmt, levelOf, localTime, modelName, post, severityLabel,
 } from '../lib'
@@ -22,18 +23,19 @@ interface Props {
   replayingLeadUp?: boolean
   forecastFor: (id: string) => Promise<Forecast | null>
   profile?: string
+  eye?: ReactNode       // the full-size ARGUS eye for the all-clear state
 }
 
 interface AuditEntry { incident_id: string; action: Action; role: Role; note: string; sim_t: number; score: number; hash: string }
 
-export function IncidentDetail({ incident, auto, config, clock, summary, role, evidence, onJump, replayingLeadUp, forecastFor, profile }: Props) {
+export function IncidentDetail({ incident, auto, config, clock, summary, role, evidence, onJump, replayingLeadUp, forecastFor, profile, eye }: Props) {
   const cfg = config ?? undefined
   const log = useAudit(incident, clock)
   const fc = useForecast(incident, clock, forecastFor, profile)
   // ?plan=1 opens the response planner on load (links and screenshots)
   const [planning, setPlanning] = useState(() => new URLSearchParams(location.search).has('plan'))
 
-  if (!incident) return <HowItWorks config={config} summary={summary} />
+  if (!incident) return <HowItWorks config={config} summary={summary} eye={eye} />
 
   const act = async (action: Action, note: string) => {
     await post(`/api/incidents/${incident.incident_id}/action`, { action, role, note })
@@ -68,7 +70,7 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
         <div className="mt-3 flex items-center gap-3.5">
           <ScoreRing score={incident.score} color={color} config={config} />
           <div className="min-w-0">
-            <h2 className="text-[17px] font-semibold leading-snug tracking-[-0.01em] text-[var(--color-fg)]">{incident.title.split(' — ')[0]}</h2>
+            <h2 className="text-[17px] font-semibold leading-snug tracking-[-0.01em] text-[var(--color-fg)]"><Decode text={incident.title.split(' — ')[0]} /></h2>
             <p className="mt-0.5 text-[12px] text-[var(--color-fg-2)]">
               {config?.areas[incident.area]?.name ?? incident.area}
               {cams.length > 0 && <span className="text-[var(--color-fg-3)]"> · seen on <span className="num">{cams.join(', ')}</span></span>}
@@ -94,8 +96,10 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
                 · {incident.brief.generated_by === 'llm' ? `written by ${modelName(incident.brief.model)}, checked against the evidence` : 'from the scoring template'}
               </span>
             </div>
-            <p className="text-[14px] leading-relaxed text-[var(--color-fg)]">{incident.brief.summary}</p>
-            <p className="mt-1.5 text-[12.5px] leading-relaxed text-[var(--color-fg-2)]">{incident.brief.why}</p>
+            <BlurIn id={`${incident.incident_id}:${incident.brief.summary}`}>
+              <p className="text-[14px] leading-relaxed text-[var(--color-fg)]">{incident.brief.summary}</p>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-[var(--color-fg-2)]">{incident.brief.why}</p>
+            </BlurIn>
             {action && (
               <div className="mt-3 flex items-start gap-2.5 rounded-lg px-3 py-2.5" style={{ background: 'var(--color-surface-2)', boxShadow: 'inset 0 0 0 1px var(--color-hair-2)' }}>
                 <CornerDownRight size={14} strokeWidth={2} className="mt-0.5 shrink-0 text-[var(--color-accent)]" />
@@ -345,7 +349,7 @@ function useAudit(incident: Incident | null, clock: Clock | null) {
 }
 
 /** Nothing selected and nothing urgent: explain what ARGUS is doing, in the order a judge would ask. */
-function HowItWorks({ config, summary }: { config: SiteConfigView | null; summary: Summary | null }) {
+function HowItWorks({ config, summary, eye }: { config: SiteConfigView | null; summary: Summary | null; eye?: ReactNode }) {
   const by = summary?.by_source ?? {}
   const steps = [
     { Icon: Radar, title: 'Sense', body: <>Cameras, door sensors and phone locations stream in: <span className="num text-[var(--color-fg)]">{fmt(summary?.raw_events)}</span> signals so far.</> },
@@ -356,9 +360,10 @@ function HowItWorks({ config, summary }: { config: SiteConfigView | null; summar
   return (
     <section className="surface fill-sm flex min-h-0 flex-1 flex-col">
       <div className="scroll flex-1 px-5 py-5">
+        {eye && <div className="mb-4 flex justify-center">{eye}</div>}
         <div className="flex items-center gap-2">
-          <StatusSymbol level="clear" size={11} />
-          <span className="eyebrow" style={{ color: 'var(--color-ok)' }}>All clear · nothing to decide</span>
+          <StatusSymbol level="low" size={11} />
+          <span className="eyebrow">Nothing to decide right now</span>
         </div>
         <h2 className="display mt-2 text-[22px] text-[var(--color-fg)]">How ARGUS works</h2>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-[var(--color-fg-2)]">

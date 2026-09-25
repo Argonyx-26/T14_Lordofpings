@@ -320,7 +320,7 @@ function Tile({ camera, config, clock, incident, primary, order, boxes, evidence
       {/* the incident this camera's area is part of */}
       {incident && level && (
         primary ? (
-          <div className="pointer-events-none absolute left-2.5 top-2.5 flex items-center gap-2 rounded-md bg-black/65 px-2 py-1 text-[11.5px] backdrop-blur-sm">
+          <div className="pointer-events-none absolute left-2.5 top-2.5 flex items-center gap-2 glass rounded-md px-2 py-1 text-[11.5px]">
             <StatusSymbol level={level} size={9} pulse={incident.status === 'open'} />
             <span className="num font-medium" style={{ color: accent! }}>{incident.score}</span>
             <span className="max-w-[260px] truncate text-white/85">{incident.title.split(' — ')[0]}</span>
@@ -336,9 +336,9 @@ function Tile({ camera, config, clock, incident, primary, order, boxes, evidence
       {/* what the detector sees right now, and the key to the boxes */}
       {primary && stem && boxes && (
         <div className="pointer-events-none absolute inset-x-2.5 bottom-2.5 flex items-end justify-between gap-3">
-          {tracks ? <span ref={counts} className="num rounded-md bg-black/60 px-2 py-1 text-[11.5px] text-white/90 backdrop-blur-sm empty:hidden" />
-            : <span className="rounded-md bg-black/60 px-2 py-1 text-[11px] text-white/60">No detections cached for this clip</span>}
-          <span className="hidden items-center gap-2.5 rounded-md bg-black/60 px-2 py-1 text-[10.5px] text-white/75 backdrop-blur-sm md:flex">
+          {tracks ? <span ref={counts} className="num glass rounded-md px-2 py-1 text-[11.5px] text-white/90 empty:hidden" />
+            : <span className="glass rounded-md px-2 py-1 text-[11px] text-white/60">No detections cached for this clip</span>}
+          <span className="hidden items-center gap-2.5 glass rounded-md px-2 py-1 text-[10.5px] text-white/75 md:flex">
             <Key color={CLASS_STYLE[0].color} label="person" />
             <Key color={CLASS_STYLE[2].color} label="vehicle" />
             <Key color={CLASS_STYLE[24].color} label="bag / device" />
