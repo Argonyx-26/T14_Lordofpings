@@ -6,6 +6,11 @@ Dual background model: B_long = median of 1 fps samples 30-60 s ago, B_short = m
 people (from the cached YOLO tracks) are masked out, so people sitting down or standing up are not
 reported as objects. appeared vs removed: whichever background has more texture in the region.
 
+EXPERIMENTAL - not used by rules.py. It does find the G331 theft-3 purse removal (dark-on-dark, via
+the structure channel), but the thief had stood beside the purse for ~2 min, so from video alone the
+removal looks like someone leaving with their own bag; a rule on it caught no theft and added 12
+false alarms, so it stays off.
+
 Usage: python backend/argus/vision/static_change.py [clip.avi ...]   (default: all clips)
 """
 from __future__ import annotations
@@ -41,10 +46,28 @@ def person_boxes(track_path: pathlib.Path) -> dict[int, list]:
     return by_sec
 
 
-def mask_people(boxes: list, mask: np.ndarray) -> None:
+def mask_people(boxes: list, mask: np.ndarray, pad: float = PERSON_PAD) -> None:
     for x1, y1, x2, y2 in boxes:
-        pw, ph = (x2 - x1) * PERSON_PAD, (y2 - y1) * PERSON_PAD
+        pw, ph = (x2 - x1) * pad, (y2 - y1) * pad
         cv2.rectangle(mask, (int((x1 - pw) / SX), int((y1 - ph) / SY)), (int((x2 + pw) / SX), int((y2 + ph) / SY)), 1, -1)
+
+
+NCC_T, NCC_MIN_STD, NCC_WIN = 0.3, 5.0, 9
+
+
+def structure_change(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Pixels whose local window (NCC_WIN px) correlates poorly between two images, where there is
+    texture to compare. Box-filter formulation, so it is one pass over the frame."""
+    ga = cv2.cvtColor(a, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    gb = cv2.cvtColor(b, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    k = (NCC_WIN, NCC_WIN)
+    ma, mb = cv2.blur(ga, k), cv2.blur(gb, k)
+    va = cv2.blur(ga * ga, k) - ma * ma
+    vb = cv2.blur(gb * gb, k) - mb * mb
+    cov = cv2.blur(ga * gb, k) - ma * mb
+    ncc = cov / np.sqrt(np.maximum(va, 1e-3) * np.maximum(vb, 1e-3))
+    textured = np.sqrt(np.maximum(np.maximum(va, vb), 0)) > NCC_MIN_STD
+    return ((ncc < NCC_T) & textured).astype(np.uint8)
 
 
 def texture(img: np.ndarray, box) -> float:
@@ -75,15 +98,18 @@ def run(clip: pathlib.Path, out: pathlib.Path) -> int:
         b_short = np.median(np.stack(samples[t - SHORT + 1:t + 1]), axis=0).astype(np.uint8)
         diff = cv2.absdiff(b_short, b_long).max(axis=2)
         m = (diff > DIFF_T).astype(np.uint8)
+        # dark-on-dark objects (black purse on a black bench) barely change colour but do change local
+        # STRUCTURE: low normalised cross-correlation between the two backgrounds
+        m |= structure_change(b_long, b_short)
         pm = np.zeros((H, W), np.uint8)
         for s in range(t - SHORT + 1, t + 1):                 # anyone in the short window
             mask_people(people.get(s, []), pm)
         long_counts = np.zeros((H, W), np.float32)            # anyone who sat in the long window
         for s in range(t - LONG[0], t - LONG[1] + 1):
             tmp = np.zeros((H, W), np.uint8)
-            mask_people(people.get(s, []), tmp)
+            mask_people(people.get(s, []), tmp, pad=0.0)  # tight: an object right beside them must survive
             long_counts += tmp
-        pm |= (long_counts > 0.3 * (LONG[0] - LONG[1])).astype(np.uint8)
+        pm |= (long_counts > 0.5 * (LONG[0] - LONG[1])).astype(np.uint8)
         m[pm > 0] = 0
         m = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
         m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
