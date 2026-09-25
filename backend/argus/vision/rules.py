@@ -1,4 +1,6 @@
-"""Tracks + zone polygons -> CCTV events (shared schema) -> data/events/cctv.jsonl
+"""Tracks + zone polygons -> CCTV events (severities follow the handoff §8 guide: <0.2 routine context)
+
+ Tracks + zone polygons -> CCTV events (shared schema) -> data/events/cctv.jsonl
 
 Usage: python backend/argus/vision/rules.py [track.jsonl ...]   (default: every file in data/tracks)
 
@@ -276,7 +278,7 @@ class ClipRules:
                     if entered and t.frames[i] - last_emit > DOOR_COOLDOWN_S * FPS:
                         # direction: track born near the door = coming in; dies near the door = going out
                         direction = "in" if i == 0 else ("out" if inside[-1] else "pass")
-                        self.emit("door_activity", t.frames[i], 0.1, min(0.95, t.conf + 0.2), t.tid, t.boxes[i],
+                        self.emit("door_activity", t.frames[i], 0.05, min(0.95, t.conf + 0.2), t.tid, t.boxes[i],
                                   door=door, direction=direction)
                         last_emit = t.frames[i]
                 # loitering at a door (propping / tailgating wait)
@@ -330,7 +332,7 @@ class ClipRules:
                     if ok and run_tid == carrier:
                         if bag.frames[i] - run_start >= CUSTODY_MIN_S * FPS:
                             exits = self.leaves_via_door(self.persons[carrier])
-                            self.emit("custody_change", run_start, 0.85 if exits else 0.7, 0.55, bag.tid, bag.boxes[i],
+                            self.emit("custody_change", run_start, 0.6 if exits else 0.45, 0.8 if exits else 0.55, bag.tid, bag.boxes[i],
                                       object=CLS_NAME[bag.cls], owner=f"{self.cam}:t{owner}",
                                       carrier=f"{self.cam}:t{carrier}", carrier_exits_via_door=exits,
                                       bag_tracks=bag.chain)
@@ -363,7 +365,7 @@ class ClipRules:
                         away_since = f if away_since is None else away_since  # noqa: E501
                         if f - away_since >= ABANDON_S * FPS:
                             left = bool(f > max(self.persons[x].frames[-1] for x in ids))
-                            self.emit("abandoned_object", f, 0.9 if left else 0.8, 0.65, bag.tid, bag.boxes[q],
+                            self.emit("abandoned_object", f, 0.8 if left else 0.7, 0.65, bag.tid, bag.boxes[q],
                                       object=CLS_NAME[bag.cls], owner=f"{self.cam}:t{dropper}",
                                       dropped_frame=int(bag.frames[s_]), owner_away_frame=int(away_since),
                                       unattended_s=round((f - away_since) / FPS, 1), owner_left_scene=left)
@@ -380,7 +382,7 @@ class ClipRules:
             inside = [i for i, p in enumerate(t.feet) if self.in_poly("walkway", p)]
             if len(inside) >= 10:
                 i = inside[0]
-                self.emit("vehicle_in_ped_zone", t.frames[i], 0.6, 0.6, t.tid, t.boxes[i], vehicle=CLS_NAME[t.cls])
+                self.emit("vehicle_in_ped_zone", t.frames[i], 0.45, 0.6, t.tid, t.boxes[i], vehicle=CLS_NAME[t.cls])
 
     def running(self):
         w = int(0.5 * FPS)
@@ -396,7 +398,7 @@ class ClipRules:
                 if speed > RUN_SPEED:
                     fast_since = f[i] if fast_since is None else fast_since
                     if f[i] - fast_since >= RUN_MIN_S * FPS:
-                        self.emit("running", fast_since, 0.4, 0.5, t.tid, t.boxes[i], speed_h_per_s=round(float(speed), 2))
+                        self.emit("running", fast_since, 0.35, 0.5, t.tid, t.boxes[i], speed_h_per_s=round(float(speed), 2))
                         break
                 else:
                     fast_since = None
@@ -415,12 +417,12 @@ class ClipRules:
             sd = max(hist.std(), 0.75)
             z = (counts[k] - hist.mean()) / sd
             if abs(z) > OCC_Z and abs(counts[k] - hist.mean()) >= 3:
-                self.emit("occupancy", k * step, 0.25 if z > 0 else 0.1, 0.7, f"{self.cam}:occ", kind="area",
+                self.emit("occupancy", k * step, 0.05, 0.7, f"{self.cam}:occ", kind="area",
                           count=round(counts[k], 1), baseline=round(float(hist.mean()), 1), z=round(float(z), 2))
         # always emit a low-severity baseline every minute so the UI can chart occupancy
         per_min = int(60 / OCC_BUCKET_S)
         for k in range(0, len(counts), per_min):
-            self.emit("occupancy", k * step, 0.0, 0.8, f"{self.cam}:occ", kind="area",
+            self.emit("occupancy", k * step, 0.05, 0.8, f"{self.cam}:occ", kind="area",
                       count=round(float(np.mean(counts[k:k + per_min])), 1), baseline=None, z=0.0)
 
     def run(self) -> list[dict]:
