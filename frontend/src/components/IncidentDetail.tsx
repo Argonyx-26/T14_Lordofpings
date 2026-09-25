@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { MOCK, PROVENANCE_LABEL, SOURCE_LABEL, localTime, post, scoreColor } from '../lib'
 import type { ArgusEvent, Incident, SiteConfigView } from '../types'
 import type { Role } from './TopBar'
@@ -7,26 +7,20 @@ interface Props {
   incident: Incident | null
   config: SiteConfigView | null
   role: Role
-  evidenceFor: (id: string) => Promise<ArgusEvent[]>
+  evidence: ArgusEvent[]
+  onJump: (e: ArgusEvent) => void
+  replayingLeadUp?: boolean
 }
 
-export function IncidentDetail({ incident, config, role, evidenceFor }: Props) {
-  const [evidence, setEvidence] = useState<ArgusEvent[]>([])
+export function IncidentDetail({ incident, config, role, evidence, onJump, replayingLeadUp }: Props) {
   const [busy, setBusy] = useState(false)
-  const idKey = incident ? `${incident.incident_id}:${incident.event_ids.length}` : ''
-
-  useEffect(() => {
-    if (!incident) return
-    evidenceFor(incident.incident_id).then(setEvidence)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idKey])
 
   if (!incident) {
     return <section className="panel flex items-center justify-center p-6 text-sm text-[var(--color-dim)]">Select an incident</section>
   }
 
   const act = async (action: 'ack' | 'escalate' | 'dismiss') => {
-    if (MOCK) return
+    if (MOCK || replayingLeadUp) return
     setBusy(true)
     try { await post(`/api/incidents/${incident.incident_id}/action`, { action, role }) } finally { setBusy(false) }
   }
@@ -55,6 +49,11 @@ export function IncidentDetail({ incident, config, role, evidenceFor }: Props) {
       </div>
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
+        {replayingLeadUp && (
+          <div className="rounded-md border border-[var(--color-watch)] px-3 py-2 text-xs text-[var(--color-watch)]">
+            Replaying the lead-up: press Play and this incident re-forms as its evidence arrives.
+          </div>
+        )}
         {incident.brief && (
           <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-panel-2)] p-3">
             <div className="label mb-1">Brief · {incident.brief.generated_by === 'llm' ? 'AI-written, checked against evidence' : 'template'}</div>
@@ -78,10 +77,11 @@ export function IncidentDetail({ incident, config, role, evidenceFor }: Props) {
         </div>
 
         <div>
-          <div className="label mb-2">Evidence timeline</div>
-          <ol className="space-y-1.5">
+          <div className="label mb-2">Evidence timeline · click to replay that moment</div>
+          <ol className="space-y-0.5">
             {evidence.map((e) => (
-              <li key={e.event_id} className="flex items-center gap-2 text-xs">
+              <li key={e.event_id} onClick={() => onJump(e)} title="Jump the replay to 2 s before this"
+                className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs hover:bg-[var(--color-panel-2)]">
                 <span className="num w-16 text-[var(--color-mute)]">{localTime(e.t)}</span>
                 <span className="h-2 w-2 rounded-full" style={{ background: `var(--color-${e.source})` }} />
                 <span className="w-28 text-[var(--color-mute)]">{SOURCE_LABEL[e.source]}</span>

@@ -26,7 +26,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Prepare
 ```
 
-Runs, in order: tracking (clips already tracked are skipped) → rules → `data\events\cctv.jsonl` → browser MP4s
+Runs, in order: tracking and the valuables pass (clips already done are skipped) → rules → `data\events\cctv.jsonl` → browser MP4s
 for the camera wall (missing ones only) → evaluation against MEVA ground truth → caching of AI briefs (needs
 internet and the key) → console build. Then it starts the demo.
 

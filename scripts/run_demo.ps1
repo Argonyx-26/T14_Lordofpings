@@ -4,7 +4,7 @@
 #   powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Prepare   # rebuild pipeline outputs first
 #   powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Live      # also start the live inference tile
 #
-# -Prepare runs: tracking (skips clips already done) -> rules -> browser MP4s -> evaluation -> brief cache -> console build
+# -Prepare runs: tracking + valuables pass (skip clips already done) -> rules -> browser MP4s -> evaluation -> brief cache -> console build
 param(
     [switch]$Prepare,
     [switch]$Live,
@@ -22,6 +22,10 @@ if ($Prepare) {
     Step "Tracking (YOLO + ByteTrack; clips already tracked are skipped)"
     & $Py -m backend.argus.vision.run_tracks
     if ($LASTEXITCODE -ne 0) { Write-Host "tracking failed" -ForegroundColor Red; exit 1 }
+
+    Step "Valuables pass (bags, laptops, phones at 1280 px; skips clips already done)"
+    & $Py -m backend.argus.vision.run_bags
+    if ($LASTEXITCODE -ne 0) { Write-Host "valuables pass failed" -ForegroundColor Red; exit 1 }
 
     Step "Rules: tracks -> data\events\cctv.jsonl"
     & $Py backend\argus\vision\rules.py

@@ -77,8 +77,9 @@ def template_brief(inc: Incident, evidence: list[Event], cfg: SiteConfig) -> Bri
     action = defaults.get(top.type, defaults["default"]) if top else defaults["default"]
     return Brief(
         summary=f"{what} in {where} at {cfg.epoch_to_local(inc.first_signal_at)[11:]}.",
-        why=(f"{len(inc.sources)} independent sources ({srcs}) point at the same area within "
-             f"{int(cfg.fusion['window_s'])} s; score {inc.score}/100."),
+        why=(f"{len(inc.sources)} independent source{'s' if len(inc.sources) != 1 else ''} ({srcs}) "
+             f"{'point' if len(inc.sources) != 1 else 'points'} at this area within {int(cfg.fusion['window_s'])} s; "
+             f"score {inc.score}/100."),
         action_id=action, evidence_ids=[e.event_id for e in evidence[:5]], generated_by="template",
     )
 
