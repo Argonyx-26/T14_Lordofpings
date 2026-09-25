@@ -44,7 +44,7 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 |---|---|
 | **Staged incidents caught** | **4 of 5**, with **0 false incidents** (MEVA, 30 min, 6 cameras + GPS, scored against the dataset's own ground truth) |
 | **Noise removed** | 1,242 signals → 20 per-stream alerts → **3 incidents**: 99.8% never reach a person |
-| **Fights** | **74.7%** accuracy, ROC-AUC 0.82 on 300 real CCTV clips, cross-validated by recording (dataset authors: 72%) |
+| **Fights** | **76.7%** accuracy, ROC-AUC 0.854 on 300 real CCTV clips, cross-validated by recording (dataset authors: 72%) |
 | **Weapons** | handguns AP50 0.51, rifles 0.54 on a camera the model never saw |
 | **Live** | 30 fps detection and tracking on one laptop GPU |
 | **Forecast** | every incident projected forward with the real scorer: next stage, what would change the risk, and responses compared |
@@ -137,7 +137,7 @@ MEVA clip ─► run_tracks.py   YOLO11s + ByteTrack: people, vehicles, bags    
 | `running` | At least 1.8 body-heights per second for 1 s, so it doesn't depend on distance from the camera. |
 | `occupancy` | 10 s head counts, flagged at more than 2.5 σ and 3 people from the previous 60 s (causal, no look-ahead). |
 | `weapon_visible` | YOLO11s fine-tuned on real CCTV weapons; a weapon on a person on 3 of 6 frames. |
-| `violence` | Body-pose features from YOLO11s-pose, random forest on 2.5 s windows, 2 in a row ≥ 0.7. |
+| `violence` | Body-pose features from YOLO11s-pose (random forest) fused with a pretrained surveillance VideoMAE, on 2.5 s windows, 2 in a row ≥ 0.7. |
 | `person_down` | A body lying (wider than tall, torso tilted ≥ 60°) for ≥ 3 s. |
 | `hand_off` / `dealing_pattern` | Two people's wrists meet for ≥ 0.4 s; ≥ 3 hand-offs with ≥ 2 people in 10 min by someone who stays put. |
 
@@ -167,7 +167,7 @@ Measured on the MEVA recording of 15 March 2018, 14:50–15:20: six cameras, one
 | Staged thefts and abandonments | **4 / 5 caught, 0 false incidents** | every staged theft and abandonment MEVA publishes in the window; 2 cafe thefts, 1 bus-station theft and 1 abandonment caught |
 | Event funnel | 1,242 → 20 → **3** | raw events → what per-stream thresholds would page → incidents |
 | Security profiles | Airport 4/5 (+6 on watch) · Campus 4/5 · Park 2/5 · **0 false in all three** | same 30 minutes, re-scored per profile |
-| Fights | accuracy **74.7%**, ROC-AUC **0.82**; at the pipeline threshold 80/150 fights, 17/150 false (precision 0.83) | 300 real CCTV clips (Akti et al. 2019), 5-fold CV grouped by source recording (74 recordings) |
+| Fights | accuracy **76.7%**, ROC-AUC **0.854**; at the pipeline threshold 87/150 fights, 12/150 false (precision 0.88) | 300 real CCTV clips (Akti et al. 2019), 5-fold CV grouped by source recording (74 recordings); body pose fused with a pretrained surveillance VideoMAE used as-is. Pose alone: 74.7%, AUC 0.82 |
 | Weapons | AP50 handgun **0.51**, rifle **0.54**; 42/84 appearances alerted, 14 false alerts in 29 min | 3,511 frames from a camera never trained on (Univ. of Seville mock armed attack). Knives AP50 0.09: not claimed |
 | Door sensor from video | indoor precision **0.54**, recall **0.75** | ±2 s against human door-open labels, 3 indoor cameras; all 6 cameras: 0.21 / 0.52 |
 | Held-out day | staged theft missed, **0 false incidents** | 5 March, unseen and untuned; the suitcase sat at the frame edge with only its handle in view |
