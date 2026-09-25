@@ -156,3 +156,25 @@ def ask(question: str, events: list[Event], incidents: list[Incident], sim_t: fl
     if generated_by == "llm":
         _store(key, out)
     return out
+
+
+def warm(question: str, at_local: str) -> dict:
+    """Answer a rehearsed question at a replay moment ahead of time, so it is served from the cache on stage."""
+    from argus.config import site
+    from argus.fusion.engine import FusionEngine
+    from argus.ingest import demo_window, load_all_events
+    from argus.replay.clock import Replay
+
+    cfg = site()
+    events = load_all_events(cfg)
+    engine = FusionEngine(cfg)
+    replay = Replay(events, engine, *demo_window(cfg))
+    replay.seek(cfg.local_to_epoch(at_local))
+    return ask(question, events, list(engine.incidents.values()), replay.sim_t, cfg)
+
+
+if __name__ == "__main__":
+    # python -m argus.ask "2018-03-15 15:19:00" "What happened at the bus station?"   (run on Wi-Fi before the pitch)
+    import sys
+    out = warm(sys.argv[2], sys.argv[1])
+    print(f"[{out['generated_by']}] {out['answer']}")
