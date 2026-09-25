@@ -6,6 +6,7 @@ import { MetricsStrip } from './components/MetricsStrip'
 import { SiteMap } from './components/SiteMap'
 import { StreamPanel } from './components/StreamPanel'
 import { TopBar, type Role } from './components/TopBar'
+import { UploadView } from './components/UploadView'
 import { MOCK, post } from './lib'
 import type { ArgusEvent, Incident } from './types'
 import { useArgus } from './useArgus'
@@ -15,6 +16,7 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null)
   const [role, setRole] = useState<Role>('duty_officer')
   const [siloed, setSiloed] = useState(false)
+  const [view, setView] = useState<'console' | 'upload'>('console')
   const incidents = useMemo(() => Object.values(state.incidents), [state.incidents])
   const live = selected ? state.incidents[selected] ?? null : null
   // Jumping back in time rebuilds the replay, so the selected incident briefly does not exist yet.
@@ -45,7 +47,9 @@ export default function App() {
 
   return (
     <div className="flex h-full min-w-[1280px] flex-col">
-      <TopBar clock={state.clock} config={state.config} connected={state.connected} mock={state.mock} role={role} onRole={setRole} />
+      <TopBar clock={state.clock} config={state.config} connected={state.connected} mock={state.mock} role={role} onRole={setRole}
+        onAnalyse={() => setView(view === 'upload' ? 'console' : 'upload')} analysing={view === 'upload'} />
+      {view === 'upload' ? <UploadView config={state.config} onBack={() => setView('console')} /> : <>
       <MetricsStrip summary={state.summary} />
 
       <main className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.55fr)_minmax(0,0.9fr)_minmax(0,1.05fr)] gap-3 p-3">
@@ -61,6 +65,7 @@ export default function App() {
 
         <IncidentDetail incident={current} config={state.config} role={role} evidence={evidence} onJump={jumpTo} replayingLeadUp={replayingLeadUp} />
       </main>
+      </>}
 
       <footer className="flex shrink-0 items-center gap-4 px-5 py-2 text-[10.5px] text-[var(--color-fg-4)] hairline-t">
         <span>{state.config?.attribution}</span>

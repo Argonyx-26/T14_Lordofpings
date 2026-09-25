@@ -40,9 +40,9 @@ Ok "Python + CUDA"
 Step "3/7 Model weights (models\)"
 New-Item -ItemType Directory -Force models | Out-Null
 Push-Location models
-& $Py -c "from ultralytics import YOLO; YOLO('yolo11s.pt')"
+& $Py -c "from ultralytics import YOLO; YOLO('yolo11s.pt'); YOLO('yolo11m.pt')"
 Pop-Location
-if (Test-Path models\yolo11s.pt) { Ok "models\yolo11s.pt" } else { Fail "could not download yolo11s.pt" }
+if ((Test-Path models\yolo11s.pt) -and (Test-Path models\yolo11m.pt)) { Ok "models\yolo11s.pt, models\yolo11m.pt" } else { Fail "could not download yolo11s.pt" }
 
 Step "4/7 MEVA data (data\meva)"
 $v = @(Get-ChildItem data\meva\video\*.avi -ErrorAction SilentlyContinue).Count

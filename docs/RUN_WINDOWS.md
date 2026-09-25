@@ -47,6 +47,14 @@ Stop everything:
 powershell -ExecutionPolicy Bypass -File scripts\stop_demo.ps1
 ```
 
+## Analyse any video
+
+In the console, **Analyse a video** (top right) → drop any MP4/AVI/MOV/MKV/WebM (up to 2 GB). Argus runs the
+same tracker, valuables pass, rules and fusion as the demo and shows the clip with detections, a clickable event
+timeline and scored incidents. A 5-minute 1080p clip takes a few minutes on the RTX 5060. Door and walkway rules
+need a camera's zones, so they only run on the site's cameras; everything else runs on any footage. Analyses are
+kept in `data\uploads\` (not in git).
+
 ## Before going on stage
 
 - Laptop on charger, Windows power mode **Best performance**, **Energy Saver off**, sleep **Never**. With Energy

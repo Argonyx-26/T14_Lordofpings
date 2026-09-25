@@ -7,7 +7,7 @@ import contextlib
 import json
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -241,6 +241,56 @@ def tracks(stem: str):
     path = settings.TRACKS_DIR / f"{stem}.jsonl"
     if not path.exists() or path.resolve().parent != settings.TRACKS_DIR.resolve():
         raise HTTPException(404, "no tracks for this clip yet")
+    return FileResponse(path, media_type="application/x-ndjson")
+
+
+# ---- Analyse any uploaded video ------------------------------------------------------------
+def _job_or_404(job_id: str):
+    from argus.uploads import manager
+    job = manager().get(job_id)
+    if job is None:
+        raise HTTPException(404, "unknown upload")
+    return job
+
+
+@app.post("/api/uploads")
+def upload_video(file: UploadFile = File(...)):
+    from argus.uploads import manager
+    try:
+        job = manager().submit(file.file, file.filename or "")
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return job.__dict__
+
+
+@app.get("/api/uploads")
+def list_uploads():
+    from argus.uploads import manager
+    return [j.__dict__ for j in manager().list()]
+
+
+@app.get("/api/uploads/{job_id}")
+def get_upload(job_id: str):
+    from argus.uploads import manager
+    job = _job_or_404(job_id)
+    return {**job.__dict__, "result": manager().result(job) if job.status == "done" else None}
+
+
+@app.get("/api/uploads/{job_id}/video")
+def upload_video_file(job_id: str):
+    job = _job_or_404(job_id)
+    web = job.dir / "web.mp4"
+    if web.exists() and web.stat().st_size > 0:
+        return FileResponse(web, media_type="video/mp4")
+    return FileResponse(job.dir / job.meta["original"])
+
+
+@app.get("/api/uploads/{job_id}/tracks")
+def upload_tracks(job_id: str):
+    job = _job_or_404(job_id)
+    path = job.dir / f"{job.meta.get('stem', '')}.jsonl"
+    if not job.meta.get("stem") or not path.exists():
+        raise HTTPException(404, "not tracked yet")
     return FileResponse(path, media_type="application/x-ndjson")
 
 

@@ -1,4 +1,4 @@
-import { Pause, Play, RotateCcw } from 'lucide-react'
+import { Pause, Play, RotateCcw, Upload } from 'lucide-react'
 import { localTime, post } from '../lib'
 import type { Clock, SiteConfigView } from '../types'
 
@@ -11,11 +11,13 @@ interface Props {
   mock: boolean
   role: Role
   onRole: (r: Role) => void
+  onAnalyse: () => void
+  analysing: boolean
 }
 
 const SPEEDS = [1, 5, 10, 20, 30]
 
-export function TopBar({ clock, config, connected, mock, role, onRole }: Props) {
+export function TopBar({ clock, config, connected, mock, role, onRole, onAnalyse, analysing }: Props) {
   const control = (cmd: string, value?: number) => !mock && post('/api/replay', { cmd, value }).catch(console.error)
   const span = clock ? clock.end_t - clock.start_t : 1
   const pct = (t: number) => (clock ? Math.min(100, Math.max(0, ((t - clock.start_t) / span) * 100)) : 0)
@@ -59,6 +61,11 @@ export function TopBar({ clock, config, connected, mock, role, onRole }: Props) 
         <span className="num text-[22px] font-medium text-[var(--color-fg)]">{clock?.local.slice(11) ?? '--:--:--'}</span>
         <span className="mt-1 text-[10.5px] text-[var(--color-fg-3)]">{clock ? `${clock.local.slice(0, 10)} · site time · replay` : '—'}</span>
       </div>
+
+      <button className={`btn ${analysing ? 'border-[var(--color-fg-2)] text-[var(--color-fg)]' : ''}`} onClick={onAnalyse} disabled={mock}
+        title="Upload any video and analyse it with the same detectors and fusion">
+        <Upload size={13} strokeWidth={1.75} /> {analysing ? 'Back to console' : 'Analyse a video'}
+      </button>
 
       <div className="seg">
         {(['duty_officer', 'supervisor'] as Role[]).map((r) => (

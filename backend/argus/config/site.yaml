@@ -8,6 +8,7 @@ areas:                         # coarse areas used for fusion; GPS polygons live
   plaza:       {name: "School plaza & road",  criticality: 0.5}
   bus_station: {name: "Bus station",          criticality: 0.8}
   parking:     {name: "Parking areas",        criticality: 0.4}
+  upload:      {name: "Uploaded clip",        criticality: 0.6}   # any video analysed from the console
 
 cameras:                       # camera -> zone (fine) -> area (coarse); pos = [lat, lon] for the site map
   # Exterior positions (G336, G638) come from MEVA KRTD calibrations; indoor ones are placed inside their building.
