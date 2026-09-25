@@ -1,7 +1,11 @@
 # Argus project website
 
-One static page (`index.html` + `assets/` + `fonts/`), no build step and no internet needed: the fonts are
-bundled. It is not deployed anywhere; it runs on the demo laptop.
+Static pages (`index.html`, `judges.html`, `motion.js`, `assets/`, `fonts/`), no build step and no internet needed:
+the fonts are bundled.
+
+**Live:** https://argus-lordofpings.vercel.app (with the judges' page at `/judges.html` and the console's offline
+demo at `/console/`), published with `scripts/deploy_site.sh`, which also adds Raah analytics. The copies served on
+the demo laptop never load analytics or anything else from the internet.
 
 ## Open it on the demo laptop
 
@@ -11,10 +15,8 @@ bundled. It is not deployed anywhere; it runs on the demo laptop.
 
 ## Before showing it
 
-- Replace `assets/console-preview.jpg` with a real screenshot of the console on the demo laptop (full replay
-  loaded, an incident open): `Win + Shift + S`, saved at about 1536 px wide. Then remove "This preview uses the
-  console's sample-data mode" from the caption under it in `index.html`.
-- Check the team roles in the Team section.
+- `assets/console-preview.jpg` is a real capture of the console (done). Retake it if the console changes a lot.
+- After changing anything under `site/`, run `scripts/deploy_site.sh` so the live site matches.
 
 ## LinkedIn post (optional draft)
 

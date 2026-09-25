@@ -281,4 +281,4 @@ Pushed by Tanush (nothing in `backend/argus/vision/` changed). After `git pull`,
   `<p align="center"><img src="docs/readme/upload.png" alt="Threat assessment of an uploaded bus-station clip" width="100%" /></p>`
   (On my Mac the only real clip was a 45 s excerpt with nothing staged in it, which correctly came back "No threat found".)
 - **CI** (`.github/workflows/ci.yml`): backend pytest + frontend lint, types, tests, build on every push.
-- **Website hosting**: no admin access, so no GitHub Pages. `scripts/deploy_site.sh` builds `site/` + the console's offline demo (with Raah analytics) and publishes it to Vercel from a laptop; Tanush runs it. The demo laptop is unaffected: everything there stays offline.
+- **Website hosting**: no admin access, so no GitHub Pages. The site is **live at https://argus-lordofpings.vercel.app** (judges' page `/judges.html`, offline console demo `/console/`, Raah analytics working). `scripts/deploy_site.sh` republishes it from Tanush's Mac. The demo laptop is unaffected: everything there stays offline.

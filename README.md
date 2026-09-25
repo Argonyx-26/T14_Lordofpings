@@ -21,6 +21,8 @@
   <a href="#-run-it">Run it</a>
 </p>
 
+<p align="center"><sub>🌐 Live at <a href="https://argus-lordofpings.vercel.app/"><b>argus-lordofpings.vercel.app</b></a>: the website, the judges' page and the console's offline demo, no install needed.</sub></p>
+
 ---
 
 In thirty minutes of one ordinary afternoon, a school, its cafe, a plaza and a bus station produced **1,242 signals** from cameras, doors and people's phones. Separate systems watching each stream would have paged a guard **20 times**. Hidden among them: a bag stolen from a cafe table, then another, then a suitcase taken at the bus station and a package left behind on the platform.
@@ -227,7 +229,7 @@ Python 3.12 · FastAPI · Pydantic · Shapely · Ultralytics YOLO11 · ByteTrack
 
 ## ▶ Run it
 
-**Publish the website** (site + offline console demo, with Raah analytics) from any machine: `scripts/deploy_site.sh` (Vercel; see the script's header).
+**The website** is live at [argus-lordofpings.vercel.app](https://argus-lordofpings.vercel.app/) (with Raah analytics). To publish changes: `scripts/deploy_site.sh` (Vercel; see the script's header).
 
 **The live demo** needs nothing: [argus-lordofpings.vercel.app/console](https://argus-lordofpings.vercel.app/console/).
 
