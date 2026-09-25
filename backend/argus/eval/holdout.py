@@ -3,6 +3,8 @@
     python -m argus.eval.holdout                  # both windows (~22 clips, about 2 h on the RTX 5060)
     python -m argus.eval.holdout --set A          # a different day only (10 clips, ~55 min): includes 1 staged theft
     python -m argus.eval.holdout --set B          # a later window of the same day (12 clips, ~60 min)
+    python -m argus.eval.holdout --set C          # another day, all six cameras + GPS (18 clips, ~90 min)
+    python -m argus.eval.holdout --no-detect --set A B C   # re-score without the GPU; the report keeps every set
     python -m argus.eval.holdout --device mps     # force a device (default: whatever ultralytics picks, CUDA on the laptop)
 
 Everything lives under data_holdout/ (gitignored), so the demo's data/ is never touched. Each step skips clips it
@@ -15,6 +17,8 @@ Held-out windows (all rules, zones, thresholds and fusion settings exactly as tu
      they run as new cameras with no zones, exactly like an uploaded clip: no zones were drawn for the held-out view.
   B  2018-03-15 15:30-15:40, after the tuning window: all six demo cameras, with GPS. No staged theft or
      abandonment; it measures false incidents and the door sensor on unseen footage.
+  C  2018-03-12 10:00-10:15, another day: all six cameras (same views as 15 Mar, checked side by side), with GPS.
+     No staged theft or abandonment in the annotations; a second false-incident test on a different day.
 """
 import argparse
 import json
@@ -54,6 +58,17 @@ WINDOWS = {
               "2018-03-15.15-35-00.15-40-00.school.G421", "2018-03-15.15-35-01.15-40-01.school.G419",
               "2018-03-15.15-35-01.15-40-01.school.G420", "2018-03-15.15-35-00.15-40-00.school.G638",
               "2018-03-15.15-35-00.15-40-00.school.G336", "2018-03-15.15-35-00.15-40-00.bus.G331"]},
+    "C": {"label": "Another day (12 Mar, 10:00-10:15)", "local": ("2018-03-12 10:00:00", "2018-03-12 10:15:00"),
+          "gps": ["2018-03-12.10-00-00.gpx", "2018-03-12.10-05-00.gpx", "2018-03-12.10-10-00.gpx"], "clips": [
+              "2018-03-12.10-00-01.10-05-01.school.G421", "2018-03-12.10-00-01.10-05-01.school.G419",
+              "2018-03-12.10-00-00.10-05-00.school.G420", "2018-03-12.10-00-01.10-05-00.school.G638",
+              "2018-03-12.10-00-02.10-05-02.school.G336", "2018-03-12.10-00-00.10-05-00.bus.G331",
+              "2018-03-12.10-05-01.10-10-01.school.G421", "2018-03-12.10-05-01.10-10-01.school.G419",
+              "2018-03-12.10-05-00.10-10-00.school.G420", "2018-03-12.10-05-01.10-10-01.school.G638",
+              "2018-03-12.10-05-02.10-10-02.school.G336", "2018-03-12.10-05-00.10-10-00.bus.G331",
+              "2018-03-12.10-10-01.10-15-00.school.G421", "2018-03-12.10-10-01.10-15-01.school.G419",
+              "2018-03-12.10-10-00.10-15-00.school.G420", "2018-03-12.10-10-01.10-15-01.school.G638",
+              "2018-03-12.10-10-02.10-15-02.school.G336", "2018-03-12.10-10-00.10-15-00.bus.G331"]},
 }
 
 ROOT = settings.DATA_DIR
@@ -216,6 +231,10 @@ def evaluate_window(window: str) -> dict:
 
 
 def write_report(results: dict) -> Path:
+    prev = ROOT / "results.json"
+    if prev.exists():                          # keep sets scored in earlier runs; this run's sets replace theirs
+        results = {**json.loads(prev.read_text(encoding="utf-8")), **results}
+        results = {k: results[k] for k in sorted(results)}
     tuning = settings.REPO_ROOT / "data" / "cache" / "metrics.json"
     rows = []
     if tuning.exists():
@@ -264,12 +283,12 @@ def write_report(results: dict) -> Path:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--set", choices=["A", "B", "all"], default="all")
+    ap.add_argument("--set", nargs="+", choices=["A", "B", "C", "all"], default=["all"])
     ap.add_argument("--device", default=None, help="e.g. cuda:0, mps, cpu (default: ultralytics' choice)")
     ap.add_argument("--no-detect", action="store_true", help="only (re)score clips already detected")
     ap.add_argument("--only", nargs="*", help="restrict to these cameras (a quick check, e.g. --only G331)")
     args = ap.parse_args(argv)
-    sets = ["A", "B"] if args.set == "all" else [args.set]
+    sets = list(WINDOWS) if "all" in args.set else list(dict.fromkeys(args.set))
     log(f"data root: {ROOT}")
     results = {}
     for key in sets:
