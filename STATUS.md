@@ -1,11 +1,11 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 17:06 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 17:42 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
 - ✅ §2 laptop updated (setup 7/7, 25 tests, `-Prepare -Live`) · §8 Gemini plain-language briefs · §3 upload test (HANDOFF.md §9) · §4 real website screenshot (HANDOFF.md §10).
-- ⏳ Waiting on Jack: the team roles for Utkarsh and Ojus on the site.
+- ✅ The site's team section is Tanush + Mohit only (Utkarsh and Ojus didn't come). **Tanush: the pitch needs a two-speaker split, proposed in HANDOFF.md §10.**
 - Next for Jack: §5 2-minute video (by 07:00), §6 Wi-Fi-off run-through, §7 slides 5–6.
 
 ## Demo laptop
@@ -23,12 +23,12 @@ _Updated Fri 25 Sep 17:06 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+e209fdf Review fixes: resilient replay loop, safe broadcasts, read endpoints on the event loop, bounded buffers, thread-safe upload manager, ffmpeg failure handling, upload duration fallback, memoised upload overlay; dead code removed; repo-relative transcode.ps1; stale docs updated
+79ffd6d Site: team is Tanush and Mohit (Utkarsh and Ojus did not attend), 2-column team grid; HANDOFF: two-speaker split for the pitch
 4d234ed Site: real console screenshot (bus-station incident at 15:18:40, Gemini brief), caption no longer says sample data; HANDOFF Â§10
 35f922c Uploads stamped at noon so unknown time of day never gets the night factor (per Jack's GPU test); test; note in HANDOFF_TO_JACK
 c1f7f0d HANDOFF: GPU results of Analyse a video (bus 318 s, abandonment found, incident 72; cafe 298 s, 1 of 2 thefts, below watch); upload night-factor note
 af10032 Demo video script as its own file: prep checklist, shot list with timings and voice-over, Clipchamp steps, honesty rules
 784a0a1 Briefs in plain words (phones, bags changing hands; no internal type names), warm.py provider-aware key warning, setup_windows bootstraps pip in a uv venv; HANDOFF update
 57485e5 HANDOFF_TO_JACK.md: what changed on Tanush's side and everything left to do on the demo laptop, in order
-925a278 HANDOFF: mark npm-order and 20x run-sheet items resolved (a28ae32)
-b4284fc Camera wall: smooth replay at 2-20x and boxes on the presented frame
 ```
