@@ -49,7 +49,9 @@ powershell -ExecutionPolicy Bypass -File scripts\stop_demo.ps1
 
 ## Before going on stage
 
-- Laptop on charger, Windows power mode **Best performance**, sleep **Never**.
+- Laptop on charger, Windows power mode **Best performance**, **Energy Saver off**, sleep **Never**. With Energy
+  Saver on, Windows throttles the minimized live tile (measured 30 → 16–19 fps; `live.py` now opts out of
+  background power throttling, which gets it back to 23–27 fps, but not 30). Close games and launchers (Roblox, Discord overlay).
 - NVIDIA Control Panel → Manage 3D settings → Program settings → `.venv\Scripts\python.exe` →
   **High-performance NVIDIA processor**.
 - Run step 2 once with internet so every brief is cached, then **turn Wi-Fi off and run step 3** to prove the

@@ -9,11 +9,11 @@ Presentation & Storytelling, Business Impact & Market Potential.
 | Placeholder | Where it comes from | Current (Fri 14:00) |
 |---|---|---|
 | `[CAUGHT]` staged incidents caught | `ground_truth_alerted / ground_truth_total` | 4/5 |
-| `[FALSE]` false incidents in the 30-min window | incidents with no ground truth nearby | 2 false bag alerts |
+| `[FALSE]` false incidents in the 30-min window | incidents with no ground truth nearby | 0 false incidents (2 stray camera bag alerts: one joined a true incident, one stayed a sub-watch candidate) |
 | `[RAW] → [SILO] → [INC]` | `reduction` block | 1,070+ → … → … |
-| `[DOOR_P] / [DOOR_R]` door detection precision / recall | `door_detection` | P 0.50 |
+| `[DOOR_P] / [DOOR_R]` door detection precision / recall | `door_detection` | Indoor door-leaf sensor (G419/G420/G421): P 0.54 R 0.75. All 6 cameras: P 0.21 R 0.52. Quote both; 0.50 excluded G331 and isn't a defensible number |
 | `[LAT]` median seconds from first signal to incident | `latency_s` | … |
-| `[FPS]` live inference fps on the RTX 5060 | live tile stats | … |
+| `[FPS]` live inference fps on the RTX 5060 | live tile stats | 30 fps (clip's real-time cap), 13–23 ms/frame; needs Energy Saver off |
 
 **Speakers:** A = Tanush (lead: opens and closes) · B = demo driver · C = vision/technical (the teammate who built
 the pipeline) · D = business. Swap names as you like; every member must speak.

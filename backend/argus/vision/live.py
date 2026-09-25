@@ -35,6 +35,22 @@ OUT_W = 960
 ATTRIBUTION = "MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0"
 
 
+def no_power_throttling() -> None:
+    """Windows 11 power-throttles (EcoQoS) processes without a foreground window, and run_demo.ps1 starts
+    this one minimized: that alone halves the fps. Opt this process out. No-op elsewhere."""
+    if sys.platform != "win32":
+        return
+    import ctypes
+
+    class State(ctypes.Structure):
+        _fields_ = [("Version", ctypes.c_ulong), ("ControlMask", ctypes.c_ulong), ("StateMask", ctypes.c_ulong)]
+
+    k32 = ctypes.windll.kernel32
+    k32.GetCurrentProcess.restype = ctypes.c_void_p
+    s = State(1, 1, 0)  # version 1, control EXECUTION_SPEED, state off -> never throttle
+    k32.SetProcessInformation(ctypes.c_void_p(k32.GetCurrentProcess()), 4, ctypes.byref(s), ctypes.sizeof(s))  # 4 = ProcessPowerThrottling
+
+
 class Live:
     def __init__(self, source, label: str, polygons: dict, weights: str, imgsz: int, header: bool = False):
         self.source, self.label, self.polygons, self.header = source, label, polygons, header
@@ -143,6 +159,7 @@ if __name__ == "__main__":
     ap.add_argument("--port", type=int, default=8001)
     ap.add_argument("--header", action="store_true", help="burn an fps/latency header into the stream (standalone use)")
     a = ap.parse_args()
+    no_power_throttling()
     if a.source is not None:
         src = int(a.source) if a.source.isdigit() else a.source
         label, polys = (f"webcam {src}" if isinstance(src, int) else pathlib.Path(src).stem), {}
