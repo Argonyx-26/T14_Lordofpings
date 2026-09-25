@@ -35,6 +35,10 @@ if ($Prepare) {
     & $Py backend\argus\vision\rules.py
     if ($LASTEXITCODE -ne 0) { Write-Host "rules failed" -ForegroundColor Red; exit 1 }
 
+    Step "Evidence thumbnails: one still per camera event -> data\meva\web\thumbs"
+    & $Py backend\argus\vision\thumbs.py
+    if ($LASTEXITCODE -ne 0) { Write-Host "thumbnails failed (the console still works without them)" -ForegroundColor Yellow }
+
     Step "Browser MP4s for the camera wall (only missing ones)"
     New-Item -ItemType Directory -Force data\meva\web | Out-Null
     Get-ChildItem data\meva\video\*.avi | ForEach-Object {

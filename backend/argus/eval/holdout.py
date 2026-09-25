@@ -11,6 +11,8 @@ has already done, so the run can be stopped and resumed. The results are written
 Held-out windows (all rules, zones, thresholds and fusion settings exactly as tuned on 2018-03-15 14:50-15:20):
   A  2018-03-05 13:10-13:20, a different day: G421 G419 G420 G336 G331. One staged theft (bus station, 13:18:27).
      No GPS is published for this slot, so fusion there sees cameras and doors only (a harder test).
+     G331 and G336 were re-aimed between 5 and 15 March (the 15 Mar door zones land on the ceiling), so on 5 March
+     they run as new cameras with no zones, exactly like an uploaded clip: no zones were drawn for the held-out view.
   B  2018-03-15 15:30-15:40, after the tuning window: all six demo cameras, with GPS. No staged theft or
      abandonment; it measures false incidents and the door sensor on unseen footage.
 """
@@ -37,7 +39,7 @@ GPS_ZIP = "https://gitlab.kitware.com/meva/meva-data-repo/-/raw/master/metadata/
 
 WINDOWS = {
     "A": {"label": "Different day (5 Mar, 13:10-13:20)", "local": ("2018-03-05 13:10:00", "2018-03-05 13:20:00"),
-          "gps": [], "clips": [
+          "gps": [], "moved": ["G331", "G336"], "clips": [
               "2018-03-05.13-10-00.13-15-00.school.G421", "2018-03-05.13-10-01.13-15-01.school.G419",
               "2018-03-05.13-10-01.13-15-01.school.G420", "2018-03-05.13-10-00.13-15-00.school.G336",
               "2018-03-05.13-10-01.13-15-01.bus.G331",
@@ -104,7 +106,14 @@ def fetch(window: str, clips: list[str]) -> None:
                     out.write_bytes(z.read(name))
 
 
-def detect(clips: list[str], device: str | None) -> None:
+def _unzoned_cfg(cam: str) -> dict:
+    """A re-aimed camera: its site.yaml zone and area, but none of the pixel polygons drawn for the old view
+    (door zones, door leaves, bag-ignore areas). The same as an uploaded clip from an unknown camera."""
+    from argus.config import site as _site
+    return dict(_site().camera(cam))
+
+
+def detect(clips: list[str], device: str | None, moved: tuple[str, ...] = ()) -> None:
     """The demo's vision pipeline, unchanged: main pass, valuables pass, door-leaf sensor."""
     import numpy as np
 
@@ -120,7 +129,8 @@ def detect(clips: list[str], device: str | None) -> None:
             _main_pass(clip, main, device)
         if not bags.exists():
             _bag_pass(clip, bags, device)
-        leaves = camera_cfg(clip_info(stem).camera).get("door_leaf") or {}
+        cam = clip_info(stem).camera
+        leaves = {} if cam in moved else camera_cfg(cam).get("door_leaf") or {}
         if leaves and not doors.exists():
             frames, sig = door_sensor.signals(clip, leaves)
             np.savez(doors, frames=frames, **sig)
@@ -171,15 +181,20 @@ def _mirror(clip: Path, out: Path, device: str, track: bool) -> None:
     tmp.replace(out)
 
 
-def camera_events(clips: list[str]) -> list[Event]:
+def camera_events(clips: list[str], moved: tuple[str, ...] = ()) -> list[Event]:
     from collections import Counter
 
-    from argus.vision.rules import ClipRules
+    from argus.vision import rules
     events, counters = [], Counter()
-    for stem in clips:
-        for e in sorted(ClipRules(TRACKS / f"{stem}.jsonl").run(), key=lambda e: e["t"]):
-            counters[e["sensor_id"]] += 1
-            events.append(Event(event_id=f"cctv-{e['sensor_id']}-{counters[e['sensor_id']]:06d}", **e))
+    zoned = rules.camera_cfg
+    try:
+        rules.camera_cfg = lambda cam: _unzoned_cfg(cam) if cam in moved else zoned(cam)
+        for stem in clips:
+            for e in sorted(rules.ClipRules(TRACKS / f"{stem}.jsonl").run(), key=lambda e: e["t"]):
+                counters[e["sensor_id"]] += 1
+                events.append(Event(event_id=f"cctv-{e['sensor_id']}-{counters[e['sensor_id']]:06d}", **e))
+    finally:
+        rules.camera_cfg = zoned
     return events
 
 
@@ -189,7 +204,7 @@ def evaluate_window(window: str) -> dict:
     start, end = (cfg.local_to_epoch(t) for t in w["local"])
     ann_dir = ROOT / "meva" / "ann" / window
     gps_dir = ROOT / "meva" / "gps" / window
-    events = camera_events(w["clips"])
+    events = camera_events(w["clips"], tuple(w.get("moved", ())))
     events += load_door_events(ann_dir, cfg) if ann_dir.exists() else []
     events += load_device_events(gps_dir, cfg, start, end) if gps_dir.exists() else []
     events = [e for e in events if start <= e.t <= end]
@@ -232,6 +247,9 @@ def write_report(results: dict) -> Path:
     lines += ["", "Notes:"]
     for key, m in results.items():
         lines.append(f"- Held-out {key} streams: {', '.join(m['streams'])}.")
+        if WINDOWS[key].get("moved"):
+            lines.append(f"  - Re-aimed since 15 Mar, so run with no zones (like an uploaded clip): "
+                         f"{', '.join(WINDOWS[key]['moved'])}.")
         for g in m["ground_truth"]:
             lines.append(f"  - Staged {g['kind']} at {g['time']} ({g['camera']}): **{g['result']}**, "
                          f"incident score {g['peak_score']}, sources {', '.join(g['sources']) or 'none'}.")
@@ -261,7 +279,7 @@ def main(argv=None) -> int:
         log(f"window {key}: {WINDOWS[key]['label']}, {len(clips)} clips")
         fetch(key, clips)
         if not args.no_detect:
-            detect(clips, args.device)
+            detect(clips, args.device, tuple(WINDOWS[key].get("moved", ())))
         results[key] = evaluate_window(key)
         m = results[key]
         log(f"window {key}: caught {m['ground_truth_alerted']}/{m['ground_truth_total']}, "

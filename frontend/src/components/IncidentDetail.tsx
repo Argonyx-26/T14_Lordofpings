@@ -1,6 +1,6 @@
 import { ArrowUpRight, Check, CornerDownRight, ShieldAlert, X } from 'lucide-react'
 import { useState } from 'react'
-import { MOCK, PROVENANCE_LABEL, SOURCE_LABEL, localTime, post, scoreColor, severityLabel } from '../lib'
+import { API, MOCK, PROVENANCE_LABEL, SOURCE_LABEL, localTime, post, scoreColor, severityLabel } from '../lib'
 import type { ArgusEvent, Incident, SiteConfigView } from '../types'
 import type { Role } from './TopBar'
 
@@ -11,6 +11,22 @@ interface Props {
   evidence: ArgusEvent[]
   onJump: (e: ArgusEvent) => void
   replayingLeadUp?: boolean
+}
+
+// A still of what the camera rule saw (backend/argus/vision/thumbs.py), hidden when there is none (mock, uploads).
+function hasStill(e: ArgusEvent): boolean {
+  const b = e.media?.bbox
+  return e.source === 'cctv' && e.type !== 'occupancy' && !!b && b[2] > b[0] && b[3] > b[1]
+}
+
+function Still({ e, className }: { e: ArgusEvent; className: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed || MOCK) return null
+  return (
+    <img src={`${API}/media/thumbs/${e.event_id}.jpg`} alt={`${e.type.replaceAll('_', ' ')} on ${e.sensor_id}`}
+      loading="lazy" onError={() => setFailed(true)}
+      className={`rounded-[3px] bg-[var(--color-surface-3)] object-cover ${className}`} />
+  )
 }
 
 export function IncidentDetail({ incident, config, role, evidence, onJump, replayingLeadUp }: Props) {
@@ -45,6 +61,7 @@ export function IncidentDetail({ incident, config, role, evidence, onJump, repla
     ['Operator feedback', `×${b.feedback}`, 1 - b.feedback, b.feedback < 1 ? 'similar alerts were dismissed' : 'no dismissals'],
   ]
   const action = incident.brief ? config?.playbook[incident.brief.action_id] ?? incident.brief.action_id : null
+  const keyFrame = evidence.filter(hasStill).reduce<ArgusEvent | null>((a, e) => (!a || e.severity > a.severity ? e : a), null)
 
   return (
     <section className="surface flex min-h-0 min-w-0 flex-col">
@@ -120,6 +137,17 @@ export function IncidentDetail({ incident, config, role, evidence, onJump, repla
 
         <div>
           <div className="eyebrow mb-2.5">Evidence · click to replay the moment</div>
+          {keyFrame && (
+            <button key={keyFrame.event_id} onClick={() => onJump(keyFrame)} title="Replay from 2 s before this"
+              className="group mb-3 block w-full text-left">
+              <Still e={keyFrame} className="aspect-video w-full" />
+              <span className="mt-1 block text-[11px] text-[var(--color-fg-3)]">
+                <span className="num">{localTime(keyFrame.t)}</span> · {keyFrame.type.replaceAll('_', ' ')} ·{' '}
+                {config?.cameras[keyFrame.sensor_id]?.label ?? keyFrame.sensor_id}
+                <span className="opacity-0 transition group-hover:opacity-100"> · replay</span>
+              </span>
+            </button>
+          )}
           <ol className="relative ml-1 border-l border-[var(--color-hair-2)]">
             {evidence.map((e) => (
               <li key={e.event_id}>
@@ -135,6 +163,7 @@ export function IncidentDetail({ incident, config, role, evidence, onJump, repla
                       {SOURCE_LABEL[e.source]} · <span className="num">{e.sensor_id}</span> · {PROVENANCE_LABEL[e.provenance]}
                     </span>
                   </span>
+                  {hasStill(e) && <Still key={e.event_id} e={e} className="h-[36px] w-[64px] shrink-0" />}
                   <span className="num pt-px text-[11.5px] text-[var(--color-fg-2)]">{e.severity.toFixed(2)}</span>
                   <ArrowUpRight size={13} strokeWidth={1.75} className="mt-0.5 text-[var(--color-fg-4)] opacity-0 transition group-hover:opacity-100" />
                 </button>
