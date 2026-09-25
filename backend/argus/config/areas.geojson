@@ -1,14 +1,250 @@
 {
-  "type": "FeatureCollection",
-  "_note": "PROVISIONAL. Rectangles placed from MEVA GPS fix density plus the MEVA site map (north = right on the map). Refine in geojson.io over satellite imagery. Coordinates are [lon, lat].",
-  "features": [
-    {"type": "Feature", "properties": {"area": "school"},
-     "geometry": {"type": "Polygon", "coordinates": [[[-85.5292, 39.0499], [-85.5280, 39.0499], [-85.5280, 39.0510], [-85.5292, 39.0510], [-85.5292, 39.0499]]]}},
-    {"type": "Feature", "properties": {"area": "plaza"},
-     "geometry": {"type": "Polygon", "coordinates": [[[-85.5300, 39.0499], [-85.5292, 39.0499], [-85.5292, 39.0510], [-85.5300, 39.0510], [-85.5300, 39.0499]]]}},
-    {"type": "Feature", "properties": {"area": "bus_station"},
-     "geometry": {"type": "Polygon", "coordinates": [[[-85.5302, 39.0486], [-85.5292, 39.0486], [-85.5292, 39.0496], [-85.5302, 39.0496], [-85.5302, 39.0486]]]}},
-    {"type": "Feature", "properties": {"area": "parking"},
-     "geometry": {"type": "Polygon", "coordinates": [[[-85.5292, 39.0492], [-85.5278, 39.0492], [-85.5278, 39.0499], [-85.5292, 39.0499], [-85.5292, 39.0492]]]}}
-  ]
+ "type": "FeatureCollection",
+ "_note": "Refined 2026-09-25 from three independent references: Esri World Imagery, OpenStreetMap building footprints, and MEVA KRTD camera calibrations (ENU metres, origin 39.04977294, -85.52924953) projected to the ground plane; cross-checked against the density of the real MEVA GPS fixes. Areas do not overlap. Coordinates are [lon, lat].",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "school",
+    "source": "OSM footprint of '5101 Trio Academy' (MEVA school: cafe G421, doors G419/G420) + 6 m for GPS error and entrances"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -85.5284833,
+       39.0501956
+      ],
+      [
+       -85.5289757,
+       39.0502013
+      ],
+      [
+       -85.5289731,
+       39.0504828
+      ],
+      [
+       -85.5293,
+       39.0504806
+      ],
+      [
+       -85.5292974,
+       39.0507587
+      ],
+      [
+       -85.5281726,
+       39.050747
+      ],
+      [
+       -85.5281759,
+       39.0507179
+      ],
+      [
+       -85.5281428,
+       39.0507187
+      ],
+      [
+       -85.5281528,
+       39.0504984
+      ],
+      [
+       -85.5281887,
+       39.0504961
+      ],
+      [
+       -85.5281932,
+       39.0504655
+      ],
+      [
+       -85.5284688,
+       39.0504726
+      ],
+      [
+       -85.5284833,
+       39.0501956
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "plaza",
+    "source": "Ground footprints of cameras G336 and G638 (MEVA KRTD calibration), semicircular drive west of the school, minus the school"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -85.5291875,
+       39.0501001
+      ],
+      [
+       -85.5292979,
+       39.0501089
+      ],
+      [
+       -85.529404,
+       39.0501343
+      ],
+      [
+       -85.5294695,
+       39.0501621
+      ],
+      [
+       -85.5294778,
+       39.0501996
+      ],
+      [
+       -85.5292829,
+       39.0504807
+      ],
+      [
+       -85.5289731,
+       39.0504828
+      ],
+      [
+       -85.5289757,
+       39.0502013
+      ],
+      [
+       -85.5289493,
+       39.0502009
+      ],
+      [
+       -85.5289747,
+       39.0501434
+      ],
+      [
+       -85.5290231,
+       39.0501186
+      ],
+      [
+       -85.5291875,
+       39.0501001
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "bus_station",
+    "source": "OSM footprint of 'Bus Stop' + 12 m, merged with ground footprints of bus cameras G340/G505/G506/G509 (KRTD)"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -85.5295879,
+       39.0487547
+      ],
+      [
+       -85.5296403,
+       39.0488372
+      ],
+      [
+       -85.5297196,
+       39.0491976
+      ],
+      [
+       -85.5296759,
+       39.0494352
+      ],
+      [
+       -85.5296334,
+       39.0494756
+      ],
+      [
+       -85.5295692,
+       39.0494908
+      ],
+      [
+       -85.529505,
+       39.0494756
+      ],
+      [
+       -85.5291829,
+       39.049285
+      ],
+      [
+       -85.529073,
+       39.0491845
+      ],
+      [
+       -85.529048,
+       39.0491336
+      ],
+      [
+       -85.5291871,
+       39.0488265
+      ],
+      [
+       -85.5295879,
+       39.0487547
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "parking",
+    "source": "Ground footprints of school cameras G328/G339/G424 (KRTD) + central staging lot (MEVA site-map area 4), minus other areas and buildings"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -85.5289855,
+       39.0501319
+      ],
+      [
+       -85.5289493,
+       39.0502009
+      ],
+      [
+       -85.5284833,
+       39.0501956
+      ],
+      [
+       -85.5284688,
+       39.0504726
+      ],
+      [
+       -85.52825,
+       39.050467
+      ],
+      [
+       -85.52825,
+       39.04925
+      ],
+      [
+       -85.5291446,
+       39.04925
+      ],
+      [
+       -85.5292551,
+       39.0500102
+      ],
+      [
+       -85.5291175,
+       39.0501035
+      ],
+      [
+       -85.5289855,
+       39.0501319
+      ]
+     ]
+    ]
+   }
+  }
+ ]
 }
