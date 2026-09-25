@@ -1,5 +1,6 @@
+import { Eye, EyeOff, Radio } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { API, clipAt, clipWindow } from '../lib'
+import { API, clipAt, clipWindow, scoreColor } from '../lib'
 import { CLASS_STYLE, detsAt, loadTracks, type FrameIndex } from '../tracks'
 import type { ArgusEvent, Clock, Incident, SiteConfigView } from '../types'
 
@@ -20,31 +21,42 @@ export function CameraWall({ config, clock, incidents, evidence, focus, onFocus 
   const [mode, setMode] = useState<'replay' | 'live'>('replay')
   const [boxes, setBoxes] = useState(true)
   if (!config) return null
-  const hotAreas = new Set(incidents.filter((i) => ['open', 'escalated'].includes(i.status)).map((i) => i.area))
+  const hot = new Map<string, Incident>()
+  for (const i of incidents) {
+    if (!['open', 'escalated', 'ack'].includes(i.status)) continue
+    const prev = hot.get(i.area)
+    if (!prev || i.score > prev.score) hot.set(i.area, i)
+  }
   const cams = WALL.filter((c) => config.cameras[c])
   const ordered = focus && cams.includes(focus) ? [focus, ...cams.filter((c) => c !== focus)] : cams
 
   return (
-    <section className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2 px-1">
-        <span className="label flex-1">{mode === 'replay' ? 'Camera wall · replay of real MEVA footage' : 'Live inference · YOLO11 + ByteTrack in real time'}</span>
-        {mode === 'replay' && (
-          <button onClick={() => setBoxes(!boxes)} className="rounded bg-[var(--color-panel-2)] px-2 py-0.5 text-[11px] hover:bg-[var(--color-line)]">
-            {boxes ? 'Hide detections' : 'Show detections'}
+    <section className="flex flex-col gap-2">
+      <div className="flex h-7 items-center gap-3">
+        <span className="text-[13px] font-medium text-[var(--color-fg)]">Cameras</span>
+        <span className="text-[11px] text-[var(--color-fg-3)]">
+          {mode === 'replay' ? 'Replay of real MEVA footage · click a camera to enlarge' : 'Real-time YOLO11 + ByteTrack on this laptop\'s GPU'}
+        </span>
+        <div className="ml-auto flex items-center gap-2">
+          {mode === 'replay' && (
+            <button className="btn" onClick={() => setBoxes(!boxes)}>
+              {boxes ? <Eye size={13} strokeWidth={1.75} /> : <EyeOff size={13} strokeWidth={1.75} />} Detections
+            </button>
+          )}
+          <button className={`btn ${mode === 'live' ? 'border-[var(--color-crit)] text-[var(--color-fg)]' : ''}`}
+            onClick={() => setMode(mode === 'replay' ? 'live' : 'replay')}>
+            <Radio size={13} strokeWidth={1.75} className={mode === 'live' ? 'text-[var(--color-crit)] breathe' : ''} />
+            {mode === 'live' ? 'Live · back to replay' : 'Live inference'}
           </button>
-        )}
-        <button onClick={() => setMode(mode === 'replay' ? 'live' : 'replay')}
-          className={`rounded px-2 py-0.5 text-[11px] ${mode === 'live' ? 'bg-[var(--color-crit)] text-white' : 'bg-[var(--color-panel-2)] hover:bg-[var(--color-line)]'}`}>
-          {mode === 'live' ? '● LIVE — back to replay' : 'Live inference'}
-        </button>
+        </div>
       </div>
       {mode === 'live' ? (
         <LiveTile />
       ) : (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           {ordered.map((cam) => (
             <Tile key={cam} camera={cam} config={config} clock={clock} boxes={boxes}
-              hot={hotAreas.has(config.cameras[cam].area)} focused={cam === focus}
+              incident={hot.get(config.cameras[cam].area) ?? null} focused={cam === focus}
               evidence={evidence.filter((e) => e.source === 'cctv' && e.sensor_id === cam && e.media?.bbox)}
               onClick={() => onFocus(cam === focus ? null : cam)} />
           ))}
@@ -58,14 +70,14 @@ interface TileProps {
   camera: string
   config: SiteConfigView
   clock: Clock | null
-  hot: boolean
+  incident: Incident | null
   focused: boolean
   boxes: boolean
   evidence: ArgusEvent[]
   onClick: () => void
 }
 
-function Tile({ camera, config, clock, hot, focused, boxes, evidence, onClick }: TileProps) {
+function Tile({ camera, config, clock, incident, focused, boxes, evidence, onClick }: TileProps) {
   const video = useRef<HTMLVideoElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const [tracks, setTracks] = useState<FrameIndex | null>(null)
@@ -140,26 +152,33 @@ function Tile({ camera, config, clock, hot, focused, boxes, evidence, onClick }:
     return () => cancelAnimationFrame(raf)
   }, [tracks, boxes, evidence, focused, stem, config.fps])
 
+  const accent = incident ? scoreColor(incident.score, config) : null
   return (
     <div onClick={onClick}
-      className={`panel relative cursor-pointer overflow-hidden bg-black ${focused ? 'col-span-2 row-span-2' : ''} ${hot ? 'ring-2 ring-[var(--color-high)]' : ''}`}
-      style={{ aspectRatio: '16 / 9' }}>
+      className={`group relative cursor-pointer overflow-hidden rounded-md bg-black ${focused ? 'col-span-2 row-span-2' : ''}`}
+      style={{ aspectRatio: '16 / 9', boxShadow: accent ? `inset 0 0 0 1.5px ${accent}` : 'inset 0 0 0 1px var(--color-hair)' }}>
       {stem ? (
         <>
           <video ref={video} key={stem} src={`${API}/media/${stem}.mp4`} muted playsInline className="absolute inset-0 h-full w-full object-contain" />
           <canvas ref={canvas} className="pointer-events-none absolute inset-0 h-full w-full" />
         </>
       ) : (
-        <div className="flex h-full items-center justify-center text-xs text-[var(--color-dim)]">
-          {config.clips.length ? 'No footage for this camera at this time' : 'Footage not loaded (data/meva/web)'}
+        <div className="flex h-full items-center justify-center px-4 text-center text-[11px] text-[var(--color-fg-4)]">
+          {config.clips.length ? 'No recording at this moment' : 'Footage not loaded'}
         </div>
       )}
-      <div className="absolute left-0 top-0 flex gap-2 bg-black/60 px-2 py-1 text-[11px]">
-        <span className="num font-semibold">{camera}</span>
-        <span className="text-[var(--color-mute)]">{info.label}</span>
-        {stem && !tracks && <span className="text-[var(--color-dim)]">no tracks</span>}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end gap-2 bg-gradient-to-t from-black/80 to-transparent px-2.5 pb-1.5 pt-6">
+        <span className="num text-[11px] font-medium text-[var(--color-fg)]">{camera}</span>
+        <span className="truncate text-[11px] text-[var(--color-fg-2)]">{info.label}</span>
+        {stem && !tracks && <span className="ml-auto text-[10px] text-[var(--color-fg-4)]">no detections cached</span>}
       </div>
-      {hot && <div className="pulse absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[var(--color-high)]" />}
+      {incident && accent && (
+        <div className="absolute right-1.5 top-1.5 flex items-center gap-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10.5px]">
+          <span className="h-1.5 w-1.5 rounded-full breathe" style={{ background: accent }} />
+          <span className="num" style={{ color: accent }}>{incident.score}</span>
+          <span className="text-[var(--color-fg-2)]">{incident.incident_id}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -182,22 +201,25 @@ function LiveTile() {
 
   if (down) {
     return (
-      <div className="panel flex aspect-video items-center justify-center p-6 text-center text-sm text-[var(--color-dim)]">
-        Live inference is not running. Start it with <code className="mx-1 text-[var(--color-ink)]">scripts\run_demo.ps1 -Live</code>
+      <div className="flex aspect-video flex-col items-center justify-center gap-2 rounded-md text-center" style={{ boxShadow: 'inset 0 0 0 1px var(--color-hair)' }}>
+        <Radio size={18} strokeWidth={1.5} className="text-[var(--color-fg-4)]" />
+        <span className="text-[12px] text-[var(--color-fg-2)]">Live inference isn't running</span>
+        <span className="num text-[11px] text-[var(--color-fg-4)]">scripts\run_demo.ps1 -Live</span>
       </div>
     )
   }
   return (
-    <div className="panel relative overflow-hidden bg-black">
+    <div className="relative overflow-hidden rounded-md bg-black" style={{ boxShadow: 'inset 0 0 0 1px var(--color-hair)' }}>
       <img src={`${LIVE_URL}/live.mjpg`} alt="Live inference stream" className="aspect-video w-full object-contain" />
-      <div className="absolute left-0 top-0 flex items-center gap-3 bg-black/70 px-2 py-1 text-[11px]">
-        <span className="pulse h-2 w-2 rounded-full bg-[var(--color-crit)]" />
-        <span className="font-semibold">LIVE</span>
-        <span className="text-[var(--color-mute)]">{stats?.source}</span>
-        <span className="num">{stats?.fps ?? '–'} fps</span>
-        <span className="num text-[var(--color-mute)]">{stats?.infer_ms ?? '–'} ms/frame</span>
+      <div className="absolute inset-x-0 top-0 flex items-center gap-4 bg-gradient-to-b from-black/80 to-transparent px-3 pb-6 pt-2 text-[11px]">
+        <span className="flex items-center gap-1.5 font-medium text-[var(--color-fg)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-crit)] breathe" /> LIVE
+        </span>
+        <span className="text-[var(--color-fg-2)]">{stats?.source}</span>
+        <span className="num ml-auto text-[var(--color-fg)]">{stats?.fps ?? '–'} <span className="text-[var(--color-fg-3)]">fps</span></span>
+        <span className="num text-[var(--color-fg)]">{stats?.infer_ms ?? '–'} <span className="text-[var(--color-fg-3)]">ms / frame</span></span>
         {Object.entries(stats?.counts ?? {}).map(([k, v]) => (
-          <span key={k} className="num text-[var(--color-mute)]">{k} {v}</span>
+          <span key={k} className="num text-[var(--color-fg)]">{v} <span className="text-[var(--color-fg-3)]">{k}</span></span>
         ))}
       </div>
     </div>

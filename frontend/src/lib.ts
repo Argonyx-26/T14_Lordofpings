@@ -56,5 +56,16 @@ export function scoreColor(score: number, cfg?: SiteConfigView): string {
   if (score >= open + 20) return 'var(--color-crit)'
   if (score >= open) return 'var(--color-high)'
   if (score >= watch) return 'var(--color-watch)'
-  return 'var(--color-dim)'
+  return 'var(--color-fg-4)'
 }
+
+export function severityLabel(score: number, cfg?: SiteConfigView): string {
+  const open = cfg?.thresholds.open_threshold ?? 55
+  const watch = cfg?.thresholds.watch_threshold ?? 35
+  if (score >= open + 20) return 'Critical'
+  if (score >= open) return 'High'
+  if (score >= watch) return 'Watch'
+  return 'Low'
+}
+
+export const fmt = (n: number | undefined) => (n ?? 0).toLocaleString('en-US')

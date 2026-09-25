@@ -80,7 +80,7 @@ export interface Summary {
 export interface SiteConfigView {
   site_name: string
   areas: Record<string, { name: string; criticality: number }>
-  cameras: Record<string, { zone: string; area: string; label: string }>
+  cameras: Record<string, { zone: string; area: string; label: string; pos?: [number, number] }>
   bookmarks: { label: string; t: number }[]
   playbook: Record<string, string>
   thresholds: { watch_threshold: number; open_threshold: number; siloed_alert_severity: number; context_max_severity: number }
@@ -88,6 +88,7 @@ export interface SiteConfigView {
   clips: string[]
   fps: number
   attribution: string
+  geometry?: Record<string, [number, number][]>
 }
 
 export interface Snapshot {
