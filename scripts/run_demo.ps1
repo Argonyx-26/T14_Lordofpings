@@ -28,7 +28,7 @@ if ($Prepare) {
     if ($LASTEXITCODE -ne 0) { Write-Host "valuables pass failed" -ForegroundColor Red; exit 1 }
 
     Step "Door sensor (door-leaf motion per camera; skips clips already done)"
-    & $Py backendrgusisiondoor_sensor.py
+    & $Py backend\argus\vision\door_sensor.py
     if ($LASTEXITCODE -ne 0) { Write-Host "door sensor failed" -ForegroundColor Red; exit 1 }
 
     Step "Rules: tracks -> data\events\cctv.jsonl"
