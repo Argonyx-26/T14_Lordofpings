@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 19:15 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 19:21 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -23,6 +23,7 @@ _Updated Fri 25 Sep 19:15 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+d30850d HANDOFF Â§11: held-out fixes (re-aimed cameras, missing theft annotation), evidence stills, Ask ARGUS, failed AI second-opinion experiment (vlm_check.py), Bengaluru hook checked
 aabfae6 Ask ARGUS: plain-language questions answered only from the log so far, with clickable citations
 0124cff Evidence stills in the incident panel; held-out set A treats re-aimed cameras as new
 c510a7b Held-out evaluation (python -m argus.eval.holdout): unchanged pipeline on unseen MEVA footage (5 Mar with one staged theft; 15 Mar 15:30-15:40, all cameras + GPS), writes docs/HOLDOUT_RESULTS.md; door-sensor experiment and overfitting / sample-size / door answers in the pitch; handoff Â§12 for Jack
@@ -30,5 +31,4 @@ c510a7b Held-out evaluation (python -m argus.eval.holdout): unchanged pipeline o
 e209fdf Review fixes: resilient replay loop, safe broadcasts, read endpoints on the event loop, bounded buffers, thread-safe upload manager, ffmpeg failure handling, upload duration fallback, memoised upload overlay; dead code removed; repo-relative transcode.ps1; stale docs updated
 79ffd6d Site: team is Tanush and Mohit (Utkarsh and Ojus did not attend), 2-column team grid; HANDOFF: two-speaker split for the pitch
 4d234ed Site: real console screenshot (bus-station incident at 15:18:40, Gemini brief), caption no longer says sample data; HANDOFF Â§10
-35f922c Uploads stamped at noon so unknown time of day never gets the night factor (per Jack's GPU test); test; note in HANDOFF_TO_JACK
 ```
