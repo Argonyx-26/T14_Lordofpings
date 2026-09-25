@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 21:40 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 21:46 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -11,7 +11,7 @@ _Updated Fri 25 Sep 21:40 IST. Refreshed every 5 min and pushed only when someth
 ## Demo laptop
 
 - Backend + console: **up** at http://localhost:8000 · 1242 events · briefs by `gemini-flash-latest`
-- Live tile: **up** · 25 fps (rounded)
+- Live tile: **up** · 30 fps (rounded)
 - AI briefs cached: 7
 - Metrics: 4/5 caught · 1242 → 20 → 3
 
@@ -23,6 +23,7 @@ _Updated Fri 25 Sep 21:40 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+26774e6 Site: console screenshot retaken with the redesigned console (15:18:40, INC-0007, real G331 footage with detections, Gemini brief, evidence still), new alt text and caption (HANDOFF_TO_JACK Â§13)
 5ff06e8 HANDOFF_TO_JACK Â§13: retake the site screenshot with the new console (seek to 15:18:40, INC-0007, 1536x864; new alt text and caption)
 acf0e5f Console redesign: situation band (what is happening, signals-to-decisions funnel, ground-truth accuracy with per-incident detail), replay bar with click-to-seek timeline and incident markers, one main camera that follows the selected incident plus a filmstrip (tiles swap without reloading video; live detection counts, box key, evidence labels in plain words), incident panel with response progress (signals -> opened by ARGUS -> human decision), risk gauge, collapsible score breakdown and hash-chained decision log, Respond menu (recommended action, acknowledge, dispatch guard, escalate, notify police, dismiss as false alarm; extra actions recorded as audit notes), Ask ARGUS moved to a header popover (/), raw signals collapsed to a ticker, status symbols with shape + colour, source icons, responsive down to phone width; overlay redraws only on new frames, mock data lazy-loaded (main bundle 337 -> 318 kB); demo script and pitch updated for the new controls
 71f853c door_eval.py: per-camera door-sensor scoring with overrides; HANDOFF: door findings (G331 doors held open vs opening labels, G336 door 100 m away, rejected occlusion idea)
@@ -30,5 +31,4 @@ acf0e5f Console redesign: situation band (what is happening, signals-to-decision
 7ed1a3b HANDOFF Â§11 update: set A result and why it missed, set C, merged report, timing, Ask offline warm-up
 4f77271 Ask ARGUS: python -m argus.ask "<local time>" "<question>" pre-answers a rehearsed question at that replay moment, so it is served from the cache on stage without Wi-Fi
 19cebd3 Held-out set C (12 Mar 10:00-10:15, all six cameras with the tuned views + GPS, nothing staged); --set takes several sets and the report merges earlier runs instead of overwriting them; vision/bench.py for GPU throughput (cameras per GPU)
-d30850d HANDOFF Â§11: held-out fixes (re-aimed cameras, missing theft annotation), evidence stills, Ask ARGUS, failed AI second-opinion experiment (vlm_check.py), Bengaluru hook checked
 ```
