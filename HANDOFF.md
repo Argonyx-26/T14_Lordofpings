@@ -93,3 +93,13 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
 - Theft and abandonment annotations are **eval only**. Nothing under `backend/argus/vision/` reads them; only `eval/evaluate.py` does.
 - No video, weights, keys or `data/` in git. Only the `.pt` weights came from Skylinev2; no code did.
 - Shared backend code stays cross-platform (Tanush is on a Mac). Windows-only calls live only in vision scripts, guarded by `sys.platform` (e.g. `live.py`'s `no_power_throttling()`).
+
+## 8. Update: Fri 25 Sep evening, after `HANDOFF_TO_JACK.md` (your §2 and §8 done)
+
+- **§8 Gemini jargon fix: done.** `SYSTEM` in `brief/llm.py` now says to write for a guard, never use internal type names, describe device-location evidence as "people's phones show a crowd gathering or leaving", and describe a custody change as "a bag changed hands". The old cache was backed up; all **7 briefs were regenerated online, with 0 template fallbacks**. For example: *"A suitcase has been left unattended at the bus platform while people's phones show a crowd gathering at the bus station."*
+- `brief/warm.py`: the "no key" warning is now provider-aware. It used to say `ANTHROPIC_API_KEY is not set` even when Gemini was working.
+- **§2 done on the demo laptop.**
+  - `setup_windows.ps1` passed 7/7, with **25 tests passing**.
+  - `run_demo.ps1 -Prepare -Live` ran end to end, and the site is at `/site/`.
+  - Fix needed on the way: this `.venv` was created by `uv`, so it has **no pip**, and `setup_windows.ps1` would have failed at `pip install`. The script now runs `python -m ensurepip --upgrade` first (one line). `python-multipart` was installed; `lap` 0.5.13 was already there.
+- Next on this laptop: **§3 Analyse a video** on the GPU, then the website screenshot, the 2-minute video, and the offline run-through.

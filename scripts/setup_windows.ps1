@@ -24,6 +24,7 @@ Ok "python, node, ffmpeg, nvidia driver"
 
 Step "2/7 Python environment (.venv)"
 if (-not (Test-Path $Py)) { py -3.12 -m venv .venv; if ($LASTEXITCODE -ne 0) { Fail "could not create .venv" } }
+& $Py -m ensurepip --upgrade 2>$null | Out-Null   # a .venv made by uv has no pip
 & $Py -m pip install --upgrade pip --quiet
 $cuda = (& $Py -c "import torch; print(torch.cuda.is_available())" 2>&1 | Select-Object -Last 1)
 if ("$cuda" -ne "True") {

@@ -3,10 +3,9 @@
 Run from backend/:  python -m argus.brief.warm
 Cached briefs live in data/cache/briefs.json and are keyed by incident evidence, so a replay reuses them.
 """
-import os
 import sys
 
-from argus.brief.llm import brief_for
+from argus.brief.llm import PROVIDER, brief_for
 from argus.config import site
 from argus.fusion.engine import FusionEngine
 from argus.ingest import demo_window, load_all_events
@@ -14,8 +13,8 @@ from argus.replay.clock import Replay
 
 
 def main() -> int:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("ANTHROPIC_API_KEY is not set (add it to .env in the repo root); briefs will stay on the template.")
+    if PROVIDER is None:
+        print("Neither GEMINI_API_KEY nor ANTHROPIC_API_KEY is set (add one to .env in the repo root); briefs will stay on the template.")
     cfg = site()
     engine = FusionEngine(cfg)
     start, end = demo_window(cfg)
