@@ -81,12 +81,12 @@ Aim for ~650 spoken words. Rehearse with a timer; cut words, not the demo.
 ## 3. Live demo run-sheet (B drives, 2 min 15 s)
 
 **Before the slot:** `scripts\run_demo.ps1` running (add `-Live` for the live tile), console at
-http://localhost:8000, **Reset** pressed, speed **20×**, Duty officer role, browser full-screen (F11), Wi-Fi off
+http://localhost:8000, **Reset** pressed, speed **10×** (the camera wall stutters above 10× until the seek fix lands), Duty officer role, browser full-screen (F11), Wi-Fi off
 if the venue network is shaky. Backup video on the desktop and on a USB stick.
 
 | Time | Do | Say |
 |---|---|---|
-| 1:00 | Press **Play** (20×) | "This is thirty minutes of real footage and sensor data from one facility, sped up." |
+| 1:00 | Press **Play** (10×) | "This is thirty minutes of real footage and sensor data from one facility, sped up." |
 | 1:10 | Point at the funnel band | "Events pour in from every stream; the per-stream alerts pile up; incidents stay near zero." |
 | 1:20 | Toggle **Siloed alerts** in the event stream | "This is what each system would page on its own. This is what operators ignore." |
 | 1:35 | Click the **Bus station** diamond on the timeline | "Let's go to the bus station." |
@@ -113,7 +113,7 @@ auto-captions), because judges may watch it muted.
 | Time | Picture | Voice-over |
 |---|---|---|
 | 0:00–0:08 | Title card: "Argus" · tagline · PS5 | "Argus: we don't watch more, we notice sooner." |
-| 0:08–0:25 | Console playing at 20×, funnel numbers climbing; then the Siloed alerts view | "A security control room gets thousands of signals. Here are thirty minutes of real multi-camera footage and GPS from one facility. Every stream on its own would page constantly." |
+| 0:08–0:25 | Console playing at 10×, funnel numbers climbing; then the Siloed alerts view | "A security control room gets thousands of signals. Here are thirty minutes of real multi-camera footage and GPS from one facility. Every stream on its own would page constantly." |
 | 0:25–0:50 | Jump to the bus-station scenario; incident rises; open it | "Argus fuses signals by place and time. At the bus station, a camera sees an object change hands while phones show a crowd forming: two independent sources, one incident, ranked first." |
 | 0:50–1:10 | Zoom on Why this score and the brief | "The score is transparent. Gemini writes the brief, but it cannot create or hide incidents, and every sentence is checked against the evidence." |
 | 1:10–1:30 | Click the evidence: camera enlarges with the red box; then the live inference view | "One click replays the moment. Detection is YOLO11 with tracking, running live on a single laptop GPU, with no training." |

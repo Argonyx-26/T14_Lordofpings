@@ -53,6 +53,7 @@ if ($Prepare) {
     Pop-Location
 
     Step "Console build"
+    npm --prefix frontend install --no-audit --no-fund
     npm --prefix frontend run build
 }
 
