@@ -21,7 +21,8 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements.txt
-      - run: pip install -r backend/requirements.txt
+      # OpenCV comes with ultralytics on the demo laptop; CI installs the headless build for the tests that need it
+      - run: pip install -r backend/requirements.txt opencv-python-headless
       # MEVA video, annotations and GPS are not in git; tests that need them skip themselves
       - run: python -m pytest -q
         working-directory: backend

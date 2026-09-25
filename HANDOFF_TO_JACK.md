@@ -282,3 +282,43 @@ Pushed by Tanush (nothing in `backend/argus/vision/` changed). After `git pull`,
   (On my Mac the only real clip was a 45 s excerpt with nothing staged in it, which correctly came back "No threat found".)
 - **CI** (`.github/workflows/ci.yml`): backend pytest + frontend lint, types, tests, build on every push.
 - **Website hosting**: no admin access, so no GitHub Pages. The site is **live at https://argus-lordofpings.vercel.app** (judges' page `/judges.html`, offline console demo `/console/`, Raah analytics working). `scripts/deploy_site.sh` republishes it from Tanush's Mac. The demo laptop is unaffected: everything there stays offline.
+
+## 15. Update 02:30: pull, rebuild the console, run it with your live camera
+
+The redesigned console (the ARGUS eye, boot sequence, forecast + response planner, upload threat assessment) is on
+`main`, and your stage-camera change sits on top of it. `run_demo.ps1` now takes the camera directly.
+
+**1. Stop what is running, then pull**
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\stop_demo.ps1
+git pull
+```
+
+**2. Rebuild the console** (it has a new package, `motion`, so install first). Quick path, when the pipeline data hasn't changed:
+```powershell
+npm --prefix frontend install --no-audit --no-fund
+npm --prefix frontend run build
+```
+(`scripts\run_demo.ps1 -Prepare` does the same and also re-runs rules, MP4s, eval and briefs; use it if you changed vision outputs.)
+
+**3. Start the demo with the live camera and the stage bag rule**
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Camera 0
+```
+- `-Camera 0` = webcam 0 (`1` for a USB camera; DroidCam: `-Camera http://<phone-ip>:4747/video`). It implies `-Live` and turns on `--rules`.
+- Or, to show your trained weapon model on the live tile instead: `-Camera 0 -LiveWeights models\weapons_yolo11s.pt`.
+  The bag rule is off in that mode (it needs the people-and-bags detector), so pick one for the stage. Suggestion: bag rule live,
+  weapons through **Analyse a video** with a short staged clip (as in §12).
+
+**4. Open the console:** http://localhost:8000, then **Ctrl+Shift+R** once so the browser drops the old build.
+- First load in a tab plays the boot (the eye opens, then flies into the top band; about 2 s, "skip" at the bottom). It shows once per tab session.
+- Camera header → **Live inference** shows the live feed. When someone leaves a bag for 15 s, the incident appears in the queue,
+  the console switches to the live feed for it, and **Where this is heading → Plan the response** works on it like any other incident.
+- Live tile check: http://localhost:8001/live/stats should show ~30 fps with Energy Saver off.
+
+**5. Quick checks before stage**
+- Incident panel: *Where this is heading* card and *Plan the response* open; *Respond* records to the audit log.
+- Analyse a video: open an analysed clip, switch Airport / School / Park, open *Plan the response* on a flagged incident.
+- Wi-Fi off once (§6): the console, boot and site must work with no network (they do on my side; nothing loads from the internet).
+
+CI note: your agent test needed OpenCV on the CI machine; CI now installs `opencv-python-headless`. Nothing changes on the laptop.

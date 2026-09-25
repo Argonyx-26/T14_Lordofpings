@@ -2,12 +2,18 @@
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1            # start (after setup + prepare)
 #   powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Prepare   # rebuild pipeline outputs first
-#   powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Live      # also start the live inference tile
+#   powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Live      # also start the live inference tile (recorded cafe clip)
+#   powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Camera 0  # live tile on webcam 0 with the stage bag rule (implies -Live)
+#   ... -Camera 0 -LiveWeights models\weapons_yolo11s.pt                     # live tile with another model (no bag rule: it needs people and bags)
+#
+# -Camera takes a webcam index (0, 1) or a stream URL such as DroidCam's http://<phone-ip>:4747/video.
 #
 # -Prepare runs: tracking + valuables pass (skip clips already done) -> rules -> browser MP4s -> evaluation -> brief cache -> console build
 param(
     [switch]$Prepare,
     [switch]$Live,
+    [string]$Camera = "",
+    [string]$LiveWeights = "",
     [switch]$NoBrowser
 )
 $ErrorActionPreference = "Continue"
@@ -87,9 +93,19 @@ Step "Starting backend + console on http://localhost:8000"
 Start-Process -FilePath $Py -ArgumentList "-m uvicorn argus.api.main:app --host 127.0.0.1 --port 8000" `
     -WorkingDirectory (Join-Path $Root "backend") -WindowStyle Minimized
 
+if ($Camera -ne "") { $Live = $true }
 if ($Live) {
-    Step "Starting live inference tile on http://localhost:8001/live.mjpg"
-    Start-Process -FilePath $Py -ArgumentList "backend\argus\vision\live.py" -WorkingDirectory $Root -WindowStyle Minimized
+    $LiveArgs = @("backend\argus\vision\live.py")
+    if ($Camera -ne "") { $LiveArgs += @("--source", $Camera) }
+    if ($LiveWeights -ne "") {
+        $LiveArgs += @("--weights", $LiveWeights)
+        Write-Host "Live tile model: $LiveWeights (the stage bag rule is off: it needs the people-and-bags detector)" -ForegroundColor Yellow
+    } elseif ($Camera -ne "") {
+        $LiveArgs += "--rules"
+        Write-Host "Stage bag rule on: leave a bag alone for 15 s in front of camera $Camera to raise an incident" -ForegroundColor Yellow
+    }
+    Step "Starting live inference tile on http://localhost:8001/live.mjpg ($($LiveArgs -join ' '))"
+    Start-Process -FilePath $Py -ArgumentList $LiveArgs -WorkingDirectory $Root -WindowStyle Minimized
 }
 
 $health = $null
