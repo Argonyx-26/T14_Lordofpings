@@ -18,6 +18,38 @@ Presentation & Storytelling, Business Impact & Market Potential.
 **Speakers:** A = Tanush (lead: opens and closes) · B = demo driver · C = vision/technical (the teammate who built
 the pipeline) · D = business. Swap names as you like; every member must speak.
 
+## 0. Answering "very little innovation" (Sat 26 Sep)
+
+The feedback was that ARGUS reads as a dashboard with detection on top. The answer is **one new layer of reasoning
+above incidents**, shown on screens the judges already look at (full audit and research in
+[INNOVATION.md](INNOVATION.md)):
+
+| Beat | What the judge sees | The line |
+|---|---|---|
+| **Patterns, not rows** | Incident panel "Part of a pattern": a chain of incidents in time; the site map draws arcs between areas; the queue tags "pattern 2/3" | "Every dashboard shows you incidents. ARGUS notices when three of them are one pattern: same behaviour, and it checks whether one person could even have walked between them." |
+| **Honest about who** | A link marked *too soon to walk* (dashed amber) | "These two thefts are two minutes and 219 metres apart. Nobody walks that in time, so ARGUS says: at least two people. It never recognises a face; it links behaviour, place and time." |
+| **Forecasts the site** | "Watch next: Bus station (G331) and Parking" with the window counting down; the map outlines them | "After a theft, crime clusters nearby for a while: criminologists call it near-repeat. So ARGUS tells the operator where to look next, and admits the parking lot has no camera at all." |
+| **Knows where it's blind** | "What could agree here" in *Why this score*; hatched areas on the map; visibility % | "A one-camera area can't corroborate itself. ARGUS says how much evidence each place can give, instead of pretending." |
+| **Cover the camera (live)** | Hand over the stage webcam for 2 s: red border, "Camera view lost" opens at once; the live area goes blind on the map until the view is back | "Attackers blind cameras first. A monitoring system that doesn't notice its own eyes going dark reports a quiet scene." |
+| **Hands over the case** | **Case report**: timeline, pattern, blind spots, forecast, decisions with hashes; print or copy | "When the shift ends, the case is already written, and every line traces back to a signal or a logged decision." |
+
+**Run-sheet inserts** (add to section 3): after opening the bus-station incident, scroll to *Part of a pattern*
+(15 s), point at the map arcs and *watch next* (10 s); in *Why this score* read *What could agree here* (10 s); at
+the end, **Case report** (10 s). With the stage camera: cover the lens for 3 s after the bag demo (10 s).
+
+**Before the slot, on the demo laptop:** `python -m argus.eval.patterns_eval` for the pattern and near-repeat numbers
+(say them as counts with the chance level, e.g. "3 of 4 later staged events were in a watch-next area; chance was
+half"), and `python -m argus.export_snapshot` so the hosted console shows the same.
+
+**Q&A for this layer**
+
+| Question | Answer |
+|---|---|
+| Isn't linking incidents just a guess? | "It's a stated rule: same crime script, the same act, inside 30 minutes, and a walking-time check from the site map. ARGUS calls it a working hypothesis on screen, and it never changes a score or opens an incident." |
+| Could it link innocent people? | "It links incidents, not people: no faces, no phone IDs. A link says the behaviour repeated; a person decides what that means." |
+| Does the watch actually predict anything? | "On the staged events in our window, [WATCH] later events were in a watch-next area, where chance was half. Five events is tiny and we say so; it's a prompt for attention, not a prediction of a crime." |
+| Why is the parking lot 'blind'? | "It has no camera, only phone counts. ARGUS can count people there but cannot see a bag or a fight, and it says so on the map and in every score." |
+
 ---
 
 ## 1. The deck (8 slides)

@@ -322,3 +322,54 @@ powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Camera 0
 - Wi-Fi off once (§6): the console, boot and site must work with no network (they do on my side; nothing loads from the internet).
 
 CI note: your agent test needed OpenCV on the CI machine; CI now installs `opencv-python-headless`. Nothing changes on the laptop.
+
+## 16. Update 05:00: the intel layer (patterns, near-repeat watch, blind spots, case report, camera tamper)
+
+Answer to the round-1 feedback ("very little innovation"): a read-only layer **above incidents**. It never changes a
+score, opens or hides an incident, so the 4/5, 0-false numbers are untouched. Plan and research: `docs/INNOVATION.md`;
+pitch beats and Q&A: `docs/PITCH.md` §0. **Nothing in the vision pipeline changed except one new live rule (`--tamper`).**
+
+**1. Stop, pull, rebuild** (no new npm packages)
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\stop_demo.ps1
+git pull
+npm --prefix frontend run build
+```
+
+**2. Measure it on the real events (this is the number for the pitch), then paste the output into the team chat**
+```powershell
+cd backend
+..\.venv\Scripts\python -m argus.eval.patterns_eval
+```
+It prints how many later staged events were in a *watch next* area one second before they began (with the chance
+level), and which staged incidents ended up linked in a series. On my Mac there is no `cctv.jsonl`, so I only
+checked it on synthetic events at MEVA's staged times: the real numbers can differ, and only yours go in the pitch.
+
+**3. Give the hosted console (Vercel, `?mock`) the real incidents and the intel**, then commit and push the snapshot
+```powershell
+..\.venv\Scripts\python -m argus.export_snapshot
+cd ..
+git add frontend/src/mock/snapshot.json
+git commit -m "Offline demo snapshot from the real replay (incidents, evidence, forecasts, intel)"
+git push
+```
+(The current snapshot is from Friday 23:10 with 2 camera signals; the exporter refuses to overwrite it with fewer.)
+
+**4. Start the demo as before** (`scripts\run_demo.ps1 -Camera 0`). `-Camera` now also passes `--tamper`.
+
+**5. What to check in the console** (http://localhost:8000, Ctrl+Shift+R once)
+- Play from the start. After the cafe theft opens, the **Site** map outlines the *watch next* areas (dashed blue) and
+  hatches **Parking** ("no camera"); the legend shows *visibility %* and the minutes left.
+- When the bus-station theft opens: the queue tags both incidents **pattern 1/2, 2/2**, the map draws an arc between the
+  areas, and the incident panel has **Part of a pattern** (a chain, each link's reason: *walkable*, *same place* or
+  *too soon to walk*).
+- **Why this score** ends with *What could agree here* (streams covering the area, how many agreed, the ceiling).
+- Footer of the incident panel: **Case report** (print / save as PDF, or copy as text).
+- Ask ARGUS: "Are these thefts connected?" answers from the links (offline too: the template answers it).
+- Stage camera: hold a hand over the lens for 3 s. The stream gets a red border and "CAMERA VIEW LOST", an incident
+  **Camera view lost** opens at once (decisive in every profile), and the live area goes blind on the map until the view
+  is back ("Camera view restored" joins the same incident with how long it was gone). If it fires on your venue's
+  lighting without a hand, tell me: thresholds are `FLAT_STD` / `DARK_MEAN` / `BLUR_FRAC` in `vision/live_rules.py`.
+
+**Not changed on purpose:** the investigator agent's tools (a new tool changes its cache key and would drop your
+rehearsed runs).
