@@ -126,3 +126,39 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
 - The "sample-data mode" caption is replaced with a factual one.
 - **Team: Utkarsh and Ojus didn't come, so Jack asked to remove them.** The site's team section now lists Tanush and Mohit only, in a 2-column grid.
 - **Pitch impact (Tanush):** `docs/PITCH.md` assumes four speakers (A lead, B demo driver, C vision, D business). With two of you, split it as **Tanush = A + D** (problem, business, close) and **Jack = B + C** (drives the live demo, then slides 5–6). Update the deck's speaker notes to match. Also check whether the rule that every member speaks needs an organiser's OK for absentees.
+
+## 11. Fri 25 Sep night: held-out run, evidence stills, Ask ARGUS, and one experiment that failed
+
+**Held-out run (your §12.3): running on the GPU now (`--set all`, A then B).**
+- I ran `--set all` instead of `--set A` then `--set B`. `write_report()` only writes the sets from the current run, so a separate B run would have overwritten A's numbers in `docs/HOLDOUT_RESULTS.md`.
+- **Two fixes to set A before trusting it** (both in `holdout.py`, commit 0124cff):
+  1. **G331 and G336 were re-aimed between 5 and 15 March.** On 5 March the bus-station door zones and door-leaf boxes land on the ceiling (side-by-side check in the table below). Those two cameras now run with **no zones in set A, exactly like an uploaded clip**. No zones were drawn for the new views, so nothing was tuned. G419 and G420 are identical; G421 has shifted a little.
+  2. **2 of the 10 annotation files failed to download**, including `2018-03-05.13-15-01.13-20-01.bus.G331`, **the clip with the staged theft**. Without it set A would have said "none staged". I copied both from the MEVA GitLab repo; the other 8 are byte-identical apart from line endings.
+- When B finishes I re-score both sets with `--no-detect --set all` (so the zone fix applies), then commit `docs/HOLDOUT_RESULTS.md`.
+
+| Camera | 15 Mar (tuned) vs 5 Mar (held-out) |
+|---|---|
+| G419, G420 | same view |
+| G421 | same room, small shift; zones still land on the doors |
+| G331 bus station | **re-aimed**: 15 Mar zones land on the ceiling → run without zones |
+| G336 school exterior | **re-aimed** (closer, onto the roundabout) → run without zones |
+
+**Evidence stills (commit 0124cff).** `backend/argus/vision/thumbs.py` renders one still per camera event: a crop around the object with its box, plus the carrier outlined for "changed hands". Output goes to `data/meva/web/thumbs/`, served at `/media/thumbs/<event_id>.jpg`. `run_demo.ps1 -Prepare` builds them after the rules (35 s for 114 stills). In `IncidentDetail` there is a key frame for the strongest camera signal above the evidence list and a small still on each camera event; both replay the moment on click and hide themselves if a still is missing (mock mode, uploads).
+
+**Ask ARGUS (commit aabfae6).** A question box above the incident queue, with `POST /api/ask` and `backend/argus/ask.py`.
+- Gemini sees only the surfaced incidents and non-routine signals **up to the replay clock**: never the future, never ground truth. It must cite ids, and citations that aren't in the log are dropped.
+- The console shows the cited incidents (click to select) and signals (click to replay).
+- Offline, it falls back to an automatic summary of what is open.
+- Answers are cached in `data/cache/ask.json`, so **ask the rehearsed questions once on Wi-Fi** and they work offline on stage.
+- Verified in the console at 15:19. Asked "Did anyone steal a phone at the plaza?", it answers that the log shows no phone theft there and cites the actual plaza signals.
+- `tests/test_ask.py` covers the fallback and the dropping of invented citations. **38 backend tests pass.**
+- I restarted the demo backend (only uvicorn, same command as `run_demo.ps1`), so it now has your story titles too.
+
+**Experiment that failed, and a good Q&A answer: an AI second opinion on camera alerts.** `backend/argus/vision/vlm_check.py` (not in the pipeline) shows Gemini three frames around each camera bag alert and asks whether they support the rule. On the 7 alerts in the tuning window:
+- It **removed the 1 false alert** (the G638 "bag" is a bush).
+- But it **would also have removed 4 of the 6 real ones**: it read moving bags as empty floor and a seated stranger as the owner.
+- So it stays out. On stage: *"We tried an AI second opinion on our camera alerts. It threw away real thefts, so the decisions stay with measured rules and the AI only explains."* n = 7; I did not tune the prompt on these 7.
+
+**Bengaluru hook (checked).** On 4 June 2025, a crowd crush outside Chinnaswamy Stadium during RCB's IPL victory celebration killed 11 people and injured more than 50 (suffocation). The Justice D'Cunha commission named unregulated entry at the gates as the root cause. Use it only for the crowding and gate signals, and don't claim ARGUS would have prevented it. Sources: [Deccan Herald](https://www.deccanherald.com/india/karnataka/chinnaswamy-stadium-stampede-karnataka-cabinet-accepts-justice-dcunhas-report-3646246), [LawChakra](https://lawchakra.in/legal-updates/report-on-bengaluru-stampede-stadium/).
+
+**Still to come tonight:** held-out numbers (about 20:45), then a GPU throughput benchmark with the GPU otherwise idle, for a cost-per-camera figure.
