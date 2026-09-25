@@ -280,6 +280,12 @@ class UploadManager:
                 job.save()
                 run_pose.run(src, tracks.with_name(f"{tracks.stem}.pose.jsonl"), stride=stride,
                              frame_scale=frame_scale, box_scale=scale)
+                from argus.vision import violence_videomae as vm
+                if vm.available():
+                    job.message = "Checking for violence (pretrained video model)"
+                    job.save()
+                    vm.run(src, tracks.with_name(f"{tracks.stem}.pose.jsonl"),
+                           tracks.with_name(f"{tracks.stem}.vmae.jsonl"), frame_scale=frame_scale, box_scale=scale)
             if run_weapons.available():
                 job.message = "Looking for weapons"
                 job.save()

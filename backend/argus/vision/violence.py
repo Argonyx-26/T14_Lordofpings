@@ -166,51 +166,93 @@ def _groups() -> dict[str, str]:
     return out
 
 
+def _scores(X, y, g, seed=0):
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import StratifiedGroupKFold
+    clf = RandomForestClassifier(n_estimators=500, min_samples_leaf=3, random_state=seed)
+    prob = np.zeros(len(y))
+    for tr, te in StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=0).split(X, y, g):
+        prob[te] = clf.fit(X[tr], y[tr]).predict_proba(X[te])[:, 1]
+    return prob
+
+
+def _report(y, prob) -> dict:
+    from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
+    pred = (prob >= 0.5).astype(int)
+    hi = prob >= 0.7                                   # the operating point threats.py uses
+    return {
+        "accuracy": round(accuracy_score(y, pred), 3), "precision": round(precision_score(y, pred), 3),
+        "recall": round(recall_score(y, pred), 3), "f1": round(f1_score(y, pred), 3),
+        "roc_auc": round(roc_auc_score(y, prob), 3),
+        "fights_caught": int(((pred == 1) & (y == 1)).sum()), "false_alarms": int(((pred == 1) & (y == 0)).sum()),
+        "at_pipeline_threshold_0_7": {
+            "fights_caught": int((hi & (y == 1)).sum()), "false_alarms": int((hi & (y == 0)).sum()),
+            "precision": round(float((hi & (y == 1)).sum() / max(hi.sum(), 1)), 3),
+            "recall": round(float((hi & (y == 1)).sum() / max((y == 1).sum(), 1)), 3)},
+    }
+
+
 def train() -> dict:
+    """Pose-only and pose + ViT models, each scored by the same grouped cross-validation; the ViT alone is an
+    external test (it was trained on a different dataset)."""
     import joblib
     from sklearn.ensemble import RandomForestClassifier
-    from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
-    from sklearn.model_selection import StratifiedGroupKFold
 
+    from argus.vision import violence_videomae as vm
+    from argus.vision import violence_vit as vv
     groups = _groups()
-    X, y, g, names = [], [], [], []
+    vit = json.loads(vv.CACHE.read_text(encoding="utf-8")) if vv.CACHE.exists() else {}
+    vmae = json.loads(vm.CACHE.read_text(encoding="utf-8")) if vm.CACHE.exists() else {}
+    Xp, Xv, Xm, y, g = [], [], [], [], []
     for label, folder in ((1, "fight"), (0, "noFight")):
         for clip in sorted((FIGHTS / folder).glob("*")):
             p = POSE_DIR / f"{clip.stem}.pose.jsonl"
             if not p.exists():
                 continue
             rows = [json.loads(x) for x in p.open(encoding="utf-8")]
-            X.append(vector(features(rows, 25.0)))
+            Xp.append(vector(features(rows, 25.0)))
+            v = vv.summarise(vit.get(clip.stem, []))
+            Xv.append([v[k] for k in vv.FEATURES])
+            Xm.append([vmae.get(clip.stem, 0.0)])
             y.append(label)
             g.append(groups.get(clip.stem, clip.stem))
-            names.append(clip.stem)
-    X, y = np.array(X), np.array(y)
-    # chosen over gradient boosting (AUC 0.79) and logistic regression (0.81) on this same cross-validation
-    clf = RandomForestClassifier(n_estimators=500, min_samples_leaf=3, random_state=0)
-    prob = np.zeros(len(y))
-    for tr, te in StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=0).split(X, y, g):
-        prob[te] = clf.fit(X[tr], y[tr]).predict_proba(X[te])[:, 1]
-    pred = (prob >= 0.5).astype(int)
+    Xp, Xv, Xm, y = np.array(Xp), np.array(Xv), np.array(Xm), np.array(y)
     res = {
         "dataset": "Surveillance Camera Fight Dataset (Akti et al. 2019, MIT)", "clips": int(len(y)),
         "fight": int(y.sum()), "no_fight": int(len(y) - y.sum()), "source_recordings": len(set(g)),
         "method": "5-fold cross-validation grouped by source recording; every clip scored by a model that never saw "
                   "its recording",
-        "accuracy": round(accuracy_score(y, pred), 3), "precision": round(precision_score(y, pred), 3),
-        "recall": round(recall_score(y, pred), 3), "f1": round(f1_score(y, pred), 3),
-        "roc_auc": round(roc_auc_score(y, prob), 3),
-        "fights_caught": int(((pred == 1) & (y == 1)).sum()), "false_alarms": int(((pred == 1) & (y == 0)).sum()),
-        "model_selection": "random forest, chosen over gradient boosting and logistic regression on this same "
+        "model_selection": "random forest, chosen over gradient boosting and logistic regression on the pose-only "
                            "cross-validation (a small optimistic bias)",
+        "pose_only": _report(y, _scores(Xp, y, g)),
     }
-    hi = prob >= 0.7                                   # the operating point threats.py uses
-    res["at_pipeline_threshold_0_7"] = {
-        "fights_caught": int((hi & (y == 1)).sum()), "false_alarms": int((hi & (y == 0)).sum()),
-        "precision": round(float((hi & (y == 1)).sum() / max(hi.sum(), 1)), 3),
-        "recall": round(float((hi & (y == 1)).sum() / max((y == 1).sum(), 1)), 3)}
-    clf.fit(X, y)
+    models = {"pose": {"model": RandomForestClassifier(n_estimators=500, min_samples_leaf=3, random_state=0).fit(Xp, y),
+                       "features": FEATURES}}
+    if vit:
+        res["vit_alone_external"] = {**_report(y, Xv[:, 0]),
+                                     "note": "pretrained ViT (Real Life Violence Situations), mean P(violent) over "
+                                             "16 frames; no training on this dataset"}
+        Xf = np.hstack([Xp, Xv])
+        res["pose_plus_vit"] = _report(y, _scores(Xf, y, g))
+        models["fused"] = {"model": RandomForestClassifier(n_estimators=500, min_samples_leaf=3,
+                                                           random_state=0).fit(Xf, y),
+                           "features": FEATURES + vv.FEATURES}
+    if vmae:
+        res["videomae_alone_external"] = {**_report(y, Xm[:, 0]),
+                                          "note": "pretrained VideoMAE (UCF-Crime + Bus Violence CCTV), 16 frames; "
+                                                  "no training on this dataset"}
+        Xf = np.hstack([Xp, Xm])
+        res["pose_plus_videomae"] = _report(y, _scores(Xf, y, g))
+        models["pose_videomae"] = {"model": RandomForestClassifier(n_estimators=500, min_samples_leaf=3,
+                                                                   random_state=0).fit(Xf, y),
+                                   "features": FEATURES + vm.FEATURES}
+    head = "pose_plus_videomae" if "pose_plus_videomae" in res else "pose_only"
+    best = res[head]
+    res.update({k: best[k] for k in ("accuracy", "precision", "recall", "f1", "roc_auc", "fights_caught",
+                                     "false_alarms", "at_pipeline_threshold_0_7")})
+    res["headline_model"] = head
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump({"model": clf, "features": FEATURES}, MODEL_PATH)
+    joblib.dump(models, MODEL_PATH)
     out = ROOT / "data" / "cache" / "violence_eval.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(res, indent=2), encoding="utf-8")

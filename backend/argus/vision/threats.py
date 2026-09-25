@@ -61,7 +61,8 @@ def apply(rules, track_path: Path) -> None:
     p = track_path.with_name(f"{stem}.pose.jsonl")
     if p.exists():
         rows = _read(p)
-        violence(rules, rows)
+        v = track_path.with_name(f"{stem}.vmae.jsonl")
+        violence(rules, rows, _read(v) if v.exists() else None)
         person_down(rules, rows)
         dealing_pattern(rules, hand_off(rules, rows))
 
@@ -110,10 +111,13 @@ def weapon_visible(rules, rows: list[dict]) -> None:
                        weapon=name, held_by=f"{rules.cam}:t{tid}", seen_frames=len(hits), person_box=pbox)
 
 
-def violence(rules, rows: list[dict]) -> None:
-    model = _violence_model()
-    if model is None or not rows:
+def violence(rules, rows: list[dict], vmae: list[dict] | None = None) -> None:
+    """Pose features, plus the VideoMAE score of the same window when the clip has one (<stem>.vmae.jsonl)."""
+    models = _violence_model()
+    if models is None or not rows:
         return
+    use_vmae = bool(vmae) and "pose_videomae" in models
+    model = models["pose_videomae"] if use_vmae else models.get("pose", models)
     frames = sorted({r["frame"] for r in rows})
     start, end = frames[0], frames[-1]
     win, step = int(VIOLENCE_WIN_S * FPS), int(VIOLENCE_STEP_S * FPS)
@@ -124,13 +128,17 @@ def violence(rules, rows: list[dict]) -> None:
             prev_hot = False
             continue
         feat = vio.features(window, FPS)
-        p = float(model["model"].predict_proba([vio.vector(feat)])[0, 1])
+        x = vio.vector(feat)
+        if use_vmae:
+            x = x + [max((r["p"] for r in vmae if a <= r["frame"] < a + win), default=0.0)]
+        p = float(model["model"].predict_proba([x])[0, 1])
         hot = p >= VIOLENCE_P
         if hot and prev_hot and a - last_emit >= VIOLENCE_REFRACTORY_S * FPS:
             last_emit = a
             box, tids = _hottest_pair(window)
             rules.emit("violence", a + win // 2, min(0.95, 0.6 + 0.4 * p), p, tids[0] if tids else 0, box,
                        probability=round(p, 3), people=[f"{rules.cam}:t{t}" for t in tids],
+                       model="pose + VideoMAE" if use_vmae else "pose",
                        wrist_speed=round(feat["wrist_speed_p90"], 2), close=round(feat["close_frac"], 2))
         prev_hot = hot
 

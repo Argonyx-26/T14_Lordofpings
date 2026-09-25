@@ -31,6 +31,10 @@ if ($Prepare) {
     & $Py backend\argus\vision\door_sensor.py
     if ($LASTEXITCODE -ne 0) { Write-Host "door sensor failed" -ForegroundColor Red; exit 1 }
 
+    Step "Threat passes: pose, weapons, violence video model (skips clips already done)"
+    & $Py backend\argus\vision\run_threats.py
+    if ($LASTEXITCODE -ne 0) { Write-Host "threat passes failed (rules still run without them)" -ForegroundColor Yellow }
+
     Step "Rules: tracks -> data\events\cctv.jsonl"
     & $Py backend\argus\vision\rules.py
     if ($LASTEXITCODE -ne 0) { Write-Host "rules failed" -ForegroundColor Red; exit 1 }
