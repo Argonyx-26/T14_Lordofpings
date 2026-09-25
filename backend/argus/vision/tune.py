@@ -12,7 +12,7 @@ from argus.config import site  # noqa: E402
 from argus.ingest.groundtruth import load_ground_truth  # noqa: E402
 from argus.settings import ANNOTATION_DIR, EVENTS_DIR, TRACKS_DIR  # noqa: E402
 
-TOL = 30.0
+TOL_BEFORE, TOL_AFTER = 5.0, 15.0  # alert may lead GT slightly, or confirm shortly after
 BAG_TYPES = ("custody_change", "abandoned_object")
 
 events = [json.loads(l) for l in (EVENTS_DIR / "cctv.jsonl").open()]
@@ -25,7 +25,8 @@ for g in load_ground_truth(ANNOTATION_DIR, site()):
         print(f"  ----  {g.kind:17s} {g.camera} {g.clip[11:19]} (no tracks yet)")
         continue
     n += 1
-    near = [e for e in bag if e["media"]["clip"] == g.clip and g.t_start - TOL <= e["t"] <= g.t_end + TOL]
+    after = TOL_AFTER + (20.0 if g.kind == "abandoned_package" else 0.0)  # abandonment is declared after a dwell
+    near = [e for e in bag if e["media"]["clip"] == g.clip and g.t_start - TOL_BEFORE <= e["t"] <= g.t_end + after]
     used |= {e["event_id"] for e in near}
     hits += bool(near)
     print(f"  {'HIT ' if near else 'MISS'}  {g.kind:17s} {g.camera} {g.clip[11:19]} frames {g.frames}"

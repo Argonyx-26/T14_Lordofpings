@@ -26,4 +26,10 @@ G336:   # road / roundabout (exterior)
 G474:   # IR pair of G336
   polygons: {}
 G331:   # bus station interior
-  polygons: {}
+  polygons:
+    door:     [[460,290],[690,290],[690,380],[460,380]]        # glass double door (left, street side)
+    door_b:   [[1320,210],[1450,210],[1450,280],[1320,280]]    # back door by the ATM
+    door_r:   [[1760,360],[1920,360],[1920,480],[1760,480]]    # right side door
+  bag_ignore:
+    - [[0,900],[180,900],[180,1072],[0,1072]]                  # newspaper rack
+    - [[1000,40],[1290,40],[1290,330],[1000,330]]              # ATM queue + trash can

@@ -21,13 +21,13 @@ from argus.schema import Entity, Event, Media  # noqa: E402
 from argus.vision.common import EVENTS_DIR, FPS, TRACKS_DIR, camera_cfg, clip_info, frame_to_t  # noqa: E402
 
 PERSON = 0
+FRAME_W, FRAME_H = 1920, 1072
 VEHICLES = {2, 3, 5, 7}
 BAGS = {24, 26, 28}
 CLS_NAME = {0: "person", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck", 24: "backpack", 26: "handbag", 28: "suitcase"}
 
 # Tunables (seconds are wall-clock seconds of footage)
-ABANDON_S = 20.0          # bag unattended this long -> abandoned_object
-ABANDON_RADIUS = 3.0      # "attended" if a person box is within this many bag-heights
+ABANDON_S = 15.0          # owner away from a resting bag this long -> abandoned_object
 BAG_STILL = 0.6           # bag counts as stationary if it drifts < this many bag-heights
 CUSTODY_MIN_S = 1.0       # carrier != owner for at least this long
 OWNER_WINDOW_S = 2.0      # owner = most frequent nearest person in the bag's first N s
@@ -158,14 +158,15 @@ def chain_bags(tracks: dict[int, Track]) -> list[Track]:
         best = None
         for c in out:
             gap = t.frames[0] - c.frames[-1]
-            if 0 < gap <= 3 * FPS:
+            if -1 * FPS <= gap <= 3 * FPS and t.frames[-1] > c.frames[-1]:  # small overlaps happen on NMS splits
                 d = np.hypot(*(t.centers[0] - c.centers[-1]))
                 if d < 2.5 * max(c.heights[-1], t.heights[0]) and (best is None or d < best[0]):
                     best = (d, c)
         if best:
             c = best[1]
-            c.frames = np.concatenate([c.frames, t.frames])
-            c.boxes = np.concatenate([c.boxes, t.boxes])
+            keep = t.frames > c.frames[-1]
+            c.frames = np.concatenate([c.frames, t.frames[keep]])
+            c.boxes = np.concatenate([c.boxes, t.boxes[keep]])
             c.chain.append(t.tid)
         else:
             out.append(Track(t.tid, t.cls, t.frames.copy(), t.boxes.copy(), t.conf, [t.tid]))
@@ -219,6 +220,40 @@ class ClipRules:
     def in_poly(self, name: str, pt) -> bool:
         return self.polys[name].contains(Point(float(pt[0]), float(pt[1])))
 
+    def successors(self, tid: int) -> list[int]:
+        """tid plus the tracks that continue it after a tracker ID switch (starts <1.5 s later, same spot)."""
+        ids, t = [tid], self.persons[tid]
+        while True:
+            cand = [u for u in self.persons.values() if 0 < u.frames[0] - t.frames[-1] <= 1.5 * FPS
+                    and np.hypot(*(u.feet[0] - t.feet[-1])) < 0.5 * t.heights[-1]]
+            if not cand:
+                return ids
+            t = min(cand, key=lambda u: u.frames[0])
+            ids.append(t.tid)
+
+    def person_away(self, ids: list[int], frame: int, pt) -> bool:
+        """Is this person (any of ids) more than 1.5 body-heights from pt, or gone from the scene?"""
+        seen = False
+        for x in ids:
+            t = self.persons[x]
+            k = int(np.argmin(np.abs(t.frames - frame)))
+            if abs(t.frames[k] - frame) <= 10:
+                seen = True
+                if box_dist(pt, t.boxes[k]) / max(t.heights[k], 1) <= 3.0:
+                    return False
+        if seen:
+            return True
+        last = self.persons[ids[-1]]
+        # Gone from view only counts if they left through a door; otherwise the tracker just lost them
+        # (occlusion behind benches is common) and we can't claim the bag was abandoned.
+        return frame > last.frames[-1] and self.leaves_scene(last)
+
+    def leaves_scene(self, t: Track) -> bool:
+        """Track ends at a door or walking out of the frame edge (not just lost mid-scene)."""
+        x1, y1, x2, y2 = t.boxes[-1]
+        at_edge = x1 < 40 or x2 > FRAME_W - 40 or y2 > FRAME_H - 20
+        return at_edge or self.leaves_via_door(t)
+
     def door_names(self):
         return [k for k in self.polys if k.startswith("door")]
 
@@ -264,8 +299,11 @@ class ClipRules:
             moved = np.hypot(*(c - c[0]).T) > BAG_STILL * h
             k = int(np.argmax(moved)) if moved.any() else len(c)
             rest_s = (bag.frames[min(k, len(c) - 1)] - bag.frames[0]) / FPS
-            owners = Counter(x for x in near_tid[:k] if x is not None)
+            rest_near = near_tid[:k]
+            owners = Counter(x for x in rest_near if x is not None)
             owner = owners.most_common(1)[0][0] if owners and rest_s >= OWNER_WINDOW_S else None
+            if owner is not None and owner in near_tid[k:k + 3]:
+                owner = None  # the owner picked it up themselves -> handling, not custody change
 
             # --- custody_change: bag moving while its nearest person is B != owner ---
             if owner is not None:
@@ -279,10 +317,16 @@ class ClipRules:
                     if ok:
                         ct, ot = self.persons[carrier], self.persons[owner]
                         ok = ct.frames[0] < bag.frames[i] - FPS and ot.frames[-1] > bag.frames[i] - 2 * FPS
-                    if ok:  # the bag must be leaving its owner (owner still holding / pushing it = not a theft)
+                    if ok:  # carrier was already next to the bag while it rested -> it's their own bag
+                        ok = rest_near.count(carrier) <= 0.15 * max(len(rest_near), 1)
+                    if ok:  # the bag must be leaving its owner (owner walking off with it = not a theft)
                         k_ = int(np.argmin(np.abs(ot.frames - bag.frames[i])))
                         if abs(ot.frames[k_] - bag.frames[i]) <= 10:
-                            ok = box_dist(c[i], ot.boxes[k_]) / max(ot.heights[k_], 1) > NEAR
+                            far = box_dist(c[i], ot.boxes[k_]) / max(ot.heights[k_], 1) > NEAR
+                            k0 = int(np.argmin(np.abs(ot.frames - bag.frames[max(k - 1, 0)])))
+                            owner_moved = np.hypot(*(ot.feet[k_] - ot.feet[k0])) / max(ot.heights[k0], 1)
+                            bag_moved = np.hypot(*(c[i] - c[max(k - 1, 0)])) / h[max(k - 1, 0)]
+                            ok = far or (bag_moved > 1.5 and owner_moved < 0.3)
                     if ok and run_tid == carrier:
                         if bag.frames[i] - run_start >= CUSTODY_MIN_S * FPS:
                             exits = self.leaves_via_door(self.persons[carrier])
@@ -296,31 +340,36 @@ class ClipRules:
                     else:
                         run_start, run_tid = None, None
 
-            # --- abandoned_object: stationary + nobody within ABANDON_RADIUS bag-heights ---
-            start = None
-            for i in range(len(bag.frames)):
-                f = int(bag.frames[i])
-                d = min((box_dist(c[i], b) for _, b in self.by_frame.get(f, [])), default=1e9)
-                alone = d > ABANDON_RADIUS * h[i]
-                still = start is not None and np.hypot(*(c[i] - c[start])) < BAG_STILL * h[i]
-                if alone and (still or start is None):
-                    start = i if start is None else start
-                    if bag.frames[i] - bag.frames[start] >= ABANDON_S * FPS:
-                        last_owner = next((x for x in reversed(near_tid[:start + 1]) if x is not None), owner)
-                        if last_owner is None:  # never near anyone -> background clutter, not a dropped bag
+            # --- abandoned_object: bag at rest, and the person who set it down has walked away ---
+            # (strangers sitting next to it don't count as attending it)
+            i = 0
+            while i < len(bag.frames):
+                s_, j = i, i
+                while j + 1 < len(bag.frames) and np.hypot(*(c[j + 1] - c[s_])) < BAG_STILL * h[s_]:
+                    j += 1
+                i = j + 1
+                if bag.frames[j] - bag.frames[s_] < ABANDON_S * FPS:
+                    continue
+                # dropper = whoever is next to the bag the moment it appears (a seated stranger nearby
+                # may be "nearest" more often later, so earliest wins)
+                dropper = next((x for x in near_tid[s_:s_ + 4] if x is not None), None)
+                if dropper is None:
+                    continue  # nobody put it there -> background clutter
+                ids = self.successors(dropper)
+                away_since = None
+                for q in range(s_, j + 1):
+                    f = int(bag.frames[q])
+                    if self.person_away(ids, f, c[q]):
+                        away_since = f if away_since is None else away_since  # noqa: E501
+                        if f - away_since >= ABANDON_S * FPS:
+                            left = bool(f > max(self.persons[x].frames[-1] for x in ids))
+                            self.emit("abandoned_object", f, 0.9 if left else 0.8, 0.65, bag.tid, bag.boxes[q],
+                                      object=CLS_NAME[bag.cls], owner=f"{self.cam}:t{dropper}",
+                                      dropped_frame=int(bag.frames[s_]), owner_away_frame=int(away_since),
+                                      unattended_s=round((f - away_since) / FPS, 1), owner_left_scene=left)
                             break
-                        owner_left = None
-                        if last_owner is not None:
-                            ot = self.persons[last_owner]
-                            owner_left = bool(ot.frames[-1] < bag.frames[i])
-                        self.emit("abandoned_object", bag.frames[start], 0.9 if owner_left else 0.75, 0.6, bag.tid,
-                                  bag.boxes[i], object=CLS_NAME[bag.cls],
-                                  unattended_s=round(float(bag.frames[i] - bag.frames[start]) / FPS, 1),
-                                  owner=f"{self.cam}:t{last_owner}" if last_owner is not None else None,
-                                  owner_left_scene=owner_left)
-                        break
-                else:
-                    start = i if alone else None
+                    else:
+                        away_since = None
 
     def vehicle_in_ped_zone(self):
         if "walkway" not in self.polys:
