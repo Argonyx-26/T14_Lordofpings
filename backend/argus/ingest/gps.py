@@ -47,6 +47,9 @@ def load_fixes(gps_dir: Path, start_t: float | None = None, end_t: float | None 
 
 def load_device_events(gps_dir: Path, cfg: SiteConfig, start_t: float | None = None,
                        end_t: float | None = None) -> list[Event]:
+    """Privacy by design: ARGUS never follows a phone. Positions are reduced, in memory, to how many phones are in
+    each area per time bucket and how many left it; only unusual COUNTS become events (crowding, dispersal, exodus),
+    and no event carries a device id. No per-phone arrival, departure or route is stored, shown or sent to a model."""
     fixes = load_fixes(gps_dir, start_t, end_t)
     events: list[Event] = []
     presence: list[tuple[str, float, str]] = []   # (area, t, device)
@@ -58,28 +61,8 @@ def load_device_events(gps_dir: Path, cfg: SiteConfig, start_t: float | None = N
         for (t, lat, lon), area in zip(pts, areas):
             if area:
                 presence.append((area, t, dev))
-            if prev is not None and area != prev_area:
-                speed = _metres(prev[1], prev[2], lat, lon) / max(t - prev[0], 1.0)
-                if prev_area:
-                    exits.append((prev_area, t))
-                    # A single fast exit is context only: people drive and GPS jitters. Unusual exit
-                    # *rates* per area become signals via _rate_signals below.
-                    events.append(Event(
-                        event_id=f"dev-{dev}-{t:.0f}-exit",
-                        t=t, source="device", sensor_id="gps", zone=prev_area, area=prev_area,
-                        type="device_fast_exit" if speed >= FAST_EXIT_MPS else "device_exit",
-                        severity=0.08 if speed >= FAST_EXIT_MPS else 0.02, confidence=0.6,
-                        entity=Entity(kind="device", id=dev), provenance="recorded",
-                        attrs={"speed_mps": round(speed, 2), "to": area or "outside"},
-                    ))
-                if area:
-                    events.append(Event(
-                        event_id=f"dev-{dev}-{t:.0f}-enter",
-                        t=t, source="device", sensor_id="gps", zone=area, area=area,
-                        type="device_enter", severity=0.02, confidence=0.6,
-                        entity=Entity(kind="device", id=dev), provenance="recorded",
-                        attrs={"from": prev_area or "outside"},
-                    ))
+            if prev is not None and area != prev_area and prev_area:
+                exits.append((prev_area, t))
             prev_area, prev = area, (t, lat, lon)
 
     events.extend(_occupancy_anomalies(presence, cfg, start_t, end_t))

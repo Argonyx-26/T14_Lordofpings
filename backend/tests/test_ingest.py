@@ -57,7 +57,10 @@ def test_ground_truth_never_leaks_into_inputs(cfg):
 def test_gps_events_are_real_and_in_window(cfg):
     start, end = demo_window(cfg)
     events = load_device_events(settings.GPS_DIR, cfg, start, end)
-    assert len(events) > 500
+    assert len(events) > 5
     assert all(start <= e.t <= end for e in events)
     assert {e.area for e in events} <= set(cfg.raw["areas"])
     assert all(e.provenance in ("recorded", "computed") for e in events)
+    # privacy: only area-level counts, never an individual phone
+    assert {e.type for e in events} <= {"device_crowding", "device_dispersal", "device_exodus"}
+    assert all(e.entity is None or e.entity.kind != "device" for e in events)

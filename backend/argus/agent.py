@@ -7,7 +7,8 @@ read-only tools in a loop:
   search_signals      the sensor log (cameras, door contacts, people's phones), filtered by area / type / time
   look_at_camera      pull the real frame from a camera at a moment (or at a piece of evidence, box drawn) and
                       ask a vision model a specific question about it: the agent checks the footage itself
-  phones_in_area      which phones were in an area around a moment, and where each one went afterwards
+  phones_in_area      how many phones were in an area around a moment, and how many now (counts only: ARGUS never
+                      follows an individual phone)
   forecast            where the incident is heading and what each response would do (argus/forecast.py)
   finish              the case file: verdict, answer, confidence, next step, cited ids
 
@@ -49,10 +50,10 @@ _lock = threading.Lock()
 
 SYSTEM = (
     "You are the ARGUS investigator, working for a security control-room operator at a site with CCTV cameras, "
-    "door sensors and people's phones (GPS). Investigate the operator's request with your tools, like a careful "
+    "door sensors and anonymous phone counts per area (ARGUS never follows an individual). Investigate the operator's request with your tools, like a careful "
     "analyst: start from what ARGUS has raised, pull the evidence, and CHECK the footage yourself with "
     "look_at_camera before you trust a camera alert (ask it a specific question, e.g. 'Is anyone standing with "
-    "the backpack?'). Use phones_in_area when it matters who was there or where they went. Do not repeat a call. "
+    "the backpack?'). Use phones_in_area when it matters how crowded an area was. Do not repeat a call. "
     "You only know what your tools return; they only cover the past up to the current time. Never invent facts. "
     "When you have enough (usually 3-6 calls), call finish. The answer is for a guard: two to four short, calm "
     "sentences with local times (HH:MM), what the sensors show and what you saw on camera. Say plainly when the "
@@ -96,7 +97,8 @@ TOOLS = [
          "offset_s": {"type": "NUMBER", "description": "seconds after the event (negative = before); default 0"}},
          "required": ["question"]}},
     {"name": "phones_in_area",
-     "description": "Phones (GPS) inside an area within window_s seconds of a moment, and where each was last seen.",
+     "description": "How many phones were inside an area within window_s seconds of a moment, and how many are there "
+                    "now. Counts only: individual phones are never identified or followed.",
      "parameters": {"type": "OBJECT", "properties": {
          "area": {"type": "STRING"}, "time": {"type": "STRING", "description": "local time HH:MM[:SS]"},
          "window_s": {"type": "NUMBER"}}, "required": ["area", "time"]}},
@@ -269,23 +271,19 @@ class Case:
         return None
 
     def phones_in_area(self, area: str, time: str, window_s=60) -> dict:
+        """How many phones were in an area around a moment, and how many are there now. Counts only: the tool never
+        returns a device id or follows a phone (see ingest/gps.py)."""
         aid, t = self.area_id(area), self.at(time)
         if t > self.now:
             return {"error": "that moment is in the future"}
         w = float(window_s or 60)
-        fixes = _fixes()
-        inside, later = [], {}
-        for dev, pts in fixes.items():
-            near = [p for p in pts if abs(p[0] - t) <= w and self.cfg.area_at(p[1], p[2]) == aid]
-            if near:
-                inside.append(dev)
-                past = [p for p in pts if p[0] <= self.now]
-                last = past[-1]
-                later[dev] = {"last_seen": self.local(last[0]),
-                              "last_area": self.cfg.area_name(self.cfg.area_at(last[1], last[2]) or "") or "outside every area"}
-        moved = Counter(v["last_area"] for v in later.values())
-        return {"area": self.cfg.area_name(aid), "moment": self.local(t), "window_s": w, "phones": len(inside),
-                "where_they_are_now": dict(moved), "sample": dict(list(later.items())[:8])}
+
+        def count(at):
+            return sum(any(abs(p[0] - at) <= w and self.cfg.area_at(p[1], p[2]) == aid for p in pts)
+                       for pts in _fixes().values())
+        then, now = count(t), count(self.now)
+        return {"area": self.cfg.area_name(aid), "moment": self.local(t), "window_s": w, "phones_then": then,
+                "phones_now": now, "change": now - then}
 
     def forecast(self, incident_id: str) -> dict:
         from argus.forecast import forecast
@@ -380,8 +378,8 @@ def _summary(name: str, args: dict, result: dict) -> str:
     if name == "look_at_camera":
         return result.get("answer", "")
     if name == "phones_in_area":
-        now = ", ".join(f"{k} {v}" for k, v in result["where_they_are_now"].items())
-        return f"{result['phones']} phones in {result['area']} around {result['moment']}" + (f"; now: {now}" if now else "")
+        return (f"{result['phones_then']} phones in {result['area']} around {result['moment']}, "
+                f"{result['phones_now']} there now")
     if name == "forecast":
         return "forecast ready"
     return ""
