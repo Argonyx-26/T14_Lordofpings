@@ -243,3 +243,30 @@ bus (G331) and plaza (G638) clips from the tuning window:
 - If you want to try one thing: narrow the `door_b` polygon for G331 in `backend/argus/vision/zones.yaml` so it covers only the door leaf, not the
   queue. That file is yours, so it's your call.
 
+
+## 13. Update 21:30: new console, please retake the site screenshot
+
+The console was redesigned (commit `acf0e5f`, frontend only: nothing in `backend/` changed). One main camera follows
+the selected incident, with the other cameras in a strip below it. A band at the top shows the situation, the
+signals-to-decisions funnel and the ground-truth score. Actions are now under **Respond ▾**.
+`docs/PITCH.md` and `docs/DEMO_VIDEO_SCRIPT.md` already name the new controls.
+
+The screenshot on the site still shows the old console. It needs your laptop, because mine has no footage or camera
+events.
+
+1. `git pull`, then `scripts\run_demo.ps1 -Prepare` (it rebuilds the console). Start the demo as usual.
+2. Put the replay at 15:18:40, paused (the same moment as the current shot):
+   ```powershell
+   Invoke-RestMethod -Method Post http://localhost:8000/api/replay -ContentType application/json -Body '{"cmd":"pause"}'
+   Invoke-RestMethod -Method Post http://localhost:8000/api/replay -ContentType application/json -Body '{"cmd":"seek","value":1521141520}'
+   ```
+3. Open http://localhost:8000/?incident=INC-0007 in a 1536×864 window. If the bus-station incident has another id now,
+   just click it in the Incidents list. Check that:
+   - the main camera is G331 with real footage and detection boxes;
+   - the incident panel shows the Gemini brief (not "from the scoring template").
+4. Capture it with `Win + Shift + S`, or headless Chrome as last time. Save it over `site\assets\console-preview.jpg`,
+   1536×864. If the footage comes out black, take the shot by hand instead.
+5. In `site\index.html`, update the image's alt text and the caption under it to describe the new console, for example:
+   - alt: "The Argus console: situation band and signal funnel, the bus-station camera with detections, ranked incidents, a to-scale site map, and the incident's brief and response progress"
+   - caption: "The Argus console at 15:18 in the MEVA replay: the bus-station incident is on the main camera, with its brief, recommended action and response progress."
+6. Commit and push.
