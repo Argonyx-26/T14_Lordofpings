@@ -181,3 +181,38 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
 - **G421 extra left-door triggers:** I tested "someone nearer the camera covers the door top". The overlap was 0 at every one of those events, so the hypothesis is wrong and I reverted it.
 - **G638:** no timing bias (median offset −1.1 s), so nothing to calibrate.
 - Conclusion: the honest door number is still **indoor P 0.54 / R 0.75**. Sets B and C will test it on unseen footage.
+
+## 12. Fri 25 Sep late: mentor round. High-security profiles, weapons, violence, dealing, and numbers with n
+
+The mentors asked for suspicious-activity detection (fights, stabbing, knives), more training data, "numbers to back it up", and a high-security (airport) setting that can be relaxed for a campus. Everything below is pushed; tests: **42 backend + 14 frontend pass**.
+
+### What was added
+- **Security profiles** (`backend/argus/config/profiles.yaml`, top-bar switch **Airport | School / college | Public park**, `POST /api/profile` re-scores the replay so far). The vision rules always run at their most sensitive; a profile sets the open/watch thresholds, an area-criticality floor, per-signal weights and minimum evidence, and which signals go straight to a human. **Default: Airport.** Campus = exactly the tuned site.
+- **New detectors** (`backend/argus/vision/threats.py`, hooked into `ClipRules.run`; run on uploads too):
+
+  | Signal | How | Title |
+  |---|---|---|
+  | `weapon_visible` | YOLO11s fine-tuned on real CCTV weapons (`train_weapons.py`); a weapon on a person on 3 of 6 frames | Weapon seen |
+  | `violence` | pose features from YOLO11s-pose → random-forest classifier (`violence.py`) on 2.5 s windows, 2 in a row ≥ 0.7 | Fight or violent struggle |
+  | `person_down` | body lying (box wider than tall, torso tilted ≥ 60°) for ≥ 3 s | Person on the ground |
+  | `hand_off` | two people's wrists meet for ≥ 0.4 s | Hand-to-hand exchange |
+  | `dealing_pattern` | ≥ 3 hand-offs with ≥ 2 different people in 10 min by someone who stays put | Repeated hand-offs (possible dealing) |
+
+  Stories: weapon + violence = **"Armed assault in progress"** (armed response); violence + person down = **"Assault: person on the ground"**. Weapons and violence open an incident on their own in every profile.
+- **New weights (not in git, on the demo laptop in `models/`):** `yolo11s-pose.pt` (Ultralytics release), `weapons_yolo11s.pt` (fine-tuned here), `violence.joblib`.
+
+### Numbers (all on data never used to tune or train, except the first row)
+| What | Result | n / method |
+|---|---|---|
+| Theft & abandonment (tuning window) | 4/5, 0 false | MEVA 15 Mar; every staged theft/abandonment MEVA publishes here |
+| Profiles on that footage | Airport 4/5 + 6 on watch · Campus 4/5 · Park 2/5; **0 false incidents in all three** | same 30 min |
+| **Fights** | **accuracy 74.7 %, ROC-AUC 0.82**; at the pipeline's 0.7: 80/150 fights, 17/150 false (precision 0.83) | 300 real CCTV clips (Akti et al. 2019, MIT), 5-fold CV **grouped by source recording** (74 recordings). The dataset's authors reported **72 %** with Xception/Bi-LSTM/attention on a random 80/20 split (their Table IV). Random forest chosen over 2 alternatives on the same CV (small optimistic bias). |
+| **Weapons** | AP50 **handgun 0.51, rifle 0.54**, knife 0.09; **42/84 weapon appearances alerted; 14 false alerts in 29 min** (people holding dark phones) | 3,511 frames from a CCTV camera **never trained on** (Univ. of Seville mock armed attack, CC BY-NC 4.0; trained on the other 2 cameras, fixed 30 epochs, no validation on the test camera). A phone veto was tried and rejected (14 → 11 false, 6 real lost). |
+| Doors & hand-offs at scale | *running* (20 unseen MEVA clips, 100 camera-minutes; full set = 306 clips / 1,337 door openings / 176 hand-offs on a GPU server) | `python -m argus.eval.scale` |
+
+### How to say it on stage
+- "Airport mode by default; a school or a park turns it down, and we measured what that costs on the same footage."
+- Fights: "Trained on 300 real CCTV fight clips, tested so that no recording is ever both trained and tested on: **75 % accuracy, better than the dataset authors' own 72 %**, from body pose alone, on a laptop GPU."
+- Weapons: "Handguns and rifles are found in half of their appearances on a camera the model never saw. Gun detection on CCTV is an open research problem, which is why a weapon alert always goes to a human with a still, and only becomes 'armed assault' when a second signal agrees." **Don't claim knives.**
+- Dealing: "Cameras can't see drugs. We flag the *pattern*: repeated hand-offs with different people by someone who stays put, for a human to judge."
+- Demo: MEVA has no fights or weapons. For a live proof, film 2–3 short, obviously staged clips at the venue (a pretend scuffle, someone holding a toy or kitchen knife, a hand-off) and use **Analyse a video**.
