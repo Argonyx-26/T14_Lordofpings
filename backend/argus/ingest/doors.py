@@ -25,7 +25,7 @@ except AttributeError:  # libyaml not available
 
 
 def _activities(path: Path):
-    for item in yaml.load(path.read_text(), Loader=_Loader) or []:
+    for item in yaml.load(path.read_text(encoding="utf-8"), Loader=_Loader) or []:
         act = item.get("act") if isinstance(item, dict) else None
         if not act:
             continue

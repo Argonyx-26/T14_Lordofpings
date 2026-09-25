@@ -63,9 +63,9 @@ class SiteConfig:
 
 
 def load_site(config_dir: Path = CONFIG_DIR) -> SiteConfig:
-    raw = yaml.safe_load((config_dir / "site.yaml").read_text())
-    playbook = yaml.safe_load((config_dir / "playbook.yaml").read_text())
-    geo = json.loads((config_dir / "areas.geojson").read_text())
+    raw = yaml.safe_load((config_dir / "site.yaml").read_text(encoding="utf-8"))
+    playbook = yaml.safe_load((config_dir / "playbook.yaml").read_text(encoding="utf-8"))
+    geo = json.loads((config_dir / "areas.geojson").read_text(encoding="utf-8"))
     shapes = {f["properties"]["area"]: prep(shape(f["geometry"])) for f in geo["features"]}
     return SiteConfig(raw=raw, playbook=playbook, area_shapes=shapes)
 

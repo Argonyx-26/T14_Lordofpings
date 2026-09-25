@@ -42,7 +42,7 @@ _lock = threading.Lock()
 
 def _cache() -> dict:
     try:
-        return json.loads(CACHE_FILE.read_text())
+        return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
@@ -52,7 +52,7 @@ def _store(key: str, brief: Brief) -> None:
         data = _cache()
         data[key] = brief.model_dump()
         CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        CACHE_FILE.write_text(json.dumps(data, indent=1))
+        CACHE_FILE.write_text(json.dumps(data, indent=1), encoding="utf-8")
 
 
 def cache_key(inc: Incident) -> str:

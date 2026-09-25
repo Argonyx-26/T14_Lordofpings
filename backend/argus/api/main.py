@@ -226,7 +226,7 @@ def metrics():
     path = settings.CACHE_DIR / "metrics.json"
     if not path.exists():
         return {"available": False}
-    return {"available": True, **json.loads(path.read_text())}
+    return {"available": True, **json.loads(path.read_text(encoding="utf-8"))}
 
 
 @app.get("/api/tracks/{stem}")
