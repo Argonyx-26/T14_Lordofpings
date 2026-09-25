@@ -17,14 +17,14 @@ class AuditLog:
     def entries(self) -> list[dict]:
         if not self.path.exists():
             return []
-        return [json.loads(line) for line in self.path.read_text().splitlines() if line.strip()]
+        return [json.loads(line) for line in self.path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
     def append(self, **fields) -> dict:
         entries = self.entries()
         prev = entries[-1]["hash"] if entries else GENESIS
         body = {"wall_time": time.time(), **fields, "prev_hash": prev}
         body["hash"] = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
-        with self.path.open("a") as f:
+        with self.path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(body) + "\n")
         return body
 

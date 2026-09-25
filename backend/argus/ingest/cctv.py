@@ -10,7 +10,7 @@ def load_cctv_events(path: Path, cfg: SiteConfig) -> list[Event]:
     if not path.exists():
         return []
     events = []
-    for line_no, line in enumerate(path.read_text().splitlines(), 1):
+    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
             continue
         try:

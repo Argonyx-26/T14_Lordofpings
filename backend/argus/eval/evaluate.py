@@ -102,7 +102,7 @@ def run() -> dict:
 def main() -> int:
     m = run()
     settings.CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    (settings.CACHE_DIR / "metrics.json").write_text(json.dumps(m, indent=2))
+    (settings.CACHE_DIR / "metrics.json").write_text(json.dumps(m, indent=2), encoding="utf-8")
     r = m["reduction"]
     print(f"Window {m['window'][0]} -> {m['window'][1][11:]}   events by source: {m['by_source']}")
     print(f"Raw events {r['raw_events']}  ->  siloed alerts {r['siloed_alerts']}  ->  "
