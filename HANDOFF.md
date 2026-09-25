@@ -78,8 +78,8 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
 
      Chrome caps `playbackRate` at 16, so 20× can't play continuously.
    - **Heads-up: the replay clock runs ~2.5 % slow** (9.75× at 10×). `_loop` in `api/main.py` does `advance(TICK_S)` after `sleep(TICK_S)`, ignoring the real elapsed time. It's harmless, but `advance(elapsed)` with `time.monotonic()` would make it exact.
-2. `run_demo.ps1 -Prepare`: "Console build" (`npm run build`) runs **before** `npm install`, so on a fresh machine it fails first. The later first-run branch recovers, but `npm install` should come before the build.
-3. **PITCH run-sheet says 20×. Use 10×** instead: it plays smoothly, while 20× jumps a little every couple of seconds.
+2. ~~`run_demo.ps1 -Prepare` built the console before `npm install`~~: fixed by Tanush in `a28ae32`.
+3. ~~PITCH run-sheet said 20×~~: changed to 10× by Tanush in `a28ae32`. Keep 10×.
 
 ## 6. Before going on stage (demo laptop)
 
