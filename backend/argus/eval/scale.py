@@ -92,7 +92,7 @@ def view_shift(clip: Path, cam: str) -> float:
 
 def process(row: dict) -> dict | None:
     import numpy as np
-    from argus.vision import door_sensor, rules, run_pose, run_tracks
+    from argus.vision import door_sensor, rules, run_pose, run_tracks, run_weapons
     from argus.vision.common import camera_cfg
 
     stem, cam = row["stem"], row["cam"]
@@ -113,6 +113,9 @@ def process(row: dict) -> dict | None:
             run_tracks.run(video, main, str(REPO / "models" / "yolo11s.pt"))
         if not pose.exists():
             run_pose.run(video, pose)
+        weapons = TRACKS / f"{stem}.weapons.jsonl"
+        if run_weapons.available() and not weapons.exists():
+            run_weapons.run(video, weapons)
         leaves = camera_cfg(cam).get("door_leaf") or {}
         if leaves and not doors.exists():
             frames, sig = door_sensor.signals(video, leaves)
@@ -133,6 +136,8 @@ def process(row: dict) -> dict | None:
             **_match_spans([e["t"] for e in events if e["type"] == "hand_off"], truth_tx),
             threats={t: sum(e["type"] == t for e in events) for t in ("weapon_visible", "violence", "person_down",
                                                                      "dealing_pattern")},
+            threat_events=[{"type": e["type"], "t": e["t"], "attrs": e["attrs"]} for e in events
+                           if e["type"] in ("weapon_visible", "violence", "person_down", "dealing_pattern")],
         )
     done.parent.mkdir(parents=True, exist_ok=True)
     done.write_text(json.dumps(res), encoding="utf-8")

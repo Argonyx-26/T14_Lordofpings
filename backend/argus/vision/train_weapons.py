@@ -15,6 +15,7 @@ Usage (from the repo root):
   python backend/argus/vision/train_weapons.py prepare   # data/train/weapons_raw/Images -> data/train/weapons_yolo
   python backend/argus/vision/train_weapons.py train     # fine-tune -> models/weapons_yolo11s.pt (~40 min on the RTX 5060)
   python backend/argus/vision/train_weapons.py test      # scores on Cam7 -> data/cache/weapons_eval.json
+  python backend/argus/vision/train_weapons.py alerts    # alert level: weapon on 3 of 6 consecutive frames (2 fps)
 """
 import json
 import shutil
@@ -110,5 +111,45 @@ def test() -> None:
     print(json.dumps(out, indent=2))
 
 
+def alerts() -> dict:
+    """What an operator sees: an alert needs a weapon on 3 of 6 consecutive frames (3 s at the dataset's 2 fps).
+    Weapon appearances = runs of annotated frames; a false alert = 6 frames with no weapon, 3+ flagged."""
+    import re
+    from collections import defaultdict
+
+    from ultralytics import YOLO
+    model = YOLO(str(WEIGHTS))
+    imgs = sorted((OUT / "images" / "test").glob("*.jpg"))
+    seqs = defaultdict(list)
+    for i in range(0, len(imgs), 16):
+        batch = imgs[i:i + 16]
+        for p, r in zip(batch, model.predict([str(x) for x in batch], imgsz=IMGSZ, conf=0.5, verbose=False)):
+            seg, n = re.match(r"(.*)_frame_(\d+)$", p.stem).groups()
+            gt = bool((OUT / "labels" / "test" / f"{p.stem}.txt").read_text(encoding="utf-8").strip())
+            seqs[seg].append((int(n), len(r.boxes) > 0, gt))
+    ep = found = fa = 0
+    for fr in seqs.values():
+        fr.sort()
+        run = []
+        for k, (_, _, gt) in enumerate(fr):
+            if gt:
+                run.append(k)
+            if (not gt or k == len(fr) - 1) and run:
+                ep += 1
+                found += any(sum(x[1] for x in fr[j:j + 6]) >= 3 for j in range(max(0, run[0] - 5), run[-1] + 1))
+                run = []
+        k = 0
+        while k + 6 <= len(fr):
+            w = fr[k:k + 6]
+            if not any(x[2] for x in w) and sum(x[1] for x in w) >= 3:
+                fa, k = fa + 1, k + 6
+                continue
+            k += 1
+    out = {"episodes": ep, "episodes_alerted": found, "false_alerts": fa,
+           "test_minutes": round(sum(len(v) for v in seqs.values()) / 2 / 60, 1)}
+    print(json.dumps(out, indent=2))
+    return out
+
+
 if __name__ == "__main__":
-    {"prepare": prepare, "train": train, "test": test}[sys.argv[1]]()
+    {"prepare": prepare, "train": train, "test": test, "alerts": alerts}[sys.argv[1]]()
