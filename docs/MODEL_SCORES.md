@@ -1,7 +1,7 @@
 # ARGUS model scores
 
 Every number below is measured, with its test set, its size and how it was split. Sources are the JSON files in
-`data/cache/` on the demo laptop (not in git; the scripts that produce them are). Updated 26 Sep 2026, 03:00 IST.
+`data/cache/` on the demo laptop (not in git; the scripts that produce them are). Updated 26 Sep 2026, 03:30 IST.
 
 ## Detection and fusion on real multi-sensor footage (MEVA, 15 Mar 2018, 14:50-15:20)
 
@@ -20,10 +20,13 @@ Every number below is measured, with its test set, its size and how it was split
 | **Fight detection** (pose + VideoMAE, random forest) | accuracy **76.7 %**, ROC-AUC **0.854**; at the pipeline threshold 0.7: **87/150 fights caught, 12/150 false** (precision 0.88) | 300 CCTV clips (Akti et al. 2019), 5-fold CV **grouped by source recording** (74 recordings). The dataset's authors reported 72 % on a random split. | `violence_eval.json` |
 | Fight detection, pose only | accuracy 74.7 %, AUC 0.821; at 0.7: 80/150 caught, 17 false | same | `violence_eval.json` |
 | VideoMAE alone (pretrained, no training here) | accuracy 74.0 %, AUC 0.805 | same 300 clips, external test | `violence_eval.json` |
-| **Weapon detector v2** (in use) | **46/84 weapon appearances alerted, 7 false alerts in 29 min**; box mAP50 0.311 (handgun 0.37, rifle 0.51, knife 0.05) | 3,511 frames from a camera **never trained on** (Univ. Seville mock attack, Cam7); trained on Cam1 + Cam5 + 2,500 synthetic frames, fixed 30 epochs | `weapons_v1_v2.json` |
-| Weapon detector v1 | 42/84 alerted, 14 false alerts in 29 min; box mAP50 **0.376** (handgun 0.51, rifle 0.54, knife 0.09) | same test camera, real frames only | `weapons_v1_v2.json`, `weapons_eval.json` |
-| Public gun/knife YOLO11n (for comparison) | 3/84 alerted at 0.5; handgun AP50 0.04 | same test camera | `weapons_compare.json` |
-| Person down, hand-off, dealing pattern | **no measured score yet**; hand-offs are being scored at scale (0 annotated in the first 10 clips) | | |
+| **Weapons: v2 detector + vision-model verifier** (in use for uploads) | real alerts kept **33/37**; false alerts on the unseen camera **4 → 0**; ordinary CCTV clips with a false weapon alarm **72 → 6 of 149** | detector as below; each alert's close crop checked by Gemini, dropped only on a clear "no" | `weapons_vlm.json` (`argus.eval.weapons_vlm`) |
+| Weapon detector v2 alone | **46/84 weapon appearances alerted, 7 false alerts in 29 min** on the unseen camera; box mAP50 0.311 (handgun 0.37, rifle 0.51, knife 0.05); but a false alarm on **145/300** ordinary CCTV clips | 3,511 frames from a camera **never trained on** (Univ. Seville mock attack, Cam7); trained on Cam1 + Cam5 + 2,500 synthetic frames. Ordinary clips: the 300-clip fight dataset (no weapons) | `weapons_v1_v2.json`, `weapons_fp.json` |
+| Weapon detector v1 | 42/84 alerted, 14 false alerts in 29 min; box mAP50 **0.376** (handgun 0.51, rifle 0.54, knife 0.09); false alarm on 137/300 ordinary clips | same | `weapons_v1_v2.json`, `weapons_eval.json`, `weapons_fp.json` |
+| Public pretrained weapon models (4 tested) | best: 15/84 alerted, 22 false alerts in 29 min, 33/149 ordinary clips flagged; gun-knife YOLO11n 3/84 | the same two tests | `weapons_public.json` (`argus.eval.weapons_public`) |
+| **Hand-offs** (pose: wrists meet) | recall **15/16** annotated transfers (demo clips), **9/10** (unseen clips); precision low (12-16 %): hands touch a lot, so it is a weak context signal that never opens an incident | MEVA `person_transfers_object`, ±2 s | `threats_eval.json`, `handoff_heldout.json` |
+| Dealing pattern (repeated hand-offs) | false patterns on ordinary footage: **51 → 7** in 65 unseen camera-minutes after requiring meetings (one person walks up or away) | MEVA, no dealing in the footage: every pattern is false | `handoff_heldout.json` |
+| **Person down** | **unvalidated**: 0/30 falls on UR Fall (the clips end ~1.5 s after the fall; the rule needs 3 s down), **0/40** false on everyday activities incl. lying on a bed. False alarms on MEVA **6 → 1** after requiring the person to have been standing just before | UR Fall Detection (30 falls, 40 activities); MEVA 90 camera-min. A variant tuned on half of UR Fall caught 11/15 there but 1/15 on the other half, so it was not adopted | `threats_eval.json`, `person_down_curve.json`, `person_down_tuning.json` |
 
 ## Live and GenAI
 
@@ -48,4 +51,6 @@ Every number below is measured, with its test set, its size and how it was split
   overfitting, and they are small (MEVA publishes few staged crimes).
 - The agent's n is small: the window has 6 staged camera alerts and 1 false one.
 - Knife detection is weak (AP50 ≤ 0.09): knives are small in 1080p CCTV and rare in the training cameras.
+- The weapon verifier needs the network; offline, weapon alerts stay but are marked unverified.
+- Person down is not proven on real falls; treat it as experimental.
 - The bus-station camera's door sensor over-fires; the indoor cameras are the reliable ones.
