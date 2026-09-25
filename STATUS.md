@@ -1,6 +1,6 @@
 # STATUS: demo laptop (Jack), auto-updated
 
-_Updated Fri 25 Sep 19:26 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
+_Updated Fri 25 Sep 19:46 IST. Refreshed every 5 min and pushed only when something changed. Details in HANDOFF.md._
 
 ## Now
 
@@ -23,6 +23,7 @@ _Updated Fri 25 Sep 19:26 IST. Refreshed every 5 min and pushed only when someth
 ## Recent commits on main
 
 ```
+19cebd3 Held-out set C (12 Mar 10:00-10:15, all six cameras with the tuned views + GPS, nothing staged); --set takes several sets and the report merges earlier runs instead of overwriting them; vision/bench.py for GPU throughput (cameras per GPU)
 d30850d HANDOFF Â§11: held-out fixes (re-aimed cameras, missing theft annotation), evidence stills, Ask ARGUS, failed AI second-opinion experiment (vlm_check.py), Bengaluru hook checked
 aabfae6 Ask ARGUS: plain-language questions answered only from the log so far, with clickable citations
 0124cff Evidence stills in the incident panel; held-out set A treats re-aimed cameras as new
@@ -30,5 +31,4 @@ c510a7b Held-out evaluation (python -m argus.eval.holdout): unchanged pipeline o
 1a7685b Story titles (unattended object then carried off = possible theft), decisive signals open on their own, quick-scan uploads, false-incident metric and indoor door split in a shared evaluator, vision-rule regression tests, headline-number guard, frontend unit tests (vitest)
 e209fdf Review fixes: resilient replay loop, safe broadcasts, read endpoints on the event loop, bounded buffers, thread-safe upload manager, ffmpeg failure handling, upload duration fallback, memoised upload overlay; dead code removed; repo-relative transcode.ps1; stale docs updated
 79ffd6d Site: team is Tanush and Mohit (Utkarsh and Ojus did not attend), 2-column team grid; HANDOFF: two-speaker split for the pitch
-4d234ed Site: real console screenshot (bus-station incident at 15:18:40, Gemini brief), caption no longer says sample data; HANDOFF Â§10
 ```
