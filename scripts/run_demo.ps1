@@ -40,8 +40,14 @@ if ($Prepare) {
     Get-ChildItem data\meva\video\*.avi | ForEach-Object {
         $out = Join-Path "data\meva\web" ($_.BaseName + ".mp4")
         if (-not (Test-Path $out)) {
-            ffmpeg -y -loglevel error -i $_.FullName -vf "scale=960:-2" -c:v libx264 -preset veryfast -crf 26 -an -movflags +faststart $out
+            ffmpeg -y -loglevel error -i $_.FullName -vf "scale=960:-2" -c:v libx264 -preset veryfast -crf 26 -g 30 -keyint_min 30 -sc_threshold 0 -an -movflags +faststart $out
             Write-Host "  $out"
+        }
+        $fast = Join-Path "data\meva\web\fast" ($_.BaseName + ".mp4")   # 5 fps proxy for replay >= 4x
+        if (-not (Test-Path $fast)) {
+            New-Item -ItemType Directory -Force data\meva\web\fast | Out-Null
+            ffmpeg -y -loglevel error -i $_.FullName -vf "fps=5,scale=960:-2" -c:v libx264 -preset veryfast -crf 26 -g 5 -keyint_min 5 -sc_threshold 0 -an -movflags +faststart $fast
+            Write-Host "  $fast"
         }
     }
 

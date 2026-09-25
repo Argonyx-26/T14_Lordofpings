@@ -6,6 +6,10 @@ import type { ArgusEvent, Clock, Incident, SiteConfigView } from '../types'
 
 const WALL = ['G421', 'G419', 'G420', 'G638', 'G336', 'G331']
 const HIGHLIGHT_WINDOW_FRAMES = 60 // show an evidence box for ±2 s around its frame
+// At 10x six 30 fps tiles need 1,800 decoded frames/s and the browser falls to ~0.2x; at 5x it manages ~4.3x
+// (measured). From 4x up tiles play a 5 fps proxy of the same clip (media/fast/, made by run_demo.ps1). A 60 Hz
+// screen shows at most 60 frames/s per tile either way.
+const FAST_SPEED = 4
 export const LIVE_URL = import.meta.env.VITE_ARGUS_LIVE ?? `${location.protocol}//${location.hostname}:8001`
 
 interface Props {
@@ -81,23 +85,50 @@ function Tile({ camera, config, clock, incident, focused, boxes, evidence, onCli
   const video = useRef<HTMLVideoElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const [tracks, setTracks] = useState<FrameIndex | null>(null)
+  const [noProxy, setNoProxy] = useState(false)
+  const shownT = useRef<number | null>(null)   // media time of the frame actually on screen
   const stem = clock ? clipAt(config, camera, clock.sim_t) : null
+  const fast = !!clock && clock.speed >= FAST_SPEED && !noProxy
   const info = config.cameras[camera]
+
+  // Track the presented frame (requestVideoFrameCallback), so boxes match the picture even when the decoder
+  // runs behind currentTime at high speed.
+  useEffect(() => {
+    const v = video.current
+    shownT.current = null
+    if (!v || !('requestVideoFrameCallback' in v)) return
+    let id = 0
+    const cb = (_now: number, meta: VideoFrameCallbackMetadata) => {
+      shownT.current = meta.mediaTime
+      id = v.requestVideoFrameCallback(cb)
+    }
+    id = v.requestVideoFrameCallback(cb)
+    return () => v.cancelVideoFrameCallback(id)
+  }, [stem, fast])
 
   useEffect(() => {
     setTracks(null)
     if (stem) loadTracks(stem).then(setTracks)
   }, [stem])
 
-  // Keep the <video> in step with the replay clock: seek when drift > 1.5 s, mirror play/pause and speed.
+  // Keep the <video> in step with the replay clock. Small drift is absorbed by nudging playbackRate; only a
+  // real jump seeks, and never while a seek is in flight. (Seeking whenever drift > 1.5 s re-seeked on every
+  // 0.25 s tick at 5-10x, since each tick moves the clock 1.25-2.5 s: the video sat paused mid-seek, a slideshow.)
   useEffect(() => {
     const v = video.current
     if (!v || !stem || !clock) return
-    const target = clock.sim_t - clipWindow(stem).start
-    if (Math.abs(v.currentTime - target) > 1.5) v.currentTime = target
-    v.playbackRate = Math.min(clock.speed, 16)
-    if (clock.playing && v.paused) v.play().catch(() => {})
     if (!clock.playing && !v.paused) v.pause()
+    if (v.seeking) return
+    const target = clock.sim_t - clipWindow(stem).start
+    const drift = v.currentTime - target                             // > 0: video ahead of the clock
+    const tol = clock.playing ? Math.max(2, clock.speed) : 0.5       // one real second of footage at speed
+    if (Math.abs(drift) > tol) {
+      v.currentTime = target
+      return                                                         // play resumes on a later tick
+    }
+    const nudge = Math.max(-0.3, Math.min(0.3, -drift / tol))
+    v.playbackRate = Math.max(0.25, Math.min(16, Math.min(clock.speed, 16) * (1 + nudge)))
+    if (clock.playing && v.paused) v.play().catch(() => {})
   }, [clock, stem])
 
   // Draw detection boxes and evidence highlights for the frame currently on screen.
@@ -119,7 +150,7 @@ function Tile({ camera, config, clock, incident, focused, boxes, evidence, onCli
       const s = Math.min(W / origW, H / origH)
       const ox = (W - origW * s) / 2
       const oy = (H - origH * s) / 2
-      const frame = Math.round(v.currentTime * config.fps)
+      const frame = Math.round((shownT.current ?? v.currentTime) * config.fps)
       const rect = (b: number[]) => [ox + b[0] * s, oy + b[1] * s, (b[2] - b[0]) * s, (b[3] - b[1]) * s] as const
 
       if (boxes && tracks) {
@@ -159,7 +190,8 @@ function Tile({ camera, config, clock, incident, focused, boxes, evidence, onCli
       style={{ aspectRatio: '16 / 9', boxShadow: accent ? `inset 0 0 0 1.5px ${accent}` : 'inset 0 0 0 1px var(--color-hair)' }}>
       {stem ? (
         <>
-          <video ref={video} key={stem} src={`${API}/media/${stem}.mp4`} muted playsInline className="absolute inset-0 h-full w-full object-contain" />
+          <video ref={video} key={`${stem}${fast ? ':fast' : ''}`} src={`${API}/media/${fast ? 'fast/' : ''}${stem}.mp4`}
+            onError={() => fast && setNoProxy(true)} muted playsInline className="absolute inset-0 h-full w-full object-contain" />
           <canvas ref={canvas} className="pointer-events-none absolute inset-0 h-full w-full" />
         </>
       ) : (

@@ -58,13 +58,28 @@ MEVA 2018-03-15 14:50–15:20, 6 cameras, 9 clips.
 
 ## 5. Open issues
 
-1. **IN PROGRESS (Mohit): the camera wall stutters at 2× / 5× / 10× replay.** This is not the live tile (verified: 29.7 fps produced and 29.7 fps received by a client).
-   - Cause, from reading `CameraWall.tsx` `Tile`: whenever drift from the replay clock exceeds 1.5 s the video seeks, and `playbackRate` is capped at 16.
-   - The MP4s (`data/meva/web`, from `run_demo.ps1` / `transcode.ps1`) use the x264 default GOP (~8 s), so every seek decodes up to 8 s of frames. At high speed the fixed 1.5 s threshold is crossed constantly, which gives seek stutter.
-   - **At 20× (the speed in the PITCH run-sheet) the video can never keep up.**
-   - Planned fix: speed-scaled drift tolerance and rate nudging in `Tile`, plus MP4s re-encoded with a 1 s GOP. Mohit is doing this next and will update this section.
+1. **FIXED (Mohit): the camera wall stuttered at 2× / 5× / 10×, and boxes drifted off people at 5×.** The live tile was never the problem (29.7 fps produced and 29.7 fps received by a client).
+   - **Cause 1, sync loop:** `Tile` seeked whenever drift was over 1.5 s. Each 0.25 s tick moves the clock 1.25–2.5 s at 5–10×, so it re-seeked every tick. With ~8 s GOPs a seek never finished before the next one, and `play()` was interrupted, so tiles sat paused mid-seek: a slideshow (468 seeks in 20 s at 10×).
+   - **Cause 2, decode load:** 6 tiles × 30 fps × 10× = 1,800 decoded frames/s. Measured on 6 bare `<video>` elements: 1×, 2× and 5× are fine (60 fps shown), but 10× collapses to 0.2× and 16× freezes.
+   - **Cause 3, boxes:** boxes were drawn at `currentTime`, which runs ahead of the frame actually on screen when the decoder lags.
+   - **Fix in `CameraWall.tsx`:**
+     - Never seek while a seek is in flight. The tolerance is `max(2 s, speed × 1 s)` while playing, and small drift is absorbed by nudging `playbackRate` ±30 %.
+     - From **4×** up, tiles play a **5 fps proxy** (`/media/fast/<stem>.mp4`; falls back to the full MP4 on error).
+     - Boxes are drawn at the presented frame's `mediaTime` (`requestVideoFrameCallback`).
+   - **Fix in the media:** full MP4s re-encoded with 1 s keyframes (`-g 30`). Proxies are `fps=5`, `-g 5`, under `data/meva/web/fast/`. `run_demo.ps1` (MP4 step) and `transcode.ps1` make both.
+   - **Measured in the console after the fix** (browser pane visible, 6 tiles):
+
+     | Speed | Achieved | Seeks | Playing |
+     |---|---|---|---|
+     | 2× | 2.0× | 0 | 100 % |
+     | 5× | 4.8× | 0 | 100 % |
+     | 10× | 9.7× (= the clock's own 9.75×) | only the switch to the proxy | 100 % |
+     | 20× | ≈18× | a catch-up seek every ~2.5 s | |
+
+     Chrome caps `playbackRate` at 16, so 20× can't play continuously.
+   - **Heads-up: the replay clock runs ~2.5 % slow** (9.75× at 10×). `_loop` in `api/main.py` does `advance(TICK_S)` after `sleep(TICK_S)`, ignoring the real elapsed time. It's harmless, but `advance(elapsed)` with `time.monotonic()` would make it exact.
 2. `run_demo.ps1 -Prepare`: "Console build" (`npm run build`) runs **before** `npm install`, so on a fresh machine it fails first. The later first-run branch recovers, but `npm install` should come before the build.
-3. PITCH run-sheet says **20×**. Until issue 1 is fixed, demo at **10×** or lower.
+3. **PITCH run-sheet says 20×. Use 10×** instead: it plays smoothly, while 20× jumps a little every couple of seconds.
 
 ## 6. Before going on stage (demo laptop)
 
