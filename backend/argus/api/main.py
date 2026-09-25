@@ -311,6 +311,15 @@ def upload_video_file(job_id: str):
     return FileResponse(job.dir / job.meta["original"])
 
 
+@app.get("/api/uploads/{job_id}/thumbs/{event_id}.jpg")
+def upload_still(job_id: str, event_id: str):
+    job = _job_or_404(job_id)
+    path = job.dir / "thumbs" / f"{event_id}.jpg"
+    if not event_id.replace("-", "").isalnum() or not path.exists():
+        raise HTTPException(404, "no still for this event")
+    return FileResponse(path, media_type="image/jpeg")
+
+
 @app.get("/api/uploads/{job_id}/tracks")
 def upload_tracks(job_id: str):
     job = _job_or_404(job_id)

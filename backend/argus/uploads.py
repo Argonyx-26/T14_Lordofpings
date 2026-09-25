@@ -187,6 +187,7 @@ class UploadManager:
         job.status, job.progress, job.message = "rules", 1.0, "Applying rules and fusion"
         job.save()
         result = self._analyse(job, tracks)
+        self._stills(job, src, tracks, result["events"])
         if transcode is not None:
             transcode()
         (job.dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
@@ -278,6 +279,23 @@ class UploadManager:
             "evidence": evidence,
             "summary": engine.summary(),
         }
+
+    @staticmethod
+    def _stills(job: Job, src: Path, tracks: Path, events: "list[dict]") -> None:
+        """Evidence stills (vision/thumbs.py) from the original video: the rules' canvas frame and boxes mapped
+        back to the clip's own frames and pixels. Optional: a failure here never fails the job."""
+        try:
+            from argus.vision.common import FPS
+            from argus.vision.thumbs import make_thumbs
+            fps, sx, sy = job.meta["fps"], job.meta["width"] / CANVAS_W, job.meta["height"] / CANVAS_H
+
+            def to_source(frame: int, bbox: list[float]):
+                return round(frame / FPS * fps), [bbox[0] * sx, bbox[1] * sy, bbox[2] * sx, bbox[3] * sy]
+
+            make_thumbs(events, lambda _clip: src, job.dir / "thumbs", tracks_for=lambda _clip: tracks,
+                        to_source=to_source)
+        except Exception as exc:
+            print(f"[uploads] stills skipped for {job.id}: {type(exc).__name__}: {exc}")
 
     @staticmethod
     def _start_transcode(src: Path, out: Path):

@@ -1,7 +1,8 @@
 import { ArrowUpRight, Check, CornerDownRight, ShieldAlert, X } from 'lucide-react'
 import { useState } from 'react'
-import { API, MOCK, PROVENANCE_LABEL, SOURCE_LABEL, localTime, post, scoreColor, severityLabel } from '../lib'
+import { MOCK, PROVENANCE_LABEL, SOURCE_LABEL, localTime, post, scoreColor, severityLabel } from '../lib'
 import type { ArgusEvent, Incident, SiteConfigView } from '../types'
+import { Still, hasStill } from './Still'
 import type { Role } from './TopBar'
 
 interface Props {
@@ -11,22 +12,6 @@ interface Props {
   evidence: ArgusEvent[]
   onJump: (e: ArgusEvent) => void
   replayingLeadUp?: boolean
-}
-
-// A still of what the camera rule saw (backend/argus/vision/thumbs.py), hidden when there is none (mock, uploads).
-function hasStill(e: ArgusEvent): boolean {
-  const b = e.media?.bbox
-  return e.source === 'cctv' && e.type !== 'occupancy' && !!b && b[2] > b[0] && b[3] > b[1]
-}
-
-function Still({ e, className }: { e: ArgusEvent; className: string }) {
-  const [failed, setFailed] = useState(false)
-  if (failed || MOCK) return null
-  return (
-    <img src={`${API}/media/thumbs/${e.event_id}.jpg`} alt={`${e.type.replaceAll('_', ' ')} on ${e.sensor_id}`}
-      loading="lazy" onError={() => setFailed(true)}
-      className={`rounded-[3px] bg-[var(--color-surface-3)] object-cover ${className}`} />
-  )
 }
 
 export function IncidentDetail({ incident, config, role, evidence, onJump, replayingLeadUp }: Props) {

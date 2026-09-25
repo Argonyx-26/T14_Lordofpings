@@ -80,9 +80,12 @@ def carrier_tid(e: dict) -> int | None:
     return int(c.split(":t")[1]) if e["type"] == "custody_change" and ":t" in c else None
 
 
-def make_thumbs(events: list[dict], video_for, out_dir: pathlib.Path = OUT_DIR, tracks_for=None) -> int:
+def make_thumbs(events: list[dict], video_for, out_dir: pathlib.Path = OUT_DIR, tracks_for=None,
+                to_source=None) -> int:
     """events: Event dicts with media {clip, frame, bbox}; video_for(clip) -> video path; tracks_for(clip) -> the
-    clip's track file (to outline a custody change's carrier). Returns the number of thumbnails written."""
+    clip's track file (to outline a custody change's carrier); to_source(frame, bbox) -> (frame, bbox) in the
+    video's own frames and pixels, for clips the rules saw on a resampled canvas (uploads). Returns thumbs written."""
+    to_source = to_source or (lambda frame, bbox: (frame, bbox))
     by_clip: dict[str, list[dict]] = defaultdict(list)
     for e in events:
         m = e.get("media") or {}
@@ -101,7 +104,9 @@ def make_thumbs(events: list[dict], video_for, out_dir: pathlib.Path = OUT_DIR, 
         cap = cv2.VideoCapture(str(path))
         frame_no, img = -1, None
         for e in sorted(evs, key=lambda e: e["media"]["frame"]):  # read forward once: seeking an AVI is slow
-            target = e["media"]["frame"]
+            target, bbox = to_source(e["media"]["frame"], e["media"]["bbox"])
+            person = carriers.get((carrier_tid(e), e["media"]["frame"]))
+            person = to_source(e["media"]["frame"], person)[1] if person else None
             while frame_no < target:
                 ok = cap.grab()
                 if not ok:
@@ -111,8 +116,7 @@ def make_thumbs(events: list[dict], video_for, out_dir: pathlib.Path = OUT_DIR, 
                     ok, img = cap.retrieve()
             if frame_no != target or img is None:
                 continue
-            cv2.imwrite(str(out_dir / f"{e['event_id']}.jpg"), render(img, e["media"]["bbox"], e["type"],
-                                                                     carriers.get((carrier_tid(e), target))),
+            cv2.imwrite(str(out_dir / f"{e['event_id']}.jpg"), render(img, bbox, e["type"], person),
                         [cv2.IMWRITE_JPEG_QUALITY, 82])
             n += 1
         cap.release()

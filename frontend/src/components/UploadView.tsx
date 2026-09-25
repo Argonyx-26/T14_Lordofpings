@@ -2,6 +2,7 @@ import { ArrowLeft, FileVideo, LoaderCircle, TriangleAlert, Upload } from 'lucid
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { API, scoreColor, severityLabel } from '../lib'
 import { CLASS_STYLE } from '../tracks'
+import { Still, hasStill } from './Still'
 import type { ArgusEvent, Incident, SiteConfigView } from '../types'
 
 interface Job {
@@ -338,6 +339,11 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
                       <span className="num">{mmss(i.first_signal_at - start)}</span> · <span style={{ color }}>{i.status === 'watch' ? 'Watch' : severityLabel(i.score, cfg)}</span>
                     </span>
                     {i.brief && <span className="mt-1 block text-[11.5px] leading-snug text-[var(--color-fg-2)]">{i.brief.summary}</span>}
+                    {(() => {
+                      const key = (result.evidence[i.incident_id] ?? []).filter(hasStill)
+                        .reduce<ArgusEvent | null>((a, e) => (!a || e.severity > a.severity ? e : a), null)
+                      return key && <Still key={key.event_id} e={key} job={job.id} className="mt-2 aspect-video w-full" />
+                    })()}
                   </span>
                 </button>
               )
@@ -346,9 +352,10 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
             {signals.length === 0 && <p className="px-4 pb-4 text-[12px] text-[var(--color-fg-4)]">No events beyond routine occupancy.</p>}
             {signals.map((e) => (
               <button key={e.event_id} onClick={() => seek(e.t)}
-                className="grid w-full grid-cols-[44px_1fr_36px] items-center gap-2 px-4 py-1.5 text-left text-[12px] hover:bg-[var(--color-surface-2)]">
+                className="grid w-full grid-cols-[44px_1fr_auto_36px] items-center gap-2 px-4 py-1.5 text-left text-[12px] hover:bg-[var(--color-surface-2)]">
                 <span className="num text-[var(--color-fg-3)]">{mmss(e.t - start)}</span>
                 <span className="truncate text-[var(--color-fg)]">{e.type.replaceAll('_', ' ')}</span>
+                <span>{hasStill(e) && <Still key={e.event_id} e={e} job={job.id} className="h-[32px] w-[57px]" />}</span>
                 <span className="num text-right text-[var(--color-fg-2)]">{e.severity.toFixed(2)}</span>
               </button>
             ))}
