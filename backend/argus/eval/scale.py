@@ -34,7 +34,7 @@ ROOT = settings.DATA_DIR
 VIDEO, TRACKS, ANN_DIR = ROOT / "video", settings.TRACKS_DIR, ROOT / "ann"
 REF_VIDEO = REPO / "data" / "meva" / "video"
 TOL_S = 2.0
-VIEW_MIN_CORR = 0.5          # below this the camera was re-aimed (decided before running)
+VIEW_MAX_SHIFT = 8.0         # px at 480 px width; more than this and the camera was re-aimed
 
 
 def log(msg: str) -> None:
@@ -71,21 +71,23 @@ def _frame(path: Path, n: int = 150):
     return img if ok else None
 
 
-def view_corr(clip: Path, cam: str) -> float:
-    """Correlation of edge maps between this clip and the tuned 15 March view (1 = same framing)."""
+def view_shift(clip: Path, cam: str) -> float:
+    """How far (pixels at 480 px width) the scene has moved against the tuned 15 March view, by phase correlation of
+    edge maps. Lighting, shadows and crowds barely move the peak; a re-aimed camera does (checked on the known
+    cases: G331 and G336 re-aimed on 5 March shift 26 and 77 px, same-view clips 0-3 px)."""
     import cv2
     import numpy as np
     ref = next(iter(sorted(REF_VIDEO.glob(f"2018-03-15*{cam}.avi"))), None)
     a, b = (_frame(p) for p in (ref, clip)) if ref else (None, None)
     if a is None or b is None:
-        return 0.0
+        return 999.0
+
     def edges(img):
         g = cv2.cvtColor(cv2.resize(img, (480, 268)), cv2.COLOR_BGR2GRAY)
         e = cv2.Canny(cv2.GaussianBlur(g, (5, 5), 0), 50, 150).astype(np.float32)
-        return cv2.GaussianBlur(e, (9, 9), 0)
-    ea, eb = edges(a), edges(b)
-    ea, eb = ea - ea.mean(), eb - eb.mean()
-    return float((ea * eb).sum() / (np.sqrt((ea ** 2).sum() * (eb ** 2).sum()) + 1e-6))
+        return cv2.GaussianBlur(e, (7, 7), 0)
+    (dx, dy), _ = cv2.phaseCorrelate(edges(a), edges(b), cv2.createHanningWindow((480, 268), cv2.CV_32F))
+    return float(np.hypot(dx, dy))
 
 
 def process(row: dict) -> dict | None:
@@ -102,8 +104,8 @@ def process(row: dict) -> dict | None:
         return None
     if not _get(f"{S3}/{row['date']}/{row['hour']}/{stem}.r13.avi", video):
         return None
-    corr = view_corr(video, cam)
-    res = {"stem": stem, "cam": cam, "view_corr": round(corr, 3), "same_view": corr >= VIEW_MIN_CORR}
+    shift = view_shift(video, cam)
+    res = {"stem": stem, "cam": cam, "view_shift_px": round(shift, 1), "same_view": shift <= VIEW_MAX_SHIFT}
     if res["same_view"]:
         TRACKS.mkdir(parents=True, exist_ok=True)
         main, pose, doors = TRACKS / f"{stem}.jsonl", TRACKS / f"{stem}.pose.jsonl", TRACKS / f"{stem}.doors.npz"
@@ -226,7 +228,7 @@ def main(argv=None) -> int:
         r = process(row)
         if r:
             results.append(r)
-            log(f"{i}/{len(picked)} {row['stem']} view {r['view_corr']} "
+            log(f"{i}/{len(picked)} {row['stem']} view shift {r['view_shift_px']} "
                 f"doors {r.get('doors_tp', '-')}/{r.get('doors_truth', '-')} tx {r.get('tx_found', '-')}/"
                 f"{r.get('tx_truth', '-')} ({time.time() - t0:.0f} s)")
         s = summarise(results)
