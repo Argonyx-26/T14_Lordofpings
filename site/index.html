@@ -192,10 +192,10 @@
     <div class="wrap">
       <a class="brand" href="#top">Argus</a>
       <div class="links">
-        <a href="#problem">Problem</a><a href="#how">How it works</a><a href="#results">Results</a><a href="#journey">Build log</a><a href="#team">Team</a><a href="judges.html">For judges</a>
+        <a href="#problem">Problem</a><a href="#how">How it works</a><a href="#results">Results</a><a href="#journey">Build log</a><a href="#team">Team</a><a data-raah-event="open_judges" href="judges.html">For judges</a>
       </div>
-      <a class="btn primary" data-live-demo href="console/">Live demo</a>
-      <a class="btn" href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
+      <a class="btn primary" data-live-demo data-raah-event="open_console" href="console/">Live demo</a>
+      <a class="btn" data-raah-event="open_github" href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
     </div>
   </nav>
 
@@ -205,9 +205,9 @@
       <h1 class="display">We don't watch more.<br /><i>We notice sooner.</i></h1>
       <p class="lead">Argus is a situational-awareness layer for security control rooms. It reads the cameras and sensors a site already owns, fuses weak signals that share a place and a minute, and hands a human a handful of ranked, explained incidents instead of a wall of alerts.</p>
       <div class="cta">
-        <a class="btn primary" data-live-demo href="console/">Try the live demo</a>
-        <a class="btn" href="judges.html">Judges: the 90-second tour</a>
-        <a class="btn" href="https://github.com/Argonyx-26/T14_Lordofpings">View the code</a>
+        <a class="btn primary" data-live-demo data-raah-event="open_console" href="console/">Try the live demo</a>
+        <a class="btn" data-raah-event="open_judges" href="judges.html">Judges: the 90-second tour</a>
+        <a class="btn" data-raah-event="open_github" href="https://github.com/Argonyx-26/T14_Lordofpings">View the code</a>
       </div>
     </div>
   </header>
@@ -404,7 +404,8 @@
       <div>Argus · ARGONYX '26 · RV University, Bengaluru<br />Data: MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0. Incidents are staged by actors.</div>
       <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
         <span class="watching"><span class="dot"></span>Watching · <span data-clock>IST</span></span>
-        <a href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
+        <span data-raah-badge></span><!-- the Raah live-visitor badge, added only in the published build -->
+        <a data-raah-event="open_github" href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
       </div>
     </div>
     <div class="bigmark-wrap" aria-hidden="true"><div class="bigmark">Argus</div></div>

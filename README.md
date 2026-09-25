@@ -262,7 +262,7 @@ Python 3.12 · FastAPI · Pydantic · Shapely · Ultralytics YOLO11 · ByteTrack
 
 ## ▶ Run it
 
-**The website** is live at [argus-lordofpings.vercel.app](https://argus-lordofpings.vercel.app/) (with Raah analytics). To publish changes: `scripts/deploy_site.sh` (Vercel; see the script's header).
+**The website** is live at [argus-lordofpings.vercel.app](https://argus-lordofpings.vercel.app/) with Raah analytics: page views and journeys on the site, the judges' page and the console; named events for opening the console, the judges' page and GitHub and for the console's case report, response planner, pattern links and Ask ARGUS (never incident content); and Raah's live-visitor badge in the site footer. To publish changes: `scripts/deploy_site.sh` (Vercel; see the script's header). The demo laptop never loads Raah: its pages are served offline.
 
 **The live demo** needs nothing: [argus-lordofpings.vercel.app/console](https://argus-lordofpings.vercel.app/console/).
 

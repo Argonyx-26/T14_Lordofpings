@@ -1,7 +1,7 @@
 import { ArrowRight, CornerDownRight, LoaderCircle, Sparkles, X } from 'lucide-react'
 import { AgentRun } from './AgentRun'
 import { useEffect, useRef, useState } from 'react'
-import { MOCK, eventLabel, localTime, modelName, post } from '../lib'
+import { MOCK, eventLabel, localTime, modelName, post, track } from '../lib'
 import type { ArgusEvent, Incident } from '../types'
 import { SourceIcon } from './Symbols'
 
@@ -53,6 +53,7 @@ export function AskBar({ incidents, onSelect, onJump }: Props) {
   useEffect(() => { if (open) input.current?.focus() }, [open])
 
   const submit = async (question: string) => {
+    track('ask_argus', { mode, offline_demo: MOCK })
     if (!question.trim() || busy || MOCK) return
     setQ(question)
     if (mode === 'investigate') { setAnswer(null); setError(null); setCase(question); return }

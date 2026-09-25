@@ -34,6 +34,17 @@ export function localTime(t: number): string {
   return d.toISOString().slice(11, 19)
 }
 
+/**
+ * A named product event for Raah analytics. Only the hosted build carries the Raah beacon (scripts/build_site.sh), so
+ * on the demo laptop and in development `window.raah` is absent and this does nothing. Never sends incident content.
+ */
+export function track(name: string, props: Record<string, string | number | boolean> = {}) {
+  if (typeof window === 'undefined') return
+  const r = (window as unknown as { raah?: { track?: (n: string, p: object) => void; q?: unknown[][] } }).raah
+  if (!r) return
+  try { if (r.track) r.track(name, props); else r.q?.push(['track', name, props]) } catch { /* analytics never breaks the console */ }
+}
+
 export async function post(path: string, body: unknown) {
   const r = await fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   if (!r.ok) throw new Error(`${path}: ${r.status}`)

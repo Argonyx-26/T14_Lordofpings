@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { ForecastCard, ResponsePlanner } from './Forecast'
 import { BlurIn, Decode } from './Motion'
 import {
-  API, LEVEL_COLOR, MOCK, PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, fmt, levelOf, localTime, modelName, post, severityLabel,
+  API, LEVEL_COLOR, MOCK, PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, fmt, levelOf, localTime, modelName, post, severityLabel, track,
 } from '../lib'
 import type { ArgusEvent, Clock, Forecast, Incident, Intel, SiteConfigView, Summary } from '../types'
 import { CaseReport } from './CaseReport'
@@ -119,7 +119,7 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
           </div>
         )}
 
-        {fc && !replayingLeadUp && <ForecastCard fc={fc} clock={clock} onPlan={() => setPlanning(true)} />}
+        {fc && !replayingLeadUp && <ForecastCard fc={fc} clock={clock} onPlan={() => { setPlanning(true); track('plan_response_open', { script: fc.script?.id ?? 'none' }) }} />}
 
         {!replayingLeadUp && <PatternCard incident={incident} intel={intel} incidents={incidents} config={config} onSelect={onSelect} />}
 
@@ -230,7 +230,7 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
       <footer className="flex shrink-0 items-center gap-3 px-4 py-3 hairline-t">
         <ResponseMenu incident={incident} config={config} onAct={act} role={role}
           disabled={MOCK || !!replayingLeadUp} disabledReason={MOCK ? 'Needs the backend' : 'Wait for the incident to re-form'} />
-        <button onClick={() => setReporting(true)} title="The case so far as a report: what, where, when, why, the pattern, what ARGUS could not see, and every decision"
+        <button onClick={() => { setReporting(true); track('case_report_open') }} title="The case so far as a report: what, where, when, why, the pattern, what ARGUS could not see, and every decision"
           className="ml-auto flex h-9 items-center gap-1.5 rounded-lg px-3 text-[12.5px] text-[var(--color-fg-2)] transition hover:bg-[var(--color-surface-2)] hover:text-[var(--color-fg)]"
           style={{ boxShadow: 'inset 0 0 0 1px var(--color-hair-2)' }}>
           <FileText size={14} strokeWidth={1.75} /> Case report

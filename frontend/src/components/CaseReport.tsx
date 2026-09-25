@@ -1,7 +1,7 @@
 import { Check, Copy, EyeOff, FileText, Link2, Printer, ShieldCheck, Waypoints, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, localTime, modelName, severityLabel } from '../lib'
+import { PROVENANCE_LABEL, SOURCE_LABEL, STATUS_LABEL, duration, eventLabel, localTime, modelName, severityLabel, track } from '../lib'
 import type { ArgusEvent, Clock, Forecast, Incident, Intel, SiteConfigView } from '../types'
 import type { AuditEntry } from './IncidentDetail'
 import { Still, hasStill } from './Still'
@@ -78,6 +78,7 @@ export function CaseReport({ incident, evidence, config, clock, forecast, intel,
   ].join('\n')
 
   const copy = async () => {
+    track('case_report_copy')
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1800) } catch { /* clipboard blocked */ }
   }
 
@@ -92,7 +93,7 @@ export function CaseReport({ incident, evidence, config, clock, forecast, intel,
           <span className="eyebrow">Case report · {incident.incident_id}</span>
           <span className="ml-auto" />
           <button className="btn btn-sm" onClick={copy}>{copied ? <Check size={13} /> : <Copy size={13} />} {copied ? 'Copied' : 'Copy as text'}</button>
-          <button className="btn btn-sm btn-primary" onClick={() => window.print()}><Printer size={13} /> Print / save PDF</button>
+          <button className="btn btn-sm btn-primary" onClick={() => { track('case_report_print'); window.print() }}><Printer size={13} /> Print / save PDF</button>
           <button onClick={onClose} className="btn btn-ghost btn-icon" aria-label="Close report"><X size={16} /></button>
         </div>
 

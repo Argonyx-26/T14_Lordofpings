@@ -1,5 +1,5 @@
 import { EyeOff, Footprints, ScanEye, Waypoints } from 'lucide-react'
-import { LEVEL_COLOR, duration, levelOf, localTime } from '../lib'
+import { LEVEL_COLOR, duration, levelOf, localTime, track } from '../lib'
 import type { AreaCoverage, Incident, Intel, PatternLink, Series, SiteConfigView } from '../types'
 
 const KIND: Record<PatternLink['kind'], string> = {
@@ -39,7 +39,7 @@ export function PatternCard({ incident, intel, incidents, config, onSelect }: {
                 const other = l.from === incident.incident_id ? l.to : l.from
                 return (
                   <li key={l.from + l.to}>
-                    <button onClick={() => onSelect(other)} className="group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left transition hover:bg-[var(--color-surface-2)]">
+                    <button onClick={() => { onSelect(other); track('pattern_link_open', { kind: l.kind }) }} className="group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left transition hover:bg-[var(--color-surface-2)]">
                       <Footprints size={12} strokeWidth={1.75} className="mt-0.5 shrink-0" style={{ color: l.kind === 'concurrent' ? 'var(--color-watch)' : 'var(--color-fg-3)' }} />
                       <span className="min-w-0 flex-1 text-[12px] leading-relaxed text-[var(--color-fg-2)]">
                         <span className="num text-[var(--color-fg)]">{other}</span>{' '}
