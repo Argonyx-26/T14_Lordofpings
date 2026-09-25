@@ -1,4 +1,5 @@
 import { ArrowRight, CornerDownRight, LoaderCircle, Sparkles, X } from 'lucide-react'
+import { AgentRun } from './AgentRun'
 import { useEffect, useRef, useState } from 'react'
 import { MOCK, eventLabel, localTime, modelName, post } from '../lib'
 import type { ArgusEvent, Incident } from '../types'
@@ -21,6 +22,7 @@ interface Props {
 }
 
 const SUGGESTIONS = ['What happened at the bus station?', 'Is anything going on at the school?', 'Summarise the last ten minutes']
+const INVESTIGATE = ['Investigate the most serious open incident', 'Is the unattended bag at the bus station real?', 'Did anything get stolen at the school?']
 
 /**
  * Ask ARGUS (backend/argus/ask.py): answered only from what has been seen so far, with clickable citations.
@@ -32,6 +34,8 @@ export function AskBar({ incidents, onSelect, onJump }: Props) {
   const [busy, setBusy] = useState(false)
   const [answer, setAnswer] = useState<Answer | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<'ask' | 'investigate'>('ask')
+  const [case_, setCase] = useState<string | null>(null)       // the question the investigator is working on
   const input = useRef<HTMLInputElement>(null)
   const root = useRef<HTMLDivElement>(null)
 
@@ -51,6 +55,8 @@ export function AskBar({ incidents, onSelect, onJump }: Props) {
   const submit = async (question: string) => {
     if (!question.trim() || busy || MOCK) return
     setQ(question)
+    if (mode === 'investigate') { setAnswer(null); setError(null); setCase(question); return }
+    setCase(null)
     setBusy(true)
     setError(null)
     try {
@@ -75,12 +81,21 @@ export function AskBar({ incidents, onSelect, onJump }: Props) {
       </button>
 
       {open && (
-        <div className="pop absolute left-0 top-full z-40 mt-2 w-[min(460px,calc(100vw-24px))] rounded-xl"
+        <div className={`pop absolute left-0 top-full z-40 mt-2 rounded-xl ${mode === 'investigate' ? 'w-[min(560px,calc(100vw-24px))]' : 'w-[min(460px,calc(100vw-24px))]'}`}
           style={{ background: 'var(--color-surface-2)', boxShadow: '0 18px 50px rgb(0 0 0 / .6), inset 0 0 0 1px var(--color-hair-2)' }}>
+          <div className="flex gap-1 px-3.5 pt-3" role="tablist">
+            {(['ask', 'investigate'] as const).map((m) => (
+              <button key={m} role="tab" aria-selected={mode === m} onClick={() => { setMode(m); setCase(null); setAnswer(null); setError(null); input.current?.focus() }}
+                title={m === 'ask' ? 'A quick answer from the log' : 'An agent works the case: pulls evidence, checks the footage itself, checks phones, then gives a verdict'}
+                className={`rounded-md px-2 py-1 text-[11.5px] transition ${mode === m ? 'bg-[var(--color-surface-4)] text-[var(--color-fg)]' : 'text-[var(--color-fg-3)] hover:text-[var(--color-fg)]'}`}>
+                {m === 'ask' ? 'Ask' : 'Investigate · agent'}
+              </button>
+            ))}
+          </div>
           <form onSubmit={(ev) => { ev.preventDefault(); submit(q) }} className="flex items-center gap-2 px-3.5 py-3 hairline-b">
             <Sparkles size={14} strokeWidth={1.75} className="shrink-0 text-[var(--color-accent)]" />
             <input ref={input} value={q} onChange={(ev) => setQ(ev.target.value)}
-              placeholder="Ask about anything ARGUS has seen so far"
+              placeholder={mode === 'ask' ? 'Ask about anything ARGUS has seen so far' : 'What should the investigator look into?'}
               className="min-w-0 flex-1 bg-transparent text-[13px] text-[var(--color-fg)] outline-none placeholder:text-[var(--color-fg-4)]" />
             <button type="submit" disabled={busy || !q.trim()} aria-label="Ask"
               className="btn btn-icon btn-sm border-transparent">
@@ -88,12 +103,14 @@ export function AskBar({ incidents, onSelect, onJump }: Props) {
             </button>
           </form>
 
-          <div className="scroll max-h-[380px] px-3.5 py-3">
-            {!answer && !busy && !error && (
+          <div className={`scroll px-3.5 py-3 ${mode === 'investigate' ? 'max-h-[min(640px,calc(100vh-120px))]' : 'max-h-[380px]'}`}>
+            {case_ && <AgentRun question={case_} incidents={incidents} onSelect={(id) => { onSelect(id); setOpen(false) }}
+              onJump={(e) => { onJump(e); setOpen(false) }} />}
+            {!case_ && !answer && !busy && !error && (
               <>
                 <div className="eyebrow mb-2">Try</div>
                 <div className="flex flex-col items-start gap-1">
-                  {SUGGESTIONS.map((s) => (
+                  {(mode === 'ask' ? SUGGESTIONS : INVESTIGATE).map((s) => (
                     <button key={s} onClick={() => submit(s)}
                       className="flex items-center gap-2 rounded-md px-1.5 py-1 text-[12.5px] text-[var(--color-fg-2)] transition hover:bg-[var(--color-surface-3)] hover:text-[var(--color-fg)]">
                       <CornerDownRight size={12} className="text-[var(--color-fg-4)]" /> {s}
@@ -101,7 +118,9 @@ export function AskBar({ incidents, onSelect, onJump }: Props) {
                   ))}
                 </div>
                 <p className="mt-3 text-[11px] leading-relaxed text-[var(--color-fg-4)]">
-                  Answers come only from the incidents and signals logged up to the replay clock, and cite them.
+                  {mode === 'ask'
+                    ? 'Answers come only from the incidents and signals logged up to the replay clock, and cite them.'
+                    : 'An agent plans the case and uses ARGUS’s tools: incidents, the sensor log, the camera footage itself (with a vision model) and people’s phones. It only sees the past and only recommends.'}
                 </p>
               </>
             )}
