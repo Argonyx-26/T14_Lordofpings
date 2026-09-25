@@ -134,22 +134,15 @@ def run(video: pathlib.Path, pose: pathlib.Path, out: pathlib.Path, frame_scale:
                 if box is None:
                     i += 1
                     continue                              # nobody in view: nothing to classify
-                l, t, side = int(box[0] / sx), int(box[1] / sy), int(box[2] / max(sx, sy))
-                frames = [f[t:t + side, l:l + side] for _, f in buf]
-            else:
-                frames = [f for _, f in buf]
+            # whole frames, exactly as the model was evaluated (76.7 %); a crop around the closest pair of people
+            # picked bystanders in a crowd and scored a chair-swinging fight 0.001
+            frames = [f for _, f in buf]
             out_rows.append({"frame": canvas_frame, "p": round(prob(frames), 3)})
         i += 1
     cap.release()
     if not out_rows and len(buf) >= 4:                   # shorter than one window: score the whole clip once
         centre = 2 * round(i / 2 * frame_scale / 2)
-        box = _people_box(rows, centre, w * sx, h * sy) if rows else None
-        if rows and box is not None:
-            l, t, side = int(box[0] / sx), int(box[1] / sy), int(box[2] / max(sx, sy))
-            frames = [f[t:t + side, l:l + side] for _, f in buf]
-        else:
-            frames = [f for _, f in buf]
-        out_rows.append({"frame": centre, "p": round(prob(frames), 3)})
+        out_rows.append({"frame": centre, "p": round(prob([f for _, f in buf]), 3)})
     tmp = out.with_suffix(".part")
     tmp.write_text("\n".join(json.dumps(r) for r in out_rows) + ("\n" if out_rows else ""), encoding="utf-8")
     tmp.replace(out)
