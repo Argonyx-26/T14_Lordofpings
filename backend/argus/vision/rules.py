@@ -271,6 +271,20 @@ class ClipRules:
             at_edge = moved / max(t.heights[k], 1) > 0.25
         return bool(at_edge) or self.leaves_via_door(t)
 
+    def walks_off(self, tid: int, frame: int, within_s: float = 10.0, min_heights: float = 1.5) -> bool:
+        """Does this person (following ID switches) move away from where they are at `frame`?"""
+        ids = self.successors(tid)
+        t0 = self.persons[tid]
+        k0 = int(np.argmin(np.abs(t0.frames - frame)))
+        start, hgt = t0.feet[k0], max(t0.heights[k0], 1)
+        for x in ids:
+            t = self.persons[x]
+            sel = (t.frames >= frame) & (t.frames <= frame + within_s * FPS)
+            if sel.any() and (np.hypot(*(t.feet[sel] - start).T) / hgt).max() >= min_heights:
+                return True
+        last = self.persons[ids[-1]]
+        return bool(last.frames[-1] <= frame + within_s * FPS and self.leaves_scene(last))
+
     def door_names(self):
         return [k for k in self.polys if k.startswith("door")]
 
@@ -278,7 +292,13 @@ class ClipRules:
         """Track's last foot point is within half a body-height of a door polygon (tracker often
         loses people a step before the doorway)."""
         pt = Point(*t.feet[-1])
-        return any(self.polys[d].distance(pt) < 0.5 * t.heights[-1] for d in self.door_names())
+        if not any(self.polys[d].distance(pt) < 0.35 * t.heights[-1] for d in self.door_names()):
+            return False
+        # must be walking when the track ends (standing people lost behind furniture are not exits)
+        k = int(np.searchsorted(t.frames, t.frames[-1] - 1.5 * FPS))
+        b0, b1 = t.boxes[k], t.boxes[-1]
+        moved = max(np.hypot(*(t.feet[-1] - t.feet[k])), abs(b1[0] - b0[0]), abs(b1[2] - b0[2]))
+        return bool(moved / max(t.heights[k], 1) > 0.25)
 
     # ---------- rules ----------
     def door_activity(self):
@@ -347,6 +367,8 @@ class ClipRules:
                             ok = far or (bag_moved > 1.5 and owner_moved < 0.3)
                     if ok and run_tid == carrier:
                         if bag.frames[i] - run_start >= CUSTODY_MIN_S * FPS:
+                            if not self.walks_off(carrier, int(run_start)):
+                                break  # seated neighbours shuffling bags / detections hopping between them
                             exits = self.leaves_via_door(self.persons[carrier])
                             self.emit("custody_change", run_start, 0.6 if exits else 0.45, 0.8 if exits else 0.55, bag.tid, bag.boxes[i],
                                       object=CLS_NAME[bag.cls], owner=f"{self.cam}:t{owner}",
