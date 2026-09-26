@@ -101,7 +101,7 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
             <div className="eyebrow mb-2 flex items-center gap-1.5">
               <Cpu size={11} strokeWidth={2} /> ARGUS assessment
               <span className="font-normal normal-case tracking-normal text-[var(--color-fg-4)]">
-                · {incident.brief.generated_by === 'llm' ? `written by ${modelName(incident.brief.model)}, checked against the evidence` : 'from the scoring template'}
+                · {incident.brief.generated_by === 'llm' ? `written by ${modelName(incident.brief.model)}, citations checked` : 'from the scoring template'}
               </span>
             </div>
             <BlurIn id={`${incident.incident_id}:${incident.brief.summary}`}>

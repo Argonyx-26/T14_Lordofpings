@@ -115,7 +115,7 @@ export function CaseReport({ incident, evidence, config, clock, forecast, intel,
           </header>
 
           {incident.brief && (
-            <Block title="Assessment" note={incident.brief.generated_by === 'llm' ? `written by ${modelName(incident.brief.model)}, checked against the evidence` : 'from the scoring template'}>
+            <Block title="Assessment" note={incident.brief.generated_by === 'llm' ? `written by ${modelName(incident.brief.model)}, citations checked` : 'from the scoring template'}>
               <p className="text-[13.5px] text-[var(--color-fg)]">{incident.brief.summary}</p>
               <p className="mt-1">{incident.brief.why}</p>
             </Block>

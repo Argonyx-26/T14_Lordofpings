@@ -132,7 +132,7 @@ The full script is in the deck's speaker notes and in `docs/PITCH.md` §2. Key l
   - YOLO11 and ByteTrack run on this laptop's GPU, and the rules need no training and no labels.
   - Fusion counts each source once, and bursts of the same alert count as one common cause.
   - The score is transparent.
-  - Gemini writes the brief, but it can't create or hide an incident; we reject any sentence the evidence doesn't back.
+  - Gemini writes the brief, but it can't create or hide an incident; a brief whose cited evidence, action or places don't match the incident is replaced by the template.
 - **Slide 6, Results:**
   - 4 of 5 caught; the miss is the black purse on the black bench.
   - 2 stray camera bag alerts, but 0 false incidents.

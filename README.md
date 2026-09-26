@@ -60,7 +60,7 @@ Three things, end to end. Everything else in this repo serves one of them.
 
 ### 1. Fuse: many weak signals become a few incidents
 
-Camera analytics, door sensors and phone counts are each noisy on their own. ARGUS joins signals that share an area and a two-minute window into one incident, scored by a formula anyone can read: severity × confidence × area criticality × corroboration × time of day × operator feedback. Each incident comes with a brief in plain words (written by Gemini, checked line by line against the evidence), and every piece of evidence is one click from the moment it happened, on the camera that saw it. **314 signals → 20 per-stream alerts → 3 incidents; 4 of 5 staged incidents caught, 0 false.**
+Camera analytics, door sensors and phone counts are each noisy on their own. ARGUS joins signals that share an area and a two-minute window into one incident, scored by a formula anyone can read: severity × confidence × area criticality × corroboration × time of day × operator feedback. Each incident comes with a brief in plain words (written by Gemini; the evidence it cites, the action it recommends and the places it names are checked, or the template brief is used), and every piece of evidence is one click from the moment it happened, on the camera that saw it. **314 signals → 20 per-stream alerts → 3 incidents; 4 of 5 staged incidents caught, 0 false.**
 
 ### 2. Foresee: where each incident is heading, and what each response would do
 
@@ -85,7 +85,7 @@ One *Respond* menu: acknowledge, escalate, dispatch a guard, call the police, or
 | **Patterns and near-repeat watch** | Links incidents that share a crime script's act and checks whether one person could have walked between them; then says where to look next. Behaviour, place and time, never faces or phones; never changes a score ([details](#-above-incidents-patterns-and-blind-spots)) | Foresee |
 | **Blind spots** | Every area's coverage from the site model: which streams see it, which cameras are recording, what it cannot see; a covered stage camera is noticed in 2 s | Fuse |
 | **Any footage** | Drop in a clip from any camera, even a phone: tracks, threats and a threat assessment under the chosen profile | Fuse |
-| **Live on stage** | The laptop webcam runs the same detector at ~30 fps: a bag left 15 s, a knife in hand, a fight, the lens covered. Each alert is fused, scored and briefed like any other | Fuse |
+| **Live on stage** | The laptop webcam runs the same models live (detection and tracking at ~30 fps, ~10 fps with every model on): a bag left 15 s, a knife in hand, a fight, the lens covered. Each alert is fused, scored and briefed like any other | Fuse |
 | **Site profiles** | **Airport**, **School / college** (the tuned setting) or **Public park**: 4/5, 4/5 and 2/5 caught on the same footage, 0 false incidents in all three | Fuse |
 | **Case report** | One click: timeline, evidence, the score's arithmetic, pattern, blind spots, forecast and every decision with its audit hash | Decide |
 
@@ -126,7 +126,7 @@ flowchart LR
     CV["Coverage<br/>what it can't see"]
   end
   subgraph Human["A person decides"]
-    B["Brief, checked<br/>against evidence"]
+    B["Brief, citations<br/>checked"]
     P["Forecast +<br/>response planner"]
     A["Respond: hash-chained<br/>audit log"]
   end
