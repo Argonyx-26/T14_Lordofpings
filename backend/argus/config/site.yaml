@@ -20,6 +20,8 @@ cameras:                       # camera -> zone (fine) -> area (coarse); pos = [
   G336: {zone: school_road,  area: plaza,       label: "School exterior / road", pos: [39.050541, -85.529185]}
   G474: {zone: school_road,  area: plaza,       label: "School exterior (IR)",   pos: [39.050541, -85.529185]}
   G331: {zone: bus_platform, area: bus_station, label: "Bus station",            pos: [39.049010, -85.529500]}
+  # Added for 14:50-14:55; the position is approximate (on the school's edge, where the entrance it watches is).
+  G639: {zone: school_entrance, area: school,      label: "School side entrance",   pos: [39.05024, -85.52830]}
   LIVE: {zone: stage,        area: live,        label: "Stage camera (live)"}
 
 fusion:

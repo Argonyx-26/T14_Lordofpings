@@ -105,7 +105,8 @@ export function CameraWall({ config, clock, incidents, current, evidence, focus,
       {mode === 'live' ? (
         <LiveTile />
       ) : (
-        <div className="feed-grid min-h-0 flex-1 gap-1.5 p-1.5" style={{ gridTemplateColumns: `repeat(${Math.max(1, others.length)}, minmax(0, 1fr))` }}>
+        // up to 6 thumbnails in one row; more wrap into two rows so they stay big enough to read
+        <div className="feed-grid min-h-0 flex-1 gap-1.5 p-1.5" style={{ gridTemplateColumns: `repeat(${Math.max(1, others.length <= 6 ? others.length : Math.ceil(others.length / 2))}, minmax(0, 1fr))` }}>
           {cams.map((cam) => (
             <Tile key={cam} camera={cam} config={config} clock={clock} boxes={boxes} primary={cam === primary}
               order={cam === primary ? -1 : others.indexOf(cam)}

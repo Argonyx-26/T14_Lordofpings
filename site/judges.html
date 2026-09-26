@@ -176,7 +176,7 @@
       <h2 class="display">What to click</h2>
       <p class="kicker">The <a href="console/" data-live-demo data-raah-event="open_console">live demo</a> is a snapshot of the replay at 15:20, bundled with the page (any stand-in event is labelled in the console). The stage demo adds live footage, replay and uploads.</p>
       <ol class="jtour">
-        <li><b>Read the top band.</b><p>What needs a decision now, the funnel from every signal to a human decision (314 → 20 → 3), and the score against ground truth.</p></li>
+        <li><b>Read the top band.</b><p>What needs a decision now, the funnel from every signal to a human decision (325 → 21 → 3), and the score against ground truth.</p></li>
         <li><b>Open the top incident.</b><p>The main camera follows it. The panel shows the brief, the evidence (click a row to replay the moment), and the response progress: signals, opened by Argus, your decision.</p></li>
         <li><b>Look at "Where this is heading".</b><p>The crime-script stage it has reached and what the next stage would do to its risk, re-scored by the real scorer.</p></li>
         <li><b>Press "Plan the response".</b><p>How incidents like this unfold, what would change the score (another sensor, night time, a stricter or looser site profile, a dismissal), and every response compared: time to effect, the stage it stops, people affected, disruption. Simulate one, then apply it.</p></li>
@@ -194,7 +194,7 @@
       <table>
         <tr><th>Claim</th><th>Result</th><th>n and method</th></tr>
         <tr><td>Staged thefts and abandonments caught</td><td><b>4 of 5</b>, 0 false incidents</td><td><small>MEVA, 15 Mar 2018, 14:50–15:20, 6 cameras + GPS. Every staged theft and abandonment MEVA publishes for that window. Ground truth is read only by the evaluator.</small></td></tr>
-        <tr><td>Noise removed</td><td>314 events → 20 per-stream alerts → <b>3 incidents</b></td><td><small>Same window. "Per-stream alerts" is what separate camera, door and GPS thresholds would page.</small></td></tr>
+        <tr><td>Noise removed</td><td>325 events → 21 per-stream alerts → <b>3 incidents</b></td><td><small>Same window. "Per-stream alerts" is what separate camera, door and GPS thresholds would page.</small></td></tr>
         <tr><td>Security profiles</td><td>Airport 4/5 (+6 on watch) · Campus 4/5 · Park 2/5; <b>0 false in all three</b></td><td><small>Same footage re-scored under each profile.</small></td></tr>
         <tr><td>Fights</td><td>accuracy <b>76.7%</b>, ROC-AUC 0.854; 87 of 150 fights at the pipeline threshold, 12 false (precision 0.88)</td><td><small>300 real CCTV clips (Akti et al. 2019), 5-fold CV grouped by source recording (74 recordings); body pose fused with a pretrained surveillance VideoMAE. The dataset authors reported 72% on a random split.</small></td></tr>
         <tr><td>Weapons</td><td>46 of 84 appearances alerted, 7 false alerts in 29 min (v2 detector); a vision-model verifier cuts false alarms on ordinary CCTV from 72 to 6 of 149 clips</td><td><small>3,511 frames from a camera never trained on (Univ. of Seville mock attack). Knives: AP50 0.09, so we don't claim them.</small></td></tr>

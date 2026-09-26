@@ -602,10 +602,31 @@ class ClipRules:
         return self.events
 
 
+def _verify_weapons(stem: str, events: list[dict]) -> list[dict]:
+    """The same second opinion uploads get (weapon_verify.py): a clear "no" from the vision model drops a weapon
+    alert; "yes", "unsure" or no network keep it. Replay clips run the rules on the original video, so frame and
+    box are already in its pixels."""
+    import cv2
+    from argus.vision.common import MEVA_DIR
+    from argus.vision.weapon_verify import filter_events
+    cap = cv2.VideoCapture(str(MEVA_DIR / "video" / f"{stem}.avi"))
+
+    def grab(frame: int, bbox: list[float]):
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
+        ok, img = cap.read()
+        return (img, bbox) if ok else (None, None)
+    try:
+        return filter_events(events, grab)
+    finally:
+        cap.release()
+
+
 def main(paths: list[pathlib.Path]):
     events = []
     for p in paths:
         ev = ClipRules(p).run()
+        if any(e["type"] == "weapon_visible" for e in ev):
+            ev = _verify_weapons(p.stem, ev)
         print(f"{p.stem}: {len(ev)} events  {dict(Counter(e['type'] for e in ev))}")
         events += ev
     events.sort(key=lambda e: e["t"])

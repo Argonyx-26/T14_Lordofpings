@@ -56,3 +56,5 @@ G331:   # bus station interior
     front:  [490,70,670,190]
     back:   [1350,30,1420,140]
     side:   [1840,100,1920,300]
+G639:   # school side entrance (exterior); no doors drawn: bags, thefts, running, crowding, weapons and fights only
+  polygons: {}

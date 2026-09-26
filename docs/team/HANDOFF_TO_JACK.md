@@ -105,7 +105,7 @@ The full script (prep, shot list, voice-over, editing steps) is in **`docs/DEMO_
 
 - **Recording:** Xbox Game Bar (`Win + Alt + R`) with the console full-screen (F11), at **10×**.
 - **Editing:** trim in Clipchamp. Add auto-captions; judges may watch it muted.
-- **The results card at 1:45:** 4 of 5 caught · 0 false incidents · 314 → 20 → 3 · 30 fps.
+- **The results card at 1:45:** 4 of 5 caught · 0 false incidents · 325 → 21 → 3 · 30 fps.
 - **Copies:** one on the desktop, one on a USB stick, and send one to me.
 
 ---

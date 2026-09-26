@@ -4,7 +4,7 @@ The unchanged pipeline (vision rules, zones, thresholds and fusion exactly as tu
 
 | Window | Camera-hours | Staged incidents caught | False incidents | Raw events → incidents | Door sensor P / R (indoor) | Door P / R (all cameras) |
 |---|---|---|---|---|---|---|
-| Tuning window (15 Mar, 14:50-15:20) | 0.75 | 4 / 5 | 0 | 314 → 3 | 0.54 / 0.75 | 0.21 / 0.52 |
+| Tuning window (15 Mar, 14:50-15:20) | 0.83 | 4 / 5 | 0 | 325 → 3 | 0.54 / 0.75 | 0.21 / 0.52 |
 | **Held-out A**: Different day (5 Mar, 13:10-13:20) | 0.17 | 0 / 1 | 0 | 20 → 0 | n/a | n/a |
 
 Notes:

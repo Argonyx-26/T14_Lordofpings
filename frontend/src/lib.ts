@@ -165,7 +165,7 @@ export function duration(s: number): string {
 }
 
 /** The cameras on the wall, in display order. */
-export const WALL = ['G421', 'G419', 'G420', 'G638', 'G336', 'G331']
+export const WALL = ['G421', 'G419', 'G420', 'G639', 'G638', 'G336', 'G331']
 
 // ---- cameras -------------------------------------------------------------------------------------------------
 

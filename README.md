@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/readme/banner.svg" alt="ARGUS: We don't watch more. We notice sooner. 314 signals, 20 per-stream alerts, 3 incidents, 1 person decides." width="100%" />
+  <img src="docs/readme/banner.svg" alt="ARGUS: We don't watch more. We notice sooner. 325 signals, 21 per-stream alerts, 3 incidents, 1 person decides." width="100%" />
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 ---
 
-In thirty minutes of one ordinary afternoon, a school, its cafe, a plaza and a bus station produced **314 signals** from cameras, doors and people's phones (phones counted per area, never one by one). Separate systems watching each stream would have paged a guard **20 times**. Hidden among them: a bag stolen from a cafe table, then another, then a suitcase taken at the bus station and a package left behind on the platform.
+In thirty minutes of one ordinary afternoon, a school, its cafe, a plaza and a bus station produced **325 signals** from cameras, doors and people's phones (phones counted per area, never one by one). Separate systems watching each stream would have paged a guard **21 times**. Hidden among them: a bag stolen from a cafe table, then another, then a suitcase taken at the bus station and a package left behind on the platform.
 
 **Three things needed a person. ARGUS found them, explained them, and showed where each one was heading.**
 
@@ -44,8 +44,8 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 
 | | |
 |---|---|
-| **Staged incidents caught** | **4 of 5**, with **0 false incidents** (MEVA, 30 min, 6 cameras + GPS, scored against the dataset's own ground truth) |
-| **Noise removed** | 314 signals → 20 per-stream alerts → **3 incidents**: 99% never reach a person |
+| **Staged incidents caught** | **4 of 5**, with **0 false incidents** (MEVA, 30 min, 7 cameras + GPS, scored against the dataset's own ground truth) |
+| **Noise removed** | 325 signals → 21 per-stream alerts → **3 incidents**: 99% never reach a person |
 | **Fights** | **76.7%** accuracy, ROC-AUC 0.854 on 300 real CCTV clips, cross-validated by recording (dataset authors: 72%) |
 | **Weapons** | 46 of 84 weapon appearances alerted, 7 false alerts in 29 min on a camera the model never saw; a vision-model verifier cuts false alarms on ordinary CCTV from 72 to 6 of 149 clips |
 | **Live** | 30 fps detection and tracking on one laptop GPU |
@@ -60,7 +60,7 @@ Three things, end to end. Everything else in this repo serves one of them.
 
 ### 1. Fuse: many weak signals become a few incidents
 
-Camera analytics, door sensors and phone counts are each noisy on their own. ARGUS joins signals that share an area and a two-minute window into one incident, scored by a formula anyone can read: severity × confidence × area criticality × corroboration × time of day × operator feedback. Each incident comes with a brief in plain words (written by Gemini; the evidence it cites, the action it recommends and the places it names are checked, or the template brief is used), and every piece of evidence is one click from the moment it happened, on the camera that saw it. **314 signals → 20 per-stream alerts → 3 incidents; 4 of 5 staged incidents caught, 0 false.**
+Camera analytics, door sensors and phone counts are each noisy on their own. ARGUS joins signals that share an area and a two-minute window into one incident, scored by a formula anyone can read: severity × confidence × area criticality × corroboration × time of day × operator feedback. Each incident comes with a brief in plain words (written by Gemini; the evidence it cites, the action it recommends and the places it names are checked, or the template brief is used), and every piece of evidence is one click from the moment it happened, on the camera that saw it. **325 signals → 21 per-stream alerts → 3 incidents; 4 of 5 staged incidents caught, 0 false.**
 
 ### 2. Foresee: where each incident is heading, and what each response would do
 
@@ -107,7 +107,7 @@ One *Respond* menu: acknowledge, escalate, dispatch a guard, call the police, or
 ```mermaid
 flowchart LR
   subgraph Streams["Real streams (MEVA)"]
-    V["6 CCTV cameras<br/>1080p video"]
+    V["7 CCTV cameras<br/>1080p video"]
     D["Door activity"]
     G["Phone GPS<br/>10 s fixes"]
   end
@@ -206,18 +206,18 @@ level; n is five staged events). Served at `GET /api/intel`; tested in `backend/
 
 ## 📊 Results
 
-Measured on the MEVA recording of 15 March 2018, 14:50–15:20: six cameras, one facility, scored against the dataset's human ground truth with `python -m argus.eval.evaluate`.
+Measured on the MEVA recording of 15 March 2018, 14:50–15:20: seven cameras, one facility, scored against the dataset's human ground truth with `python -m argus.eval.evaluate`.
 
 | Claim | Result | n and method |
 |---|---|---|
 | Staged thefts and abandonments | **4 / 5 caught, 0 false incidents** | every staged theft and abandonment MEVA publishes in the window; 2 cafe thefts, 1 bus-station theft and 1 abandonment caught |
-| Event funnel | 314 → 20 → **3** | raw events → what per-stream thresholds would page → incidents. Phones are counted per area, never one by one (was 1,242 when each phone's arrival and departure was an event) |
+| Event funnel | 325 → 21 → **3** | raw events → what per-stream thresholds would page → incidents. Phones are counted per area, never one by one (was 1,242 when each phone's arrival and departure was an event) |
 | Security profiles | Airport 4/5 (+6 on watch) · Campus 4/5 · Park 2/5 · **0 false in all three** | same 30 minutes, re-scored per profile |
 | Fights | accuracy **76.7%**, ROC-AUC **0.854**; at the pipeline threshold 87/150 fights, 12/150 false (precision 0.88) | 300 real CCTV clips (Akti et al. 2019), 5-fold CV grouped by source recording (74 recordings); body pose fused with a pretrained surveillance VideoMAE used as-is. Pose alone: 74.7%, AUC 0.82 |
 | Weapons (v2 detector, in use) | **46/84** appearances alerted, **7** false alerts in 29 min; box AP50 handgun 0.37, rifle 0.51 (v1: 42/84, 14 false, AP50 0.51 / 0.54) | 3,511 frames from a camera never trained on (Univ. of Seville mock armed attack). Knives: not claimed |
 | Weapon verifier | false weapon alarms on ordinary CCTV **72 → 6** of 149 clips; on the unseen camera real alerts kept 33/37, false 4 → 0 | a vision model checks a close crop of each detector alert; dropped only on a clear no; offline, alerts stay and are marked unverified |
 | Investigator agent | real alerts kept **12/12** (11 confirmed or likely); false alert called a false alarm **2/2**; 24 s and 1.6 camera looks per case | the 7 camera bag alerts in the window, 2 runs each, scored against MEVA annotations it never sees. n is small |
-| Door sensor from video | indoor precision **0.54**, recall **0.75** | ±2 s against human door-open labels, 3 indoor cameras; all 6 cameras: 0.21 / 0.52 |
+| Door sensor from video | indoor precision **0.54**, recall **0.75** | ±2 s against human door-open labels, 3 indoor cameras; all 6 annotated cameras: 0.21 / 0.52 |
 | Held-out day | staged theft missed, **0 false incidents** | 5 March, unseen and untuned; the suitcase sat at the frame edge with only its handle in view |
 | Live inference | **30 fps**, 13–23 ms a frame | YOLO11s at 960 px, FP16, one RTX 5060 laptop GPU |
 
@@ -248,9 +248,9 @@ The console is built around a single living instrument, the **ARGUS eye** (Argus
 | Part | What it shows |
 |---|---|
 | Outer ticks | the watch, turning while the replay plays |
-| Six arc segments | the six cameras: lit when they have footage, coloured when their area has an incident |
+| One arc segment per camera | lit when it has footage, coloured when its area has an incident |
 | Three rotating rings | camera analytics, door sensors and phone locations, each pulsing with its live signal rate |
-| Particles flowing inward | every real signal. Routine events fade halfway (absorbed); only signals reach the pupil: the 314 → 3 funnel, live |
+| Particles flowing inward | every real signal. Routine events fade halfway (absorbed); only signals reach the pupil: the 325 → 3 funnel, live |
 | Iris and pupil | the most urgent state on screen: the pupil dilates and the iris changes colour from calm to critical |
 
 It opens full screen while the console links up (the percentage is real readiness), then flies into its place in the top band. Around it, motion only ever says that something changed: new incident titles **decode** out of scrambled glyphs, briefs **come into focus** when they are written, the incident list **re-ranks on springs**, counts **roll**. Glass appears only where UI floats over footage. Everything respects `prefers-reduced-motion`, runs on one animation loop that stops when the tab is hidden, and adds no long tasks at 30× replay.
@@ -340,6 +340,7 @@ Everything here was made on site at RV University between 11:00 on Friday 25 Sep
 | 04:16 | Above incidents: pattern links, near-repeat watch, coverage and blind spots, case reports |
 | 04:26 | Camera tamper on the stage camera |
 | 05:10 | Duty officer and supervisor data tiers: detector internals, the whole decision log, what ARGUS learned, reopening dismissals |
+| 08:15 | A seventh camera (G639, school side entrance): 325 → 21 → 3, still 4/5 and 0 false. Three more were tried and left out: a far-away person read as a rifle (the verifier said "unsure"), and people running in the parking lot and bus front joined the theft pattern |
 
 **AI assistance, disclosed.** We used Claude Code as a coding assistant and Gemini inside the product for briefs. Every change was reviewed, run and tested by us, and every number above comes from our own measurements.
 

@@ -44,7 +44,7 @@ clips land in `Videos\Captures`. OBS works too. Then assemble them in **Clipcham
 | 1:25–1:33 | **F. Live** | Toggle **Live inference** for about 5 seconds; the fps counter is visible. Toggle back. | "And it runs live, at thirty frames a second, on a single laptop GPU." |
 | 1:33–1:42 | **G. A human decides** | Switch the role to **Supervisor**, open **Respond** and choose **Escalate to a supervisor**; open **Decision log** to show the verified chain. | "A person makes every call, and every call goes into a tamper-evident log." |
 | 1:42–1:50 | **H. Any footage** | Header: **Analyse a video** → open the finished bus-station analysis; play 3 seconds with boxes on. | "Any clip can be uploaded and analysed the same way." |
-| 1:50–2:00 | **Results card** | "4 of 5 staged incidents caught · 0 false incidents · 314 events → 3 incidents · 30 fps live" · small line: "MEVA dataset, Kitware / IARPA. Incidents staged by actors." | "On real footage, Argus caught four of five staged incidents with zero false incidents. We don't watch more. We notice sooner." |
+| 1:50–2:00 | **Results card** | "4 of 5 staged incidents caught · 0 false incidents · 325 events → 3 incidents · 30 fps live" · small line: "MEVA dataset, Kitware / IARPA. Incidents staged by actors." | "On real footage, Argus caught four of five staged incidents with zero false incidents. We don't watch more. We notice sooner." |
 
 **Check before recording shot C:** the bus-station incident is now titled **"Possible theft: unattended object taken"**
 (its evidence holds both the unattended bag and the bag changing hands, plus phones showing a crowd). If the evidence on

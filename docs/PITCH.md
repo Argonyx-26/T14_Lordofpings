@@ -10,7 +10,7 @@ Presentation & Storytelling, Business Impact & Market Potential.
 |---|---|---|
 | Staged incidents caught | `ground_truth_alerted / ground_truth_total` | **4/5** (2 cafe thefts, bus theft + abandonment; miss: black purse on black bench) |
 | False incidents in the 30-min window | incidents with no ground truth nearby | **0** (2 camera-level bag alerts, absorbed by fusion) |
-| Raw → per-stream alerts → incidents | `reduction` block | **314 → 20 → 3** (99% never reach an operator; phones are counted per area, never followed) |
+| Raw → per-stream alerts → incidents | `reduction` block | **325 → 21 → 3** (99% never reach an operator; phones are counted per area, never followed) |
 | Door detection precision / recall | `door_detection` | **0.54 / 0.75** indoor (0.21 / 0.52 all cameras) |
 | Median seconds from first signal to incident | `latency_s` | not on the slides |
 | Live inference fps on the RTX 5060 | live tile stats | **30 fps** (13–23 ms per frame) |
@@ -63,10 +63,10 @@ one idea per slide, numbers big.
 |---|---|---|---|
 | 1 | **Title** | "Argus" wordmark · *We don't watch more. We notice sooner.* · PS5 Intelligent Threat Detection & Situational Awareness · team names | A · 0:00–0:10 |
 | 2 | **The problem** | Big: **4,484 alerts a day · 67% never looked at** (Vectra 2023, 2,000 SOC analysts). Small: physical security teams report the same wall of false alarms (ServiceNow cut 94% with alarm triage, Ambient.ai 2026). Photo-free: a sketch of five screens, one tired operator. If you got a quote from RV University campus security, put it here. | A · 0:10–0:35 |
-| 3 | **The insight** | *The threat lives between the screens.* One camera flag is noise; a camera flag + a crowd forming on phones + a door opening in the same place and minute is an incident. Visual: the funnel `314 events → 20 per-stream alerts → 3 incidents`. | A · 0:35–1:00 |
+| 3 | **The insight** | *The threat lives between the screens.* One camera flag is noise; a camera flag + a crowd forming on phones + a door opening in the same place and minute is an incident. Visual: the funnel `325 events → 21 per-stream alerts → 3 incidents`. | A · 0:35–1:00 |
 | 4 | **Live** | One word: "Live". Switch to the console. | B (+C) · 1:00–3:15 |
 | 5 | **How it works** | Left to right: *Real streams* (MEVA CCTV · door sensor · device location) → *Detect* (YOLO11 + ByteTrack, rules, causal baselines; no training, no labels) → *Fuse* (same area within 120 s, strongest signal per source, corroboration, common-cause damping) → *Score* (transparent 0–100) → *Explain* (Gemini writes the brief; it can't create, hide or re-rank incidents; every sentence checked against evidence) → *Human decides* (acknowledge / escalate / dismiss, hash-chained audit). | C · 3:15–3:40 |
-| 6 | **Measured on real footage** | **4 of 5 staged incidents caught** · **0 false incidents** in 30 min across 6 cameras · **314 → 3** · door detection P 0.54 R 0.75 (indoor) · **30 fps** live on one laptop GPU. Footnote: *MEVA dataset (Kitware/IARPA), staged incidents among real passers-by; door stream derived from annotations (stands in for access control); video door sensor scored against them; the miss was a black purse on a black bench.* | C · 3:40–3:55 |
+| 6 | **Measured on real footage** | **4 of 5 staged incidents caught** · **0 false incidents** in 30 min across 7 cameras · **325 → 3** · door detection P 0.54 R 0.75 (indoor) · **30 fps** live on one laptop GPU. Footnote: *MEVA dataset (Kitware/IARPA), staged incidents among real passers-by; door stream derived from annotations (stands in for access control); video door sensor scored against them; the miss was a black purse on a black bench.* | C · 3:40–3:55 |
 | 7 | **Why us, who pays** | 2×2: *camera-only vs multi-stream* × *enterprise-priced vs campus-priced*. Genetec / Milestone PSIM (physical, enterprise) · Splunk / Sentinel (cyber, enterprise) · Ambient.ai (camera-first, US enterprise) · **Argus: multi-stream, software-only, explainable, runs on one GPU**. Beachhead: Indian university and hospital campuses with 2–5-person control rooms. Model: per-site SaaS by stream count + on-prem licence (assumption to state: ₹[X] per site per month). PSIM market ≈ $4.3B by 2029 (MarketsandMarkets). | D · 3:55–4:40 |
 | 8 | **What comes next** | Any footage: upload a clip and Argus analyses it on the spot. Connectors (Milestone/Genetec video, access control, Wi-Fi and security logs). One GPU box per site with a DPDP-ready audit trail. Close line. | A · 4:40–5:00 |
 
@@ -95,7 +95,7 @@ Aim for ~650 spoken words. Rehearse with a timer; cut words, not the demo.
 > camera can't shout louder, and rewards independent corroboration. The score is transparent: you just saw every
 > factor. Gemini writes the brief, but it can't create or hide an incident, and we reject any sentence that isn't
 > backed by the evidence. Measured against the ground truth: we caught 4 of 5 staged incidents with 0 false
-> alarms in half an hour of six cameras, out of 314 raw events."
+> alarms in half an hour of seven cameras, out of 325 raw events."
 
 **D: Business (3:55–4:40)**
 > "Big sites buy Genetec or Milestone for physical security and Splunk for cyber: enterprise products, separate
@@ -154,7 +154,7 @@ auto-captions), because judges may watch it muted.
 | 0:50–1:10 | Zoom on Why this score and the brief | "The score is transparent. Gemini writes the brief, but it cannot create or hide incidents, and every sentence is checked against the evidence." |
 | 1:10–1:30 | Click the evidence: that camera takes the main view with the red box; then the live inference view | "One click replays the moment. Detection is YOLO11 with tracking, running live on a single laptop GPU, with no training." |
 | 1:30–1:45 | Supervisor escalates; audit log | "A human makes every call, and every call is recorded in a tamper-evident log." |
-| 1:45–2:00 | Results card: 4/5 caught · 0 false alarms · 314 → 3 | "On real footage we caught 4 of 5 staged incidents with 0 false alarms. And you can hand Argus any clip to analyse on the spot." |
+| 1:45–2:00 | Results card: 4/5 caught · 0 false alarms · 325 → 3 | "On real footage we caught 4 of 5 staged incidents with 0 false alarms. And you can hand Argus any clip to analyse on the spot." |
 
 Export as MP4 ≤ 2:00. Keep one copy on the demo laptop desktop and one on a USB stick.
 
