@@ -211,9 +211,11 @@ function Tile({ camera, config, clock, incident, primary, order, boxes, evidence
       last = key
       if (c.width !== W || c.height !== H) { c.width = W; c.height = H }
       ctx.clearRect(0, 0, W, H)
-      // Boxes are in original 1920-wide pixels; the <video> is object-contain, so letterbox offsets apply.
-      const origW = 1920
-      const origH = origW * (v.videoHeight / v.videoWidth)
+      // Boxes are in the original's pixels, whose long side is 1920 (G639 is mounted on its side: 1072 x 1920);
+      // the <video> is object-contain, so letterbox offsets apply.
+      const k = 1920 / Math.max(v.videoWidth, v.videoHeight)
+      const origW = v.videoWidth * k
+      const origH = v.videoHeight * k
       const s = Math.min(W / origW, H / origH)
       const ox = (W - origW * s) / 2
       const oy = (H - origH * s) / 2
