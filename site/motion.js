@@ -1,6 +1,6 @@
 // Motion for the Argus site. No dependencies, works offline, and does nothing under prefers-reduced-motion.
 //   1. the eye: scrolling through #see opens an aperture onto real footage (sets --r and --p)
-//   2. (scrolling is left native)
+//   2. inertial scroll, Lenis-style, for mouse wheels only (keyboard, touch and links stay native)
 //   3. sections come into focus as they arrive; eyebrows decode; big numbers count up
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -20,8 +20,26 @@
   }
   if (!reduce) { updateEye(); addEventListener('scroll', () => requestAnimationFrame(updateEye), { passive: true }); addEventListener('resize', updateEye) }
 
-  // 2. scrolling stays native: an inertial wheel handler called scrollTo every frame, and with the page's
-  //    scroll-behavior: smooth each call restarted a smooth scroll, which stuttered on laptop touchpads
+  // 2. inertial wheel scroll ----------------------------------------------------------------------------------
+  if (!reduce && matchMedia('(pointer: fine)').matches) {
+    let target = scrollY, current = scrollY, running = false
+    const maxY = () => document.documentElement.scrollHeight - innerHeight
+    const step = () => {
+      current += (target - current) * 0.11
+      if (Math.abs(target - current) < 0.4) { current = target; running = false }
+      scrollTo(0, current)
+      if (running) requestAnimationFrame(step)
+    }
+    addEventListener('wheel', (ev) => {
+      if (ev.ctrlKey || ev.metaKey || Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) return
+      if (ev.target.closest && ev.target.closest('.scroll, textarea, [data-native-scroll]')) return
+      ev.preventDefault()
+      if (!running) { target = current = scrollY }
+      target = Math.max(0, Math.min(maxY(), target + ev.deltaY * (ev.deltaMode === 1 ? 32 : 1)))
+      if (!running) { running = true; requestAnimationFrame(step) }
+    }, { passive: false })
+    addEventListener('scroll', () => { if (!running) target = current = scrollY }, { passive: true })   // keys, links, scrollbar
+  }
 
   // 3. reveals ------------------------------------------------------------------------------------------------
   const GLYPHS = '▮▯◆◇▲△●○01ABCDEFHKLMNPRSTUVXYZ'
