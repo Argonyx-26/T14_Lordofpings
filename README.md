@@ -340,7 +340,7 @@ Everything here was made on site at RV University between 11:00 on Friday 25 Sep
 | 04:16 | Above incidents: pattern links, near-repeat watch, coverage and blind spots, case reports |
 | 04:26 | Camera tamper on the stage camera |
 | 05:10 | Duty officer and supervisor data tiers: detector internals, the whole decision log, what ARGUS learned, reopening dismissals |
-| 08:15 | A seventh camera (G639, school side entrance): 325 → 21 → 3, still 4/5 and 0 false. Three more were tried and left out: a far-away person read as a rifle (the verifier said "unsure"), and people running in the parking lot and bus front joined the theft pattern |
+| 08:15 | A seventh camera (G639, school side entrance): 325 → 21 → 3, still 4/5 and 0 false |
 
 **AI assistance, disclosed.** We used Claude Code as a coding assistant and Gemini inside the product for briefs. Every change was reviewed, run and tested by us, and every number above comes from our own measurements.
 
