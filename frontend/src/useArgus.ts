@@ -13,6 +13,7 @@ export interface ArgusState {
   mockEvidence: Record<string, ArgusEvent[]>
   mockForecasts: Record<string, Forecast>
   mockIntel: Intel | null
+  mockPlaceholders: number   // events in the offline snapshot marked as stand-ins (attrs.fixture), not detections
 }
 
 type Action =
@@ -22,6 +23,12 @@ type Action =
   | { kind: 'connected'; value: boolean }
 
 const MAX_EVENTS = 400
+
+/** How many distinct events in a snapshot are stand-ins rather than detections (attrs.fixture). */
+export function placeholders(snap: Snapshot): number {
+  const all = [...snap.recent_events, ...Object.values(snap.evidence ?? {}).flat()]
+  return new Set(all.filter((e) => e.attrs?.fixture).map((e) => e.event_id)).size
+}
 
 export function reducer(s: ArgusState, a: Action): ArgusState {
   switch (a.kind) {
@@ -39,6 +46,7 @@ export function reducer(s: ArgusState, a: Action): ArgusState {
         mockEvidence: a.snap.evidence ?? s.mockEvidence,
         mockForecasts: a.snap.forecasts ?? s.mockForecasts,
         mockIntel: a.snap.intel ?? s.mockIntel,
+        mockPlaceholders: placeholders(a.snap),
       }
     case 'tick': {
       // keep the same object when nothing changed, so views memoised on it don't recompute four times a second
@@ -54,7 +62,7 @@ export function reducer(s: ArgusState, a: Action): ArgusState {
 }
 
 export const initial: ArgusState = {
-  config: null, clock: null, summary: null, incidents: {}, events: [], connected: false, mock: MOCK, mockEvidence: {}, mockForecasts: {}, mockIntel: null,
+  config: null, clock: null, summary: null, incidents: {}, events: [], connected: false, mock: MOCK, mockEvidence: {}, mockForecasts: {}, mockIntel: null, mockPlaceholders: 0,
 }
 
 export function useArgus() {
@@ -71,16 +79,19 @@ export function useArgus() {
       return
     }
     let cancelled = false
-    let retry: ReturnType<typeof setTimeout>
+    // two timers: a pending config retry must not hide a pending reconnect from the cleanup (or the reverse)
+    let configRetry: ReturnType<typeof setTimeout> | undefined
+    let wsRetry: ReturnType<typeof setTimeout> | undefined
     let profile: string | undefined
 
     const loadConfig = () =>
       fetch(API + '/api/config')
         .then((r) => r.json())
         .then((config) => { profile = config.profile; if (!cancelled) dispatch({ kind: 'config', config }) })
-        .catch(() => { if (!cancelled) retry = setTimeout(loadConfig, 2000) })
+        .catch(() => { if (!cancelled) configRetry = setTimeout(loadConfig, 2000) })
 
     const connect = () => {
+      if (cancelled) return
       const ws = new WebSocket(WS_URL)
       wsRef.current = ws
       ws.onopen = () => dispatch({ kind: 'connected', value: true })
@@ -94,14 +105,15 @@ export function useArgus() {
       }
       ws.onclose = () => {
         dispatch({ kind: 'connected', value: false })
-        if (!cancelled) retry = setTimeout(connect, 1500)
+        if (!cancelled) wsRetry = setTimeout(connect, 1500)
       }
     }
     loadConfig()
     connect()
     return () => {
       cancelled = true
-      clearTimeout(retry)
+      clearTimeout(configRetry)
+      clearTimeout(wsRetry)
       wsRef.current?.close()
     }
   }, [])

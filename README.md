@@ -64,7 +64,7 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 
 <p align="center">
   <img src="docs/readme/planner.png" alt="The response planner: the theft script with intervention points, what-if bars for each change in evidence, context and profile, and a course-of-action comparison with a simulation" width="100%" />
-  <br /><sub>The response planner on the offline demo's real snapshot: how this unfolds, what would change the score, and every response compared, then simulated.</sub>
+  <br /><sub>The response planner on the offline demo's snapshot: how this unfolds, what would change the score, and every response compared, then simulated.</sub>
 </p>
 
 **4. Keeps a person in charge.** One *Respond* menu: acknowledge, escalate, dispatch a guard, call the police, or dismiss as a false alarm. Each decision is appended to a hash-chained audit log, and a dismissal teaches ARGUS to score similar alerts lower in that area.
@@ -89,7 +89,7 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 ## ▶ The 90-second tour
 
 > [!TIP]
-> Open the **[live demo](https://argus-lordofpings.vercel.app/console/)**. It is a real snapshot of the replay at 15:20, bundled with the page, so it works without a backend.
+> Open the **[live demo](https://argus-lordofpings.vercel.app/console/)**. It is a snapshot of the replay at 15:20, bundled with the page, so it works without a backend (`python -m argus.export_snapshot` makes it from the real replay; any stand-in event is labelled as one in the console).
 
 1. **Read the top band**: what needs a decision now, the funnel from every signal to a human decision, and the score against ground truth (click it for each staged incident).
 2. **Open the top incident.** The main camera follows it. Click an evidence row to replay that moment on the camera that saw it.
@@ -258,7 +258,7 @@ On the website the same eye becomes the hero: real footage from the bus-station 
 
 ## 🛠 Engineering
 
-- **78 backend tests and 15 frontend tests** on every push ([CI](https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml)). Tests that need MEVA video skip themselves; the rest run anywhere.
+- **80 backend tests and 16 frontend tests** on every push ([CI](https://github.com/Argonyx-26/T14_Lordofpings/actions/workflows/ci.yml)). Tests that need MEVA video skip themselves; the rest run anywhere.
 - **Deterministic**: the same events in the same order give the same incidents, scores and forecasts.
 - **Offline on stage**: fonts, briefs and Ask ARGUS answers are cached; nothing needs the network.
 - **Windows-first demo**: PowerShell setup, run and stop scripts, UTF-8 file I/O everywhere, one process at `http://localhost:8000`.
@@ -327,6 +327,16 @@ Everything here was made on site at RV University between 11:00 on Friday 25 Sep
 | 21:14 | Console redesigned around one question: what needs a person right now? |
 | 21:54 | Mentor round: security profiles, weapons, fights, falls, hand-offs |
 | 22:54 | Forecasting and response planning; threat assessment for uploaded footage |
+| **Sat** | |
+| 00:26 | The ARGUS eye: the console's living instrument, boot sequence, decoding titles |
+| 01:54 | Live incident on stage: the unattended-bag rule on the webcam |
+| 02:02 | The investigator: a tool-using agent that looks at footage and writes a case file (12/12 real alerts kept) |
+| 02:55 | Threat rules fixed by scoring them; weapon alerts verified by a vision model (false alarms 72 → 6 of 149 clips) |
+| 03:41 | Privacy: ARGUS never follows a phone (the funnel becomes 314 → 20 → 3) |
+| 03:58 | Supervisor-only decisions enforced by the backend |
+| 04:16 | Above incidents: pattern links, near-repeat watch, coverage and blind spots, case reports |
+| 04:26 | Camera tamper on the stage camera |
+| 05:10 | Duty officer and supervisor data tiers: detector internals, the whole decision log, what ARGUS learned, reopening dismissals |
 
 **AI assistance, disclosed.** We used Claude Code as a coding assistant and Gemini inside the product for briefs. Every change was reviewed, run and tested by us, and every number above comes from our own measurements.
 

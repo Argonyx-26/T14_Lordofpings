@@ -51,7 +51,7 @@ export function CaseReport({ incident, evidence, config, clock, forecast, intel,
 
   const rows: Row[] = [
     ...evidence.map((e) => ({ t: e.t, kind: 'signal' as const, what: eventLabel(e.type),
-      detail: `${SOURCE_LABEL[e.source]} · ${config?.cameras[e.sensor_id]?.label ?? e.sensor_id} · strength ${e.severity.toFixed(2)} · ${PROVENANCE_LABEL[e.provenance]}` })),
+      detail: `${SOURCE_LABEL[e.source]} · ${config?.cameras[e.sensor_id]?.label ?? e.sensor_id} · strength ${e.severity.toFixed(2)} · ${e.attrs?.fixture ? 'placeholder, not a detection' : PROVENANCE_LABEL[e.provenance]}` })),
     ...(incident.opened_at ? [{ t: incident.opened_at, kind: 'argus' as const, what: 'ARGUS opened the incident for a person',
       detail: incident.decisive ? 'a decisive signal: goes to a person whatever the score' : `risk crossed ${config?.thresholds.open_threshold ?? 55}` }] : []),
     ...decisions.map((d) => ({ t: d.sim_t, kind: 'decision' as const, what: `${DECISION[d.action] ?? d.action} by ${d.role === 'supervisor' ? 'the supervisor' : 'the duty officer'}`,

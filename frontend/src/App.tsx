@@ -93,7 +93,7 @@ export default function App() {
     )}
     {desk && role === 'supervisor' && <SupervisorDesk config={state.config} onClose={() => setDesk(false)} onOpen={select} />}
     <div className="app">
-      <TopBar config={state.config} summary={state.summary} connected={state.connected} mock={state.mock} role={role} onRole={setRole}
+      <TopBar config={state.config} summary={state.summary} connected={state.connected} mock={state.mock} placeholders={state.mockPlaceholders} role={role} onRole={setRole}
         onAnalyse={() => setView(view === 'upload' ? 'console' : 'upload')} analysing={view === 'upload'} onDesk={() => setDesk(true)}
         ask={<AskBar incidents={state.incidents} onSelect={select} onJump={jumpTo} />} />
       {view === 'upload' ? <UploadView config={state.config} /> : <>

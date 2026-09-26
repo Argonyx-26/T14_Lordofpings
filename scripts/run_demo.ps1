@@ -77,10 +77,16 @@ if ($Prepare) {
     npm --prefix frontend run build
 }
 
-if (-not (Test-Path frontend\dist\index.html)) {
-    Step "Console build (first run)"
+# Rebuild the console when there is no build yet, or when any of its sources changed since the last build (a git pull
+# that brought console changes), so the laptop never serves an old console by mistake.
+$Dist = "frontend\dist\index.html"
+$Newest = Get-ChildItem -Path frontend\src, frontend\index.html, frontend\package.json -Recurse -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if (-not (Test-Path $Dist) -or ($Newest -and $Newest.LastWriteTime -gt (Get-Item $Dist).LastWriteTime)) {
+    Step "Console build (the console's sources are newer than its build)"
     npm --prefix frontend install --no-audit --no-fund
     npm --prefix frontend run build
+    if ($LASTEXITCODE -ne 0) { Write-Host "Console build failed: the previous build (if any) is served" -ForegroundColor Yellow }
 }
 
 Step "Stopping anything already on ports 8000 / 8001"

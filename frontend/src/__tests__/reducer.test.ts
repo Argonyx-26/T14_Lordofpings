@@ -26,3 +26,13 @@ describe('live state reducer', () => {
     expect(Object.keys(s.incidents)).toEqual(['INC-1'])
   })
 })
+
+describe('placeholders', () => {
+  it('counts distinct stand-in events in a snapshot, wherever they appear', async () => {
+    const { placeholders } = await import('../useArgus')
+    const ev = (id: string, fixture?: boolean) => ({ event_id: id, attrs: fixture ? { fixture: true } : {} }) as never
+    const snap = { recent_events: [ev('a', true), ev('b')], evidence: { 'INC-1': [ev('a', true), ev('c', true)] } } as never
+    expect(placeholders(snap)).toBe(2)
+    expect(placeholders({ recent_events: [ev('b')] } as never)).toBe(0)
+  })
+})

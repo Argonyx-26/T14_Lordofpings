@@ -150,7 +150,8 @@ export function IncidentDetail({ incident, auto, config, clock, summary, role, e
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12.5px] text-[var(--color-fg)]">{eventLabel(e.type)}</span>
                     <span className="block truncate text-[11px] text-[var(--color-fg-3)]">
-                      {SOURCE_LABEL[e.source]} · <span className="num">{e.sensor_id}</span> · {PROVENANCE_LABEL[e.provenance]}
+                      {SOURCE_LABEL[e.source]} · <span className="num">{e.sensor_id}</span> ·{' '}
+                      {e.attrs?.fixture ? <span className="text-[var(--color-watch)]">placeholder, not a detection</span> : PROVENANCE_LABEL[e.provenance]}
                     </span>
                   </span>
                   {hasStill(e) && <Still key={e.event_id} e={e} className="h-[36px] w-[64px] shrink-0" />}

@@ -11,6 +11,7 @@ interface Props {
   summary: Summary | null
   connected: boolean
   mock: boolean
+  placeholders?: number
   role: Role
   onRole: (r: Role) => void
   onAnalyse: () => void
@@ -20,7 +21,7 @@ interface Props {
 }
 
 /** Global status bar: identity, the question box, stream health, link state and who is signed in. */
-export function TopBar({ config, summary, connected, mock, role, onRole, onAnalyse, analysing, ask, onDesk }: Props) {
+export function TopBar({ config, summary, connected, mock, placeholders = 0, role, onRole, onAnalyse, analysing, ask, onDesk }: Props) {
   const sources = Object.entries(summary?.by_source ?? {})
   const [asking, setAsking] = useState(false)
   const [pin, setPin] = useState('')
@@ -63,8 +64,10 @@ export function TopBar({ config, summary, connected, mock, role, onRole, onAnaly
 
       {mock ? (
         <span className="chip" style={{ color: 'var(--color-watch)' }}
-          title="A real snapshot of the MEVA replay at 15:20, bundled with the page. Live footage, replay and uploads need the backend.">
-          Offline demo · real snapshot
+          title={placeholders
+            ? `A snapshot of the MEVA replay at 15:20, bundled with the page. Doors and phone counts are real; ${placeholders} camera event${placeholders === 1 ? ' is a stand-in' : 's are stand-ins'} for the pipeline's detections, marked in the evidence. Live footage, replay and uploads need the backend.`
+            : 'A real snapshot of the MEVA replay at 15:20, bundled with the page. Live footage, replay and uploads need the backend.'}>
+          {placeholders ? `Offline demo · ${placeholders} placeholder event${placeholders === 1 ? '' : 's'}` : 'Offline demo · real snapshot'}
         </span>
       ) : (
         <span className="flex items-center gap-1.5 text-[11.5px] text-[var(--color-fg-2)]" role="status">

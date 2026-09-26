@@ -37,6 +37,9 @@ powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1          # console
 powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Live    # + live inference tile on :8001
 ```
 
+`run_demo.ps1` rebuilds the console by itself when its sources are newer than the last build (after a `git pull`), so
+the laptop never serves an old console.
+
 One backend process serves the API, the videos and the console, so the whole demo is one URL:
 **http://localhost:8000**. The script frees ports 8000/8001 first, waits until the backend is healthy, prints
 how many events it loaded per stream (warns if CCTV events are missing), and opens the browser.

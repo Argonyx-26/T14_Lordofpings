@@ -387,3 +387,42 @@ Pull and rebuild the console (`npm --prefix frontend run build`). What changes o
 - Demo beat (20 s): as duty officer, dismiss is greyed; escalate. Switch to Supervisor, open the incident's *Detector
   internals* ("the camera adds 37 points, the phones 33"), dismiss it as a false alarm, open **Supervisor desk →
   What ARGUS learned** (the lesson it just learned), then **Dismissed → Reopen** (the lesson is taken back).
+
+## 18. Update 06:00: what to do now, in order (supersedes the step lists in §16 and §17)
+
+**1. Stop, pull, start.** `run_demo.ps1` now rebuilds the console by itself when its sources are newer than the build,
+so a plain start after the pull is enough (check the window says "Console build ..." once).
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\stop_demo.ps1
+git pull
+powershell -ExecutionPolicy Bypass -File scripts\run_demo.ps1 -Camera 0
+```
+(I can't run PowerShell on the Mac: if that build step errors, run `npm --prefix frontend run build` by hand and tell me.)
+
+**2. Export the real offline snapshot and push it (most important: the hosted console is built on it).** The one in
+git is Friday 23:10's: its two open incidents rest on two **placeholder** camera events (`fixture: true`), and the
+hosted console now says so ("Offline demo · 2 placeholder events"). Your export replaces them with the real replay.
+```powershell
+cd backend
+..\.venv\Scripts\python -m argus.export_snapshot
+cd ..
+git add frontend/src/mock/snapshot.json
+git commit -m "Offline demo snapshot from the real replay"
+git push
+```
+Tell me when it's pushed and I'll redeploy the website.
+
+**3. Measure the intel layer on the real events** and paste the output in the team chat (it goes in the pitch):
+```powershell
+cd backend
+..\.venv\Scripts\python -m argus.eval.patterns_eval
+```
+
+**4. Re-warm the briefs once while online** (`..\.venv\Scripts\python -m argus.brief.warm`): briefs now follow the
+evidence as it grows, and the warm-up caches one per evidence state, so the stage replay shows model-written briefs
+throughout with Wi-Fi off.
+
+**5. Rehearse the three new moments** (details in §16 and §17): pattern links at the bus station, the supervisor
+desk (dismiss → what ARGUS learned → reopen), and the hand over the stage camera.
+
+**6. Optional:** `ARGUS_SUPERVISOR_PIN=<digits>` in `.env` to make the supervisor role ask for a PIN.
