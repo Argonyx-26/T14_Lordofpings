@@ -41,6 +41,33 @@ OUT_W = 960
 ATTRIBUTION = "MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0"
 
 
+def real_people(r, pr, min_points: int = 2, min_height: float = 0.35) -> list[bool]:
+    """Which boxes to keep. A large person box (at least `min_height` of the frame, close to the camera, where the
+    pose model is reliable) only when the pose model finds someone's head where a head belongs in it, across the
+    middle (15-85 % of its width) and in its upper 60 %. Smaller boxes are always kept: pose misses distant
+    people, and dropping a bag's owner would make the bag look abandoned. A backpack held up to the camera is
+    person-shaped to the detector (straps like arms) and scored 0.75 'person' on the stage camera; the nearest head
+    was the holder's, at the box's edge. The head is the centre of the confident nose, eyes and ears, or of the
+    shoulders when the face is turned away; a pose needs `min_points` confident head/shoulder points (COCO 0-6,
+    >= 0.5) to count. Other classes are always kept."""
+    if r.boxes is None or not len(r.boxes):
+        return []
+    heads = []
+    for kp in (pr.keypoints.data.tolist() if pr is not None and pr.keypoints is not None else []):
+        upper = [(x, y) for x, y, c in kp[:7] if c >= 0.5]
+        face = [(x, y) for x, y, c in kp[:5] if c >= 0.5]
+        if len(upper) >= min_points:
+            pts = face or upper
+            heads.append((sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts)))
+    keep = []
+    frame_h = r.orig_shape[0]
+    for (x1, y1, x2, y2), cls in zip(r.boxes.xyxy.tolist(), r.boxes.cls.int().tolist()):
+        w, h = x2 - x1, y2 - y1
+        keep.append(cls != 0 or h < min_height * frame_h
+                    or any(x1 + 0.15 * w <= hx <= x2 - 0.15 * w and y1 <= hy <= y1 + 0.6 * h for hx, hy in heads))
+    return keep
+
+
 def no_power_throttling() -> None:
     """Windows 11 power-throttles (EcoQoS) processes without a foreground window, and run_demo.ps1 starts
     this one minimized: that alone halves the fps. Opt this process out. No-op elsewhere."""
@@ -127,6 +154,13 @@ class Live:
                 r = self.model.track(frame, persist=True, tracker="bytetrack.yaml", classes=self.classes, conf=0.3,
                                      imgsz=self.imgsz, half=True, verbose=False)[0]
                 infer_ms = (time.perf_counter() - t1) * 1000
+                pr = None
+                if self.violence is not None:
+                    pr = self.pose.track(frame, persist=True, tracker="bytetrack.yaml", conf=0.25, imgsz=640,
+                                         half=True, verbose=False)[0]
+                    keep = real_people(r, pr)
+                    if not all(keep):
+                        r = r[keep]
                 if r.boxes is not None and (self.rule is not None or self.sharp is not None):
                     ids = r.boxes.id.int().tolist() if r.boxes.id is not None else [None] * len(r.boxes)
                     dets = list(zip(r.boxes.cls.int().tolist(), ids, r.boxes.conf.tolist(), r.boxes.xyxy.tolist()))
@@ -134,9 +168,7 @@ class Live:
                         self.rule.update(dets, frame=frame)
                     if self.sharp is not None:
                         self.sharp.update(dets, frame=frame)
-                if self.violence is not None:
-                    pr = self.pose.track(frame, persist=True, tracker="bytetrack.yaml", conf=0.25, imgsz=640,
-                                         half=True, verbose=False)[0]
+                if pr is not None:
                     self.violence.update(pr, frame)
                 times.append(time.perf_counter())
                 fps = (len(times) - 1) / (times[-1] - times[0]) if len(times) > 1 else 0.0
