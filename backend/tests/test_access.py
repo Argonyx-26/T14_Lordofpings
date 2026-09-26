@@ -43,6 +43,28 @@ def test_duty_officer_gets_evidence_without_detector_internals(client):
     assert c["source"] == "cctv" and c["score_without"] == 0 and c["adds"] == s["incident"]["score"]
 
 
+def test_the_websocket_and_state_carry_no_detector_internals(client):
+    """The WebSocket is not tied to a role, so what it pushes is the duty officer's view; so is /api/state unless a
+    supervisor asks."""
+    main.rt.remember(list(main.rt.engine.events.values()))
+
+    def clean(events):
+        return events and all(e["entity"] is None and not set(e["attrs"]) - {"live", "fixture"} for e in events)
+
+    with client.websocket_connect("/ws") as ws:
+        assert clean(ws.receive_json()["recent_events"])
+        client.post("/api/live/event", json={"type": "abandoned_object", "severity": 0.9, "confidence": 0.8,
+                                             "bbox": [0, 0, 10, 10], "track": 7, "attrs": {"unattended_s": 20}})
+        for _ in range(50):
+            msg = ws.receive_json()
+            if msg.get("events"):
+                break
+        assert clean(msg["events"])
+    assert clean(client.get("/api/state").json()["recent_events"])
+    full = client.get("/api/state", headers=SUP).json()["recent_events"]
+    assert any(e["entity"] and "unattended_s" in e["attrs"] for e in full)
+
+
 def test_the_whole_decision_log_and_its_export_are_a_supervisors(client):
     iid = _iid()
     client.post(f"/api/incidents/{iid}/action", json={"action": "ack"})

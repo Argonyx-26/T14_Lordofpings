@@ -19,7 +19,7 @@ from typing import Literal
 from fastapi import HTTPException, Request
 
 Role = Literal["duty_officer", "supervisor"]
-PUBLIC_ATTRS = {"live", "camera", "weapon", "reason", "view_lost_s", "story"}   # plain facts a duty officer may read
+PUBLIC_ATTRS = {"live", "camera", "weapon", "reason", "view_lost_s", "story", "fixture"}   # plain facts a duty officer may read
 
 
 def pin_required() -> bool:
@@ -50,3 +50,13 @@ def require_supervisor(request: Request, what: str) -> None:
 def for_duty_officer(event: dict) -> dict:
     """An event as a duty officer sees it: what happened, where, when and how strongly, without detector internals."""
     return {**event, "entity": None, "attrs": {k: v for k, v in (event.get("attrs") or {}).items() if k in PUBLIC_ATTRS}}
+
+
+def public_message(msg: dict) -> dict:
+    """A state message (snapshot or tick) with every event in the duty officer's view. The WebSocket is not tied to a
+    role, so everything it pushes is public; supervisors read detector internals per incident over REST."""
+    out = dict(msg)
+    for key in ("events", "recent_events"):
+        if key in out:
+            out[key] = [for_duty_officer(e) for e in out[key]]
+    return out

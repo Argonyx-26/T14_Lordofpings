@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from argus import settings
-from argus.access import for_duty_officer, pin_required, require_supervisor, role_of
+from argus.access import for_duty_officer, pin_required, public_message, require_supervisor, role_of
 from argus.audit import AuditLog
 from argus.brief.llm import MODEL, brief_for, cache_key
 from argus.config import profiles, site
@@ -160,7 +160,7 @@ async def _upgrade_brief(inc: Incident):
 async def _broadcast(msg: dict):
     if not rt.clients:
         return
-    data = json.dumps(msg)
+    data = json.dumps(public_message(msg))
     dead = []
     for ws in list(rt.clients):
         try:
@@ -208,8 +208,9 @@ def _area_geometry() -> dict[str, list[list[float]]]:
 
 
 @app.get("/api/state")
-async def state():
-    return rt.snapshot()
+async def state(request: Request):
+    snap = rt.snapshot()
+    return snap if role_of(request) == "supervisor" else public_message(snap)
 
 
 @app.get("/api/role")
@@ -663,7 +664,7 @@ def upload_weapons(job_id: str):
 async def ws(websocket: WebSocket):
     await websocket.accept()
     rt.clients.add(websocket)
-    await websocket.send_text(json.dumps(rt.snapshot()))
+    await websocket.send_text(json.dumps(public_message(rt.snapshot())))
     try:
         while True:
             await websocket.receive_text()     # client pings; commands go through REST

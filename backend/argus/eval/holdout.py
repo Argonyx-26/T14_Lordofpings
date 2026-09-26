@@ -239,7 +239,10 @@ def write_report(results: dict) -> Path:
     rows = []
     if tuning.exists():
         t = json.loads(tuning.read_text(encoding="utf-8"))
-        rows.append(("Tuning window (15 Mar, 14:50-15:20)", t, round(9 * 5 / 60, 2)))
+        if t.get("cctv_events"):               # without the camera events (no data/events/cctv.jsonl) it's not the result
+            rows.append(("Tuning window (15 Mar, 14:50-15:20)", t, round(9 * 5 / 60, 2)))
+        else:
+            log("tuning-window metrics have no camera events on this machine: its row is left out")
     for key, m in results.items():
         rows.append((f"**Held-out {key}**: {m['label']}", m, m["camera_hours"]))
 
@@ -262,7 +265,7 @@ def write_report(results: dict) -> Path:
         n_false = len(m.get("false_incidents", []))
         door = m.get("door_detection", {})
         lines.append(f"| {label} | {hours} | {caught} | {n_false} | {red['raw_events']:,} → "
-                     f"{red['incidents_open'] + red['incidents_watch']} | {pr(door.get('indoor'))} | {pr(door)} |")
+                     f"{red['incidents_open']} | {pr(door.get('indoor'))} | {pr(door)} |")
     lines += ["", "Notes:"]
     for key, m in results.items():
         lines.append(f"- Held-out {key} streams: {', '.join(m['streams'])}.")
@@ -274,6 +277,7 @@ def write_report(results: dict) -> Path:
                          f"incident score {g['peak_score']}, sources {', '.join(g['sources']) or 'none'}.")
         for fi in m.get("false_incidents", []):
             lines.append(f"  - False incident: {fi['title']} at {fi['time']} (score {fi['peak_score']}).")
+    lines.append("- A larger unseen sample (20 clips from seven days, nothing staged) is in `docs/SCALE_RESULTS.md`.")
     lines.append("- Staged incidents are acted among real passers-by; MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0.")
     out = settings.REPO_ROOT / "docs" / "HOLDOUT_RESULTS.md"
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
