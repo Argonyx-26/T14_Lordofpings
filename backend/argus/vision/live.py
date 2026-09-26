@@ -31,10 +31,12 @@ from argus.vision.common import MEVA_DIR, camera_cfg, clip_info  # noqa: E402
 from argus.vision.live_rules import SHARP, LiveBagRule, LiveSharpRule, LiveTamperRule, LiveViolence  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
-CLASSES = [0, 2, 3, 5, 7, 24, 26, 28]
+# laptops and phones are drawn (the valuables the upload pipeline tracks too); the rules pick their own classes
+CLASSES = [0, 2, 3, 5, 7, 24, 26, 28, 63, 67]
 NAMES = {0: "person", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck", 24: "backpack", 26: "handbag", 28: "suitcase",
-         43: "knife", 76: "scissors"}
-COLORS = {0: (80, 200, 255), 24: (0, 200, 255), 26: (0, 200, 255), 28: (0, 200, 255)}
+         43: "knife", 63: "laptop", 67: "phone", 76: "scissors"}
+COLORS = {0: (80, 200, 255), 24: (0, 200, 255), 26: (0, 200, 255), 28: (0, 200, 255), 63: (255, 120, 220),
+          67: (255, 120, 220)}
 OUT_W = 960
 ATTRIBUTION = "MEVA dataset, Kitware Inc. / IARPA, CC-BY-4.0"
 

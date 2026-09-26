@@ -648,6 +648,16 @@ def upload_tracks(job_id: str):
     return FileResponse(path, media_type="application/x-ndjson")
 
 
+@app.get("/api/uploads/{job_id}/weapons")
+def upload_weapons(job_id: str):
+    """The weapon detector's raw per-frame boxes (run_weapons.py), so the review overlay follows the weapon."""
+    job = _job_or_404(job_id)
+    path = job.dir / f"{job.meta.get('stem', '')}.weapons.jsonl"
+    if not job.meta.get("stem") or not path.exists():
+        raise HTTPException(404, "no weapon pass for this clip")
+    return FileResponse(path, media_type="application/x-ndjson")
+
+
 # ---- WebSocket ----------------------------------------------------------------------------
 @app.websocket("/ws")
 async def ws(websocket: WebSocket):

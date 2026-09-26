@@ -28,6 +28,8 @@ type Det = { frame: number; cls: number; conf: number; xyxy: [number, number, nu
 const CANVAS_W = 1920 // upload tracks are normalised to the vision rules' 1920x1072 canvas
 const CANVAS_H = 1072
 const FPS = 30
+const WEAPON_CONF = 0.5 // the weapon rule's own threshold (vision/threats.py WEAPON_CONF)
+const SIGNAL_HOLD_S = 1.5 // how long a signal's frozen box stays after the moment it fired
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
@@ -215,6 +217,7 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
   const video = useRef<HTMLVideoElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const [tracks, setTracks] = useState<Map<number, Det[]> | null>(null)
+  const [weapons, setWeapons] = useState<Map<number, Det[]> | null>(null)
   const [time, setTime] = useState(0)
   const [boxes, setBoxes] = useState(true)
   const result = job.result!
@@ -236,17 +239,21 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
   }, [job.id, profile])
 
   useEffect(() => {
-    fetch(`${API}/api/uploads/${job.id}/tracks`).then((r) => (r.ok ? r.text() : '')).then((text) => {
-      const index = new Map<number, Det[]>()
-      for (const line of text.split('\n')) {
-        if (!line) continue
-        const d = JSON.parse(line) as Det
-        const list = index.get(d.frame)
-        if (list) list.push(d)
-        else index.set(d.frame, [d])
-      }
-      setTracks(index)
-    })
+    const load = (what: string, minConf: number) =>
+      fetch(`${API}/api/uploads/${job.id}/${what}`).then((r) => (r.ok ? r.text() : '')).then((text) => {
+        const index = new Map<number, Det[]>()
+        for (const line of text.split('\n')) {
+          if (!line) continue
+          const d = JSON.parse(line) as Det
+          if (d.conf < minConf) continue
+          const list = index.get(d.frame)
+          if (list) list.push(d)
+          else index.set(d.frame, [d])
+        }
+        return index
+      })
+    load('tracks', 0).then(setTracks)
+    load('weapons', WEAPON_CONF).then(setWeapons)
   }, [job.id])
 
   // Overlay: boxes live on a 1920x1072 canvas scaled per axis onto the displayed video.
@@ -269,9 +276,27 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
       const oy = (H - dh) / 2
       const rect = (b: number[]) => [ox + (b[0] / CANVAS_W) * dw, oy + (b[1] / CANVAS_H) * dh, ((b[2] - b[0]) / CANVAS_W) * dw, ((b[3] - b[1]) / CANVAS_H) * dh] as const
       const frame = Math.round(v.currentTime * FPS)
+      // the detections nearest this frame (analysed frames are 2-3 clock frames apart), never older than ~0.13 s
+      const near = (index: Map<number, Det[]>) => {
+        for (let k = 0; k <= 4; k++) {
+          const d = index.get(frame - k) ?? index.get(frame + k)
+          if (d?.length) return d
+        }
+        return []
+      }
+      // the weapon detector's own boxes, frame by frame: they follow the weapon and go when it goes
+      const armed = boxes && weapons ? near(weapons) : []
+      for (const d of armed) {
+        const [x, y, w, h] = rect(d.xyxy)
+        ctx.lineWidth = 2.5
+        ctx.strokeStyle = '#ef4f4f'
+        ctx.strokeRect(x, y, w, h)
+        ctx.fillStyle = '#ef4f4f'
+        ctx.font = 'bold 12px ui-sans-serif, system-ui'
+        ctx.fillText(`weapon ${Math.round(d.conf * 100)}%`, x, y - 4)
+      }
       if (boxes && tracks) {
-        let dets: Det[] = []
-        for (let k = 0; k <= 4 && !dets.length; k++) dets = tracks.get(frame - k) ?? tracks.get(frame + k) ?? []
+        const dets = near(tracks)
         ctx.lineWidth = 1.5
         ctx.font = '11px ui-monospace, monospace'
         for (const d of dets) {
@@ -283,21 +308,28 @@ function Review({ job, config }: { job: Job; config: SiteConfigView | null }) {
           ctx.fillText(`${st.label}${d.tid !== undefined ? ' #' + d.tid : ''}`, x + 2, y - 3)
         }
       }
+      // A signal's box is where it was confirmed, frozen: show it from just before that moment for a short while,
+      // not +-2 s. A weapon alert whose weapon is boxed live right now needs no frozen copy.
       for (const e of signals) {
-        if (!e.media?.bbox || Math.abs(e.media.frame - frame) > 2 * FPS) continue
+        if (!e.media?.bbox) continue
+        const dt = frame - e.media.frame
+        if (dt < -0.3 * FPS || dt > SIGNAL_HOLD_S * FPS) continue
+        if (e.type === 'weapon_visible' && armed.length) continue
         const [x, y, w, h] = rect(e.media.bbox)
         if (w <= 0 || h <= 0) continue
-        ctx.lineWidth = 3
-        ctx.strokeStyle = '#ef4f4f'
+        const strong = e.severity >= 0.5 // hand-offs (0.3) and the like are context, not alarms
+        const color = strong ? '#ef4f4f' : '#f0b429'
+        ctx.lineWidth = strong ? 3 : 1.5
+        ctx.strokeStyle = color
         ctx.strokeRect(x - 3, y - 3, w + 6, h + 6)
-        ctx.fillStyle = '#ef4f4f'
-        ctx.font = 'bold 13px ui-sans-serif, system-ui'
+        ctx.fillStyle = color
+        ctx.font = `${strong ? 'bold 13px' : '11px'} ui-sans-serif, system-ui`
         ctx.fillText(e.type.replaceAll('_', ' '), x - 3, y - 9)
       }
     }
     raf = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(raf)
-  }, [tracks, boxes, signals])
+  }, [tracks, weapons, boxes, signals])
 
   const seek = (t: number) => {
     const v = video.current
