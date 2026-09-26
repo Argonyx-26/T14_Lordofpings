@@ -47,7 +47,7 @@ export function SituationBand({ summary, incidents, config, clock, onSelect, eve
   const since = top && clock ? clock.sim_t - (top.opened_at ?? top.first_signal_at) : null
 
   const raw = summary?.raw_events ?? 0
-  const surfaced = (summary?.incidents_open ?? 0) + (summary?.incidents_watch ?? 0)
+  const surfaced = summary?.incidents_open ?? 0      // on-watch incidents are below the bar for a person
   const decided = incidents.filter((i) => ['ack', 'escalated', 'dismissed'].includes(i.status)).length
 
   return (
@@ -105,7 +105,7 @@ export function SituationBand({ summary, incidents, config, clock, onSelect, eve
           <Arrow />
           <Stage value={summary?.siloed_alerts ?? 0} label="stream alerts" hint="What separate camera, door and GPS systems would each have paged" />
           <Arrow />
-          <Stage value={surfaced} label="incidents" hint="Signals ARGUS fused by place and time and scored high enough for a person" strong />
+          <Stage value={surfaced} label="incidents" hint={`Signals ARGUS fused by place and time and scored high enough for a person${summary?.incidents_watch ? ` (plus ${summary.incidents_watch} on watch, below that bar)` : ''}`} strong />
           <Arrow />
           <Stage value={decided} label="decided" hint="Incidents a person has acknowledged, escalated or dismissed" strong />
         </div>
