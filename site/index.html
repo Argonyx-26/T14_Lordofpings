@@ -114,14 +114,6 @@
     .two ul { color: var(--fg-2); padding-left: 18px; }
     .two li { margin: 8px 0; }
 
-    /* journey */
-    .timeline { margin-top: 48px; border-left: 1px solid var(--hair-2); margin-left: 6px; }
-    .tl { position: relative; padding: 0 0 26px 28px; }
-    .tl::before { content: ""; position: absolute; left: -5px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--fg-2); }
-    .tl.key::before { background: var(--accent); }
-    .tl .time { font-family: var(--mono); font-size: 13px; color: var(--fg-3); }
-    .tl .what { color: var(--fg); margin-top: 2px; }
-    .tl .who { font-size: 13.5px; color: var(--fg-3); }
 
     /* team */
     .team { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 48px; }
@@ -172,8 +164,8 @@
     .aperture-hint { position: absolute; bottom: 4vh; font-family: var(--mono); font-size: 11.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--fg-3); opacity: calc(1 - var(--p) * 4); }
 
     /* entrances: blur to focus as sections arrive (added by site/motion.js, so no-JS readers see everything) */
-    [data-reveal] { opacity: 0; filter: blur(10px); transform: translateY(14px); transition: opacity .9s cubic-bezier(.22,1,.36,1), filter .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1); }
-    [data-reveal].in { opacity: 1; filter: none; transform: none; }
+    [data-reveal] { opacity: 0; transform: translateY(14px); transition: opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1); }
+    [data-reveal].in { opacity: 1; transform: none; }
     .hero h1, .hero .lead, .hero .cta, .hero .eyebrow { animation: focus-in 1.1s cubic-bezier(.22,1,.36,1) both; }
     .hero .eyebrow { animation-delay: .05s; } .hero h1 { animation-delay: .15s; } .hero .lead { animation-delay: .35s; } .hero .cta { animation-delay: .5s; }
     @keyframes focus-in { from { opacity: 0; filter: blur(12px); transform: translateY(10px); } to { opacity: 1; filter: none; transform: none; } }
@@ -192,7 +184,7 @@
     <div class="wrap">
       <a class="brand" href="#top">Argus</a>
       <div class="links">
-        <a href="#problem">Problem</a><a href="#how">How it works</a><a href="#results">Results</a><a href="#journey">Build log</a><a href="#team">Team</a><a data-raah-event="open_judges" href="judges.html">For judges</a>
+        <a href="#problem">Problem</a><a href="#how">How it works</a><a href="#results">Results</a><a href="#team">Team</a><a data-raah-event="open_judges" href="judges.html">For judges</a>
       </div>
       <a class="btn primary" data-live-demo data-raah-event="open_console" href="console/">Live demo</a>
       <a class="btn" data-raah-event="open_github" href="https://github.com/Argonyx-26/T14_Lordofpings">GitHub</a>
@@ -360,27 +352,6 @@
         <img src="assets/site-areas.jpg" alt="Satellite view of the MEVA facility with the school, plaza, parking and bus-station areas outlined and real GPS fixes in magenta" width="798" height="994" loading="lazy" style="border-radius:12px;border:1px solid var(--hair)" />
         <p class="caption">Fusion areas over satellite imagery; magenta dots are real GPS fixes. Imagery © Esri, Maxar, Earthstar Geographics; footprints © OpenStreetMap contributors.</p>
       </figure>
-    </div>
-  </section>
-
-  <section id="journey" class="hair-t">
-    <div class="wrap">
-      <div class="eyebrow">Build log</div>
-      <h2 class="display">Built in 24 hours, in public</h2>
-      <p class="lead">Every step is in the repository's commit history. Friday 25 September 2026, RV University, Bengaluru.</p>
-      <div class="timeline">
-        <div class="tl"><div class="time">Fri 11:00</div><div class="what">Hackathon starts on site at RV University.</div></div>
-        <div class="tl key"><div class="time">Fri 12:30</div><div class="what">Decision: no synthetic data. MEVA chosen as the real multi-camera source.</div></div>
-        <div class="tl"><div class="time">Fri 12:42</div><div class="what">Repository, team handoff and data plan for the Windows GPU laptop.</div></div>
-        <div class="tl"><div class="time">Fri 12:50</div><div class="what">Backend core: event schema, door and GPS loaders, fusion engine, scoring, replay clock, API.</div></div>
-        <div class="tl"><div class="time">Fri 12:53</div><div class="what">Vision pipeline: YOLO11 tracking, a low-confidence valuables pass, camera rules.</div></div>
-        <div class="tl"><div class="time">Fri 13:06</div><div class="what">Fusion areas refined from satellite imagery, OpenStreetMap and camera calibrations.</div></div>
-        <div class="tl"><div class="time">Fri 13:23</div><div class="what">Bag false alarms cut from 6 to 2 with recall unchanged at 4 of 5.</div></div>
-        <div class="tl"><div class="time">Fri 13:38</div><div class="what">Console redesign: the signal funnel, ranked incidents, score breakdown and to-scale site map.</div></div>
-        <div class="tl"><div class="time">Fri 13:40</div><div class="what">Video door-contact sensor from door-leaf motion, with no training.</div></div>
-        <div class="tl key"><div class="time">Fri 15:46</div><div class="what">Measured results: 4 of 5 caught, 0 false incidents, 30 fps live.</div></div>
-        <div class="tl"><div class="time">Fri 16:15</div><div class="what">Analyse any footage: upload a clip and the full pipeline runs on it.</div></div>
-      </div>
     </div>
   </section>
 
