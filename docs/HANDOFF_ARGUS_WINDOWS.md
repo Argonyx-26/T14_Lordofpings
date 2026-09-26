@@ -1,4 +1,4 @@
-> **Historical (Fri 12:40 plan).** Superseded: run the demo with `docs/RUN_WINDOWS.md`; current state is in `HANDOFF.md`, `HANDOFF_TO_JACK.md` and `README.md`. Code paths and formats below may be out of date.
+> **Historical (Fri 12:40 plan).** Superseded: run the demo with `docs/RUN_WINDOWS.md`; current state is in `README.md` and the team notes in `docs/team/`. Code paths and formats below may be out of date.
 
 # ARGUS: handoff for the Windows GPU laptop
 

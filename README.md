@@ -56,35 +56,38 @@ ARGUS is a situational-awareness layer for security control rooms. It reads the 
 
 ## ✦ What ARGUS does
 
-**1. Fuses the streams a site already has.** Camera analytics, door sensors and phone locations are each noisy on their own. ARGUS joins signals that share an area and a two-minute window into one incident, scored by a formula anyone can read: severity × confidence × area criticality × corroboration × time of day × operator feedback.
+Three things, end to end. Everything else in this repo serves one of them.
 
-**2. Explains every incident in plain words.** A brief (written by Gemini, checked line by line against the evidence) says what happened, where and how sure the sensors are. Every piece of evidence is one click from the moment it happened, on the camera that saw it.
+### 1. Fuse: many weak signals become a few incidents
 
-**3. Projects where it is heading.** This is Endsley's level 3 of situation awareness, *projection*, which most dashboards never reach. ARGUS finds the crime script an incident is following (bag left → taken → the taker leaves), re-scores the stages still ahead, shows what would change the risk, and compares every response side by side.
+Camera analytics, door sensors and phone counts are each noisy on their own. ARGUS joins signals that share an area and a two-minute window into one incident, scored by a formula anyone can read: severity × confidence × area criticality × corroboration × time of day × operator feedback. Each incident comes with a brief in plain words (written by Gemini, checked line by line against the evidence), and every piece of evidence is one click from the moment it happened, on the camera that saw it. **314 signals → 20 per-stream alerts → 3 incidents; 4 of 5 staged incidents caught, 0 false.**
+
+### 2. Foresee: where each incident is heading, and what each response would do
+
+This is Endsley's level 3 of situation awareness, *projection*, which most dashboards never reach. ARGUS finds the crime script an incident is following (bag left → taken → the taker leaves), re-scores the stages still ahead with the real scorer, shows what would change the risk, and compares every response side by side.
 
 <p align="center">
   <img src="docs/readme/planner.png" alt="The response planner: the theft script with intervention points, what-if bars for each change in evidence, context and profile, and a course-of-action comparison with a simulation" width="100%" />
   <br /><sub>The response planner on the offline demo's snapshot: how this unfolds, what would change the score, and every response compared, then simulated.</sub>
 </p>
 
-**4. Keeps a person in charge.** One *Respond* menu: acknowledge, escalate, dispatch a guard, call the police, or dismiss as a false alarm. Each decision is appended to a hash-chained audit log, and a dismissal teaches ARGUS to score similar alerts lower in that area.
+### 3. Decide: a person makes every call, on the record
 
-**Two roles, enforced by the backend.** A **duty officer** runs the floor: incidents, briefs, plain-language evidence (no track ids or detector internals), forecasts, patterns, and the decisions on the incident in front of them. A **supervisor** has oversight and policy on top: the whole hash-chained decision log and its export, **detector internals** per incident (raw strength × profile weight, the signals the score counts, and what each source adds, re-scored without it), **what ARGUS has learned** from dismissals (each lesson resettable), **dismissed incidents** (reopening one takes its lesson back), and the supervisor-only decisions (dismiss, police, site profile). Set `ARGUS_SUPERVISOR_PIN` and the supervisor role needs a PIN (single sign-on on a real site); the rules live in `backend/argus/access.py`.
+One *Respond* menu: acknowledge, escalate, dispatch a guard, call the police, or dismiss as a false alarm. Each decision is appended to a hash-chained audit log, and a dismissal teaches ARGUS to score similar alerts lower in that area. A language model never creates, hides or ranks an incident.
 
-**5. Investigates like an analyst.** Ask ARGUS answers questions from the log with citations. In *Investigate* mode a tool-using agent (Gemini function calling over read-only tools) works the case: it lists and opens incidents, searches signals, **looks at the footage** around a piece of evidence and asks a vision model one specific question, counts phones in an area, reads the forecast, then writes a case file with a verdict, a confidence and the next step. Its steps stream into the console as it works. The trust rule comes from our own measurement: footage can confirm an alert, never dismiss one. Measured on every camera alert in the window, 2 runs each: real alerts kept **12/12**, the false alert (a bush) called a false alarm 2/2; a vision model alone kept only 2/6.
+**Two roles, enforced by the backend.** A **duty officer** runs the floor: incidents, briefs, plain-language evidence (no track ids or detector internals), forecasts, patterns, and the decisions on the incident in front of them. A **supervisor** adds oversight and policy: the whole decision log and its export, **detector internals** per incident, **what ARGUS has learned** from dismissals (each lesson resettable), **dismissed incidents** (reopening one takes its lesson back), and the supervisor-only decisions (dismiss, police, site profile). The live stream every screen receives carries only the duty officer's view. Set `ARGUS_SUPERVISOR_PIN` and the supervisor role needs a PIN (single sign-on on a real site); the rules live in `backend/argus/access.py`.
 
-**6. Assesses any footage.** Drop in a clip from any camera, even a phone. ARGUS tracks everything in it, flags threats with the same rules, and returns a threat assessment (verdict, risk over time, incidents with forecasts) under the security profile you pick.
+### Around the core
 
-
-**7. Sees patterns above incidents.** Two thefts four minutes apart are not two unrelated rows. ARGUS links incidents that follow the same crime script and share its act, then checks the site map: could one person have walked it in the gap? *Walkable*, *same place*, or *too soon to walk* (at least two people). After an act it puts the site on **near-repeat watch**: where to look next, until when, and where no camera can see. It links behaviour, place and time, never faces or phones, and it never changes a score.
-
-**8. Knows where it is blind.** Every area's coverage is computed from the site model: which streams can see it, which cameras are recording, and what it cannot see at all (the parking lots have phone counts but no camera). Every score says how much evidence its area can give; a covered stage camera is noticed in 2 s and its area goes blind until the view is back.
-
-**9. Writes the case up.** One click turns an incident into a case report: timeline, evidence, the score's arithmetic, the pattern, the blind spots, the forecast and every decision with its audit hash. Print it, or copy it into a message.
-
-**10. Works live on stage.** The laptop webcam runs the same detector at ~30 fps with stage rules: a bag its owner leaves for 15 s, a knife or scissors in someone's hands, a fight (pose + VideoMAE), and the lens covered for 2 s. Each alert joins the replay as a signal in the *Stage camera (live)* area and is fused, scored and briefed like any other.
-
-**11. Adapts to the site.** One switch: **Airport** (every area critical, any unattended bag or weapon goes straight to a person), **School / college** (the tuned setting) or **Public park** (running and crowds are normal). Measured on the same footage: 4/5, 4/5 and 2/5 caught, with 0 false incidents in all three.
+| | What it adds | Serves |
+|---|---|---|
+| **Ask ARGUS and the investigator** | Questions answered from the log with citations. In *Investigate* mode a tool-using agent works a case like an analyst, looking at footage and writing a case file with a verdict. Footage can confirm an alert, never dismiss one: real alerts kept **12/12**, the false alert called false 2/2 | Decide |
+| **Patterns and near-repeat watch** | Links incidents that share a crime script's act and checks whether one person could have walked between them; then says where to look next. Behaviour, place and time, never faces or phones; never changes a score ([details](#-above-incidents-patterns-and-blind-spots)) | Foresee |
+| **Blind spots** | Every area's coverage from the site model: which streams see it, which cameras are recording, what it cannot see; a covered stage camera is noticed in 2 s | Fuse |
+| **Any footage** | Drop in a clip from any camera, even a phone: tracks, threats and a threat assessment under the chosen profile | Fuse |
+| **Live on stage** | The laptop webcam runs the same detector at ~30 fps: a bag left 15 s, a knife in hand, a fight, the lens covered. Each alert is fused, scored and briefed like any other | Fuse |
+| **Site profiles** | **Airport**, **School / college** (the tuned setting) or **Public park**: 4/5, 4/5 and 2/5 caught on the same footage, 0 false incidents in all three | Fuse |
+| **Case report** | One click: timeline, evidence, the score's arithmetic, pattern, blind spots, forecast and every decision with its audit hash | Decide |
 
 ## ▶ The 90-second tour
 
@@ -304,7 +307,7 @@ backend/tests/        pytest suite
 frontend/             React + Vite + Tailwind console (and the offline demo build)
 site/                 project website and the judges' page (served at :8000/site/; published with scripts/deploy_site.sh)
 scripts/              data download, Windows setup / run / stop
-docs/                 run guide, pitch, demo video script, held-out results
+docs/                 run guide, pitch, demo video script, held-out and model results; docs/team/ has the build notes
 ```
 
 </details>

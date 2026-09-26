@@ -1,22 +1,22 @@
 # ARGUS: pitch pack (deck, 5-minute script, demo run-sheet, 2-minute video, Q&A)
 
-**Format (from the rules):** 5 min pitch + 2 min Q&A · live demo mandatory (backup video allowed) · **all four
-members speak** · final deck **max 8 slides** · judged 25% each on Innovation, Technical Implementation,
+**Format (from the rules):** 5 min pitch + 2 min Q&A · live demo mandatory (backup video allowed) · **every
+member present speaks** · final deck **max 8 slides** · judged 25% each on Innovation, Technical Implementation,
 Presentation & Storytelling, Business Impact & Market Potential.
 
-**Fill in before 07:00** from `python -m argus.eval.evaluate` on the demo laptop (numbers marked `[…]`):
+**The numbers used below**, from `python -m argus.eval.evaluate` on the demo laptop:
 
-| Placeholder | Where it comes from | Measured (Fri, vision README) |
+| Number | Where it comes from | Measured |
 |---|---|---|
-| `[CAUGHT]` staged incidents caught | `ground_truth_alerted / ground_truth_total` | **4/5** (2 cafe thefts, bus theft + abandonment; miss: black purse on black bench) |
-| `[FALSE]` false incidents in the 30-min window | incidents with no ground truth nearby | **0** (2 camera-level bag alerts, absorbed by fusion) |
-| `[RAW] → [SILO] → [INC]` | `reduction` block | **314 → 20 → 3** (99% never reach an operator; phones are counted per area, never followed) |
-| `[DOOR_P] / [DOOR_R]` door detection precision / recall | `door_detection` | **0.54 / 0.75** indoor (0.21 / 0.52 all cameras) |
-| `[LAT]` median seconds from first signal to incident | `latency_s` | not on the slides |
-| `[FPS]` live inference fps on the RTX 5060 | live tile stats | **30 fps** (13–23 ms per frame) |
+| Staged incidents caught | `ground_truth_alerted / ground_truth_total` | **4/5** (2 cafe thefts, bus theft + abandonment; miss: black purse on black bench) |
+| False incidents in the 30-min window | incidents with no ground truth nearby | **0** (2 camera-level bag alerts, absorbed by fusion) |
+| Raw → per-stream alerts → incidents | `reduction` block | **314 → 20 → 3** (99% never reach an operator; phones are counted per area, never followed) |
+| Door detection precision / recall | `door_detection` | **0.54 / 0.75** indoor (0.21 / 0.52 all cameras) |
+| Median seconds from first signal to incident | `latency_s` | not on the slides |
+| Live inference fps on the RTX 5060 | live tile stats | **30 fps** (13–23 ms per frame) |
 
-**Speakers:** A = Tanush (lead: opens and closes) · B = demo driver · C = vision/technical (the teammate who built
-the pipeline) · D = business. Swap names as you like; every member must speak.
+**Speakers:** Tanush = A + D (problem, business, close) · Mohit = B + C (drives the live demo, then the vision and
+results slides). The letters below mark each part.
 
 ## 0. Answering "very little innovation" (Sat 26 Sep)
 
@@ -63,10 +63,10 @@ one idea per slide, numbers big.
 |---|---|---|---|
 | 1 | **Title** | "Argus" wordmark · *We don't watch more. We notice sooner.* · PS5 Intelligent Threat Detection & Situational Awareness · team names | A · 0:00–0:10 |
 | 2 | **The problem** | Big: **4,484 alerts a day · 67% never looked at** (Vectra 2023, 2,000 SOC analysts). Small: physical security teams report the same wall of false alarms (ServiceNow cut 94% with alarm triage, Ambient.ai 2026). Photo-free: a sketch of five screens, one tired operator. If you got a quote from RV University campus security, put it here. | A · 0:10–0:35 |
-| 3 | **The insight** | *The threat lives between the screens.* One camera flag is noise; a camera flag + a crowd forming on phones + a door opening in the same place and minute is an incident. Visual: the funnel `[RAW] events → [SILO] per-stream alerts → [INC] incidents`. | A · 0:35–1:00 |
+| 3 | **The insight** | *The threat lives between the screens.* One camera flag is noise; a camera flag + a crowd forming on phones + a door opening in the same place and minute is an incident. Visual: the funnel `314 events → 20 per-stream alerts → 3 incidents`. | A · 0:35–1:00 |
 | 4 | **Live** | One word: "Live". Switch to the console. | B (+C) · 1:00–3:15 |
 | 5 | **How it works** | Left to right: *Real streams* (MEVA CCTV · door sensor · device location) → *Detect* (YOLO11 + ByteTrack, rules, causal baselines; no training, no labels) → *Fuse* (same area within 120 s, strongest signal per source, corroboration, common-cause damping) → *Score* (transparent 0–100) → *Explain* (Gemini writes the brief; it can't create, hide or re-rank incidents; every sentence checked against evidence) → *Human decides* (acknowledge / escalate / dismiss, hash-chained audit). | C · 3:15–3:40 |
-| 6 | **Measured on real footage** | **[CAUGHT] staged incidents caught** · **[FALSE] false incidents** in 30 min across 6 cameras · **[RAW] → [INC]** · door detection P `[DOOR_P]` R `[DOOR_R]` · `[LAT]` s to an explained incident · `[FPS]` fps live on one laptop GPU. Footnote: *MEVA dataset (Kitware/IARPA), staged incidents among real passers-by; door stream derived from annotations (stands in for access control); video door sensor scored against them; the miss was a black purse on a black bench.* | C · 3:40–3:55 |
+| 6 | **Measured on real footage** | **4 of 5 staged incidents caught** · **0 false incidents** in 30 min across 6 cameras · **314 → 3** · door detection P 0.54 R 0.75 (indoor) · **30 fps** live on one laptop GPU. Footnote: *MEVA dataset (Kitware/IARPA), staged incidents among real passers-by; door stream derived from annotations (stands in for access control); video door sensor scored against them; the miss was a black purse on a black bench.* | C · 3:40–3:55 |
 | 7 | **Why us, who pays** | 2×2: *camera-only vs multi-stream* × *enterprise-priced vs campus-priced*. Genetec / Milestone PSIM (physical, enterprise) · Splunk / Sentinel (cyber, enterprise) · Ambient.ai (camera-first, US enterprise) · **Argus: multi-stream, software-only, explainable, runs on one GPU**. Beachhead: Indian university and hospital campuses with 2–5-person control rooms. Model: per-site SaaS by stream count + on-prem licence (assumption to state: ₹[X] per site per month). PSIM market ≈ $4.3B by 2029 (MarketsandMarkets). | D · 3:55–4:40 |
 | 8 | **What comes next** | Any footage: upload a clip and Argus analyses it on the spot. Connectors (Milestone/Genetec video, access control, Wi-Fi and security logs). One GPU box per site with a DPDP-ready audit trail. Close line. | A · 4:40–5:00 |
 
@@ -94,8 +94,8 @@ Aim for ~650 spoken words. Rehearse with a timer; cut words, not the demo.
 > training and no labels. The fusion engine groups signals by place and time, counts each *source* once so one noisy
 > camera can't shout louder, and rewards independent corroboration. The score is transparent: you just saw every
 > factor. Gemini writes the brief, but it can't create or hide an incident, and we reject any sentence that isn't
-> backed by the evidence. Measured against the ground truth: we caught [CAUGHT] staged incidents with [FALSE] false
-> alarms in half an hour of six cameras, out of [RAW] raw events."
+> backed by the evidence. Measured against the ground truth: we caught 4 of 5 staged incidents with 0 false
+> alarms in half an hour of six cameras, out of 314 raw events."
 
 **D: Business (3:55–4:40)**
 > "Big sites buy Genetec or Milestone for physical security and Splunk for cyber: enterprise products, separate
@@ -129,7 +129,7 @@ if the venue network is shaky. Backup video on the desktop and on a USB stick.
 | 2:20 | Click the **camera evidence** row | "One click replays the moment." (that camera moves to the main view, red box on the object) |
 | 2:35 | C: one sentence | "That box comes from YOLO11 tracking, running on this laptop, no training." |
 | 2:45 | Switch role to **Supervisor**, **Respond → Escalate to a supervisor** | "A human decides, and every decision goes into a tamper-evident log." |
-| 2:55 | (optional) **Live inference** toggle for 5 s | "And this is the detector running live, [FPS] frames a second." |
+| 2:55 | (optional) **Live inference** toggle for 5 s | "And this is the detector running live, 30 frames a second." |
 | 3:10 | Back to slides | |
 
 **If something breaks:** say "let me show you the recording" and play the backup video from the matching moment.
@@ -154,7 +154,7 @@ auto-captions), because judges may watch it muted.
 | 0:50–1:10 | Zoom on Why this score and the brief | "The score is transparent. Gemini writes the brief, but it cannot create or hide incidents, and every sentence is checked against the evidence." |
 | 1:10–1:30 | Click the evidence: that camera takes the main view with the red box; then the live inference view | "One click replays the moment. Detection is YOLO11 with tracking, running live on a single laptop GPU, with no training." |
 | 1:30–1:45 | Supervisor escalates; audit log | "A human makes every call, and every call is recorded in a tamper-evident log." |
-| 1:45–2:00 | Results card: [CAUGHT] caught · [FALSE] false alarms · [RAW] → [INC] | "On real footage we caught [CAUGHT] staged incidents with [FALSE] false alarms. And you can hand Argus any clip to analyse on the spot." |
+| 1:45–2:00 | Results card: 4/5 caught · 0 false alarms · 314 → 3 | "On real footage we caught 4 of 5 staged incidents with 0 false alarms. And you can hand Argus any clip to analyse on the spot." |
 
 Export as MP4 ≤ 2:00. Keep one copy on the demo laptop desktop and one on a USB stick.
 
@@ -164,14 +164,14 @@ Export as MP4 ≤ 2:00. Keep one copy on the demo laptop desktop and one on a US
 
 | Likely question | Answer |
 |---|---|
-| Isn't it tuned on the data you tested on? | "We tuned on one 30-minute window, then ran the unchanged pipeline on footage it never saw: a different day and a later window. Those held-out numbers are on the results slide [fill from docs/HOLDOUT_RESULTS.md]." |
+| Isn't it tuned on the data you tested on? | "We tuned on one 30-minute window, then ran the unchanged pipeline on footage it never saw. On a different day it missed the one staged theft (the suitcase sat at the frame edge, only its handle in view) and raised no false incidents. On 20 more unseen clips from seven days it raised no false fights and no false falls. We report the miss because it's real." |
 | Five incidents is a tiny sample. | "It is, and we say so. MEVA only stages six thefts and abandonments in the whole public set; five are in our window and the sixth is in our held-out day. That's why we also count false incidents over every hour of unseen footage." |
 | Isn't the data staged? | "The incidents are staged by actors, but among real passers-by, on real multi-camera footage and real GPS from one facility (the MEVA dataset). We score against its human ground truth, including the miss." |
 | Why not just use Splunk, Genetec or Ambient? | "They're enterprise products and each covers one silo. Argus fuses streams from different vendors, runs on one GPU box, and explains every score: built for a two-person campus control room." |
 | What about the one you missed? | "A black purse on a black bench: the detector can't see it. We added an experimental static-change detector for exactly that case; it's the next thing we'd harden." |
 | Does the LLM hallucinate threats? | "It can't: detection and scoring are deterministic; Gemini only writes the explanation, we reject anything not backed by the evidence, and there's a template fallback if it's offline." |
 | Corroboration assumes independent sensors. What if a power cut trips everything? | "Bursts of the same alert are treated as one likely common cause and damped, and each source counts once, however noisy it is." |
-| Where does the door stream come from on a real campus? | "The access-control system. In the demo it's derived from MEVA's human door annotations as a stand-in, and separately our video door sensor (door-leaf motion) detects the same openings on its own: precision [DOOR_P] against those annotations." |
+| Where does the door stream come from on a real campus? | "The access-control system. In the demo it's derived from MEVA's human door annotations as a stand-in, and separately our video door sensor (door-leaf motion) detects the same openings on its own: precision 0.54 and recall 0.75 on the indoor cameras against those annotations." |
 | Your door sensor is 0.21 precision across all cameras. | "Indoors, where a camera faces the door, it's 0.54 precision at 0.75 recall. Outdoors it's a motion heuristic: at the bus station most false openings come from the queue in front of the ATM back door. We tried a stricter pass-through rule and it lost more real openings than it removed false ones, so we kept the simpler rule and report both numbers. On a real site the access-control system gives the exact signal." |
 | GPS on a campus? | "On a real campus that stream is Wi-Fi access-point associations: where devices are, not who they are. We fuse by place and time, never identity." |
 | Privacy / DPDP? | "No face recognition, no identity inference; people are track numbers; every operator action is logged in a tamper-evident audit trail." |

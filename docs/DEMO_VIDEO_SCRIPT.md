@@ -5,7 +5,7 @@ stage. **Length:** 2:00 or less. **Format:** 1920×1080 MP4 with burned-in capti
 **Record on:** the Windows demo laptop, with the full MEVA replay loaded. **Due:** 07:00 Saturday.
 
 The script is about 250 spoken words, a calm pace for 2 minutes. Numbers are the measured ones (vision README,
-`HANDOFF.md`); don't round them up.
+`docs/team/HANDOFF.md`); don't round them up.
 
 ---
 
@@ -15,7 +15,7 @@ The script is about 250 spoken words, a calm pace for 2 minutes. Numbers are the
 - [ ] Charger in, **Best performance**, **Energy Saver off**, notifications off (Focus assist → Alarms only).
 - [ ] Browser full-screen (**F11**), zoom 100%, nothing else on screen. Close the dev tools.
 - [ ] Console: **Reset**, speed **10×**, role **Duty officer**, **Raw signals** drawer (under the cameras) closed.
-- [ ] One upload already analysed (for shot H): the bus-station clip from `HANDOFF_TO_JACK.md` §3.
+- [ ] One upload already analysed (for shot H): the bus-station clip from `docs/team/HANDOFF_TO_JACK.md` §3.
 - [ ] A quiet room and a headset mic. Record the voice-over separately if the room is noisy.
 - [ ] **Title and results cards:** export the deck's cover slide and results slide as PNGs (Download → PNG/PDF), or make them in Clipchamp as white text on `#0c0d0f`.
 
